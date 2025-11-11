@@ -63,9 +63,9 @@ export default function Sidebar({ profile }: SidebarProps) {
       ],
     },
     {
-      name: "Quran Progress",
-      href: "/progress",
-      icon: BookMarked,
+      name: "Curriculum & Assessment",
+      href: "/curriculum-assessment",
+      icon: BookOpen,
       roles: ["super_admin", "admin", "teacher"],
     },
     {
