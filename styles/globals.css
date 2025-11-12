@@ -284,3 +284,11 @@
   @apply absolute left-0 top-0 bg-primary text-primary-foreground px-4 py-2 
          transform -translate-y-full focus:translate-y-0 transition-transform;
 }
+
+.font-arabic {
+  font-family: "Traditional Arabic", "Arabic Typesetting", "Geeza Pro", serif;
+}
+
+.rtl {
+  direction: rtl;
+}
