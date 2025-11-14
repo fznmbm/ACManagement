@@ -27,12 +27,43 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
     arabic_name: "مركز النور الإسلامي",
   };
 
+  console.log("Centre Info:", settings);
+
+  const [logoUrl, setLogoUrl] = useState(centreInfo.logo_url || "");
+  const [sealUrl, setSealUrl] = useState(centreInfo.seal_url || "");
+
   const handleSave = async () => {
     setLoading(true);
     setSaved(false);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Get all form values from the DOM
+      const form = document.querySelector("form") || document.body;
+      const formElements = form.querySelectorAll("input, select, textarea");
+
+      // Collect all form data
+      const formData = {
+        ...centreInfo,
+        logo_url: logoUrl,
+        seal_url: sealUrl,
+      };
+
+      // Collect all form field values
+      formElements.forEach((element: any) => {
+        if (element.name) {
+          formData[element.name] = element.value;
+        }
+      });
+
+      // Save to database (you'll need to implement the actual save logic)
+      const response = await fetch("/api/settings/centre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Failed to save");
+
       setSaved(true);
       router.refresh();
       setTimeout(() => setSaved(false), 3000);
@@ -253,53 +284,104 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
           </div>
         </div>
 
-        {/* Logo Upload */}
+        {/* Logo & Branding */}
         <div className="border border-border rounded-lg p-4">
           <h4 className="font-semibold mb-4">Logo & Branding</h4>
-          <div className="space-y-4">
-            <div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Centre Logo */}
+            <div className="space-y-3">
               <label className="form-label">Centre Logo</label>
-              <div className="flex items-center space-x-4">
-                <div className="h-20 w-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted">
-                  {centreInfo.logo_url ? (
-                    <img
-                      src={centreInfo.logo_url}
-                      alt="Logo"
-                      className="h-full w-full object-contain rounded-lg"
-                    />
-                  ) : (
-                    <Building2 className="h-8 w-8 text-muted-foreground" />
-                  )}
+
+              {logoUrl && (
+                <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
+                  <img
+                    src={logoUrl}
+                    alt="Centre Logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Current Logo</p>
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl("")}
+                      className="text-xs text-destructive hover:underline mt-1"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
-                <button className="btn-outline flex items-center space-x-2">
-                  <Upload className="h-4 w-4" />
-                  <span>Upload Logo</span>
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Recommended: PNG or SVG, max 2MB, square format (400x400px)
+              )}
+
+              <input
+                type="url"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                className="form-input"
+                placeholder="https://example.com/logo.png"
+              />
+              <p className="text-xs text-muted-foreground">
+                Recommended: PNG or SVG, 200x200px, transparent background
               </p>
             </div>
 
-            <div>
-              <label className="form-label">Primary Color</label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="color"
-                  defaultValue="#22c55e"
-                  className="h-10 w-20 rounded border border-input cursor-pointer"
-                />
-                <input
-                  type="text"
-                  defaultValue="#22c55e"
-                  className="form-input flex-1"
-                  placeholder="#22c55e"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Used for buttons, links, and highlights
+            {/* Official Seal */}
+            <div className="space-y-3">
+              <label className="form-label">Official Seal/Stamp</label>
+
+              {sealUrl && (
+                <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
+                  <img
+                    src={sealUrl}
+                    alt="Official Seal"
+                    className="h-20 w-20 object-contain"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Current Seal</p>
+                    <button
+                      type="button"
+                      onClick={() => setSealUrl("")}
+                      className="text-xs text-destructive hover:underline mt-1"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <input
+                type="url"
+                value={sealUrl}
+                onChange={(e) => setSealUrl(e.target.value)}
+                className="form-input"
+                placeholder="https://example.com/seal.png"
+              />
+              <p className="text-xs text-muted-foreground">
+                Used on certificates. Recommended: PNG, circular design,
+                200x200px
               </p>
             </div>
+          </div>
+
+          {/* Primary Color - Keep this existing part */}
+          <div className="mt-6">
+            <label className="form-label">Primary Color</label>
+            <div className="flex items-center space-x-4">
+              <input
+                type="color"
+                defaultValue="#22c55e"
+                className="h-10 w-20 rounded border border-input cursor-pointer"
+              />
+              <input
+                type="text"
+                defaultValue="#22c55e"
+                className="form-input flex-1"
+                placeholder="#22c55e"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Used for buttons, links, and highlights
+            </p>
           </div>
         </div>
 

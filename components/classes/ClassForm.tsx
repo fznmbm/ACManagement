@@ -123,7 +123,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="form-input"
+              // className="form-input"
+              className="form-input bg-background text-foreground border-border"
               placeholder="e.g., Quran Beginners - Morning"
               required
             />
@@ -153,7 +154,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="level"
               value={formData.level}
               onChange={handleChange}
-              className="form-input"
+              //className="form-input"
+              className="form-input bg-background text-foreground border-border"
             >
               <option value="">Select level</option>
               <option value="Beginner">Beginner</option>
@@ -172,7 +174,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="teacher_id"
               value={formData.teacher_id}
               onChange={handleChange}
-              className="form-input"
+              // className="form-input"
+              className="form-input bg-background text-foreground border-border"
             >
               <option value="">No teacher assigned</option>
               {teachers.map((teacher) => (
@@ -193,7 +196,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="capacity"
               value={formData.capacity}
               onChange={handleChange}
-              className="form-input"
+              //className="form-input"
+              className="form-input bg-background text-foreground border-border"
               min="1"
               max="100"
             />
@@ -209,7 +213,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="academic_year"
               value={formData.academic_year}
               onChange={handleChange}
-              className="form-input"
+              //className="form-input"
+              className="form-input bg-background text-foreground border-border"
               placeholder="2024-2025"
             />
           </div>
@@ -230,7 +235,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="schedule_days"
               value={formData.schedule_days}
               onChange={handleChange}
-              className="form-input"
+              //className="form-input"
+              className="form-input bg-background text-foreground border-border"
               placeholder="Monday, Wednesday, Friday"
             />
             <p className="text-xs text-muted-foreground mt-1">
@@ -248,7 +254,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="schedule_time"
               value={formData.schedule_time}
               onChange={handleChange}
-              className="form-input"
+              //className="form-input"
+              className="form-input bg-background text-foreground border-border"
               placeholder="09:00-11:00"
             />
           </div>
@@ -263,7 +270,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               name="schedule_room"
               value={formData.schedule_room}
               onChange={handleChange}
-              className="form-input"
+              //className="form-input"
+              className="form-input bg-background text-foreground border-border"
               placeholder="Room A"
             />
           </div>

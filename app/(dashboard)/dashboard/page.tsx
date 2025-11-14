@@ -130,13 +130,22 @@ export default async function DashboardPage() {
       <div className="bg-card border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link href="/attendance" className="btn-primary">
+          <Link
+            href="/attendance"
+            className="flex items-center justify-center px-6 py-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg"
+          >
             Mark Attendance
           </Link>
-          <Link href="/students?action=new" className="btn-secondary">
+          <Link
+            href="/students?action=new"
+            className="flex items-center justify-center px-6 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
+          >
             Add New Student
           </Link>
-          <Link href="/reports" className="btn-outline">
+          <Link
+            href="/reports"
+            className="flex items-center justify-center px-6 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
+          >
             Generate Report
           </Link>
         </div>
@@ -148,7 +157,7 @@ export default async function DashboardPage() {
           <h3 className="text-lg font-semibold">Recently Added Students</h3>
           <Link
             href="/students"
-            className="text-sm text-primary hover:underline"
+            className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           >
             View all
           </Link>
@@ -171,7 +180,7 @@ export default async function DashboardPage() {
                 </div>
                 <Link
                   href={`/students/${student.id}`}
-                  className="text-sm text-primary hover:underline"
+                  className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                 >
                   View Details
                 </Link>

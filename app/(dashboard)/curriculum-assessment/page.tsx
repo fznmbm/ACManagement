@@ -65,7 +65,8 @@ export default async function CurriculumAssessmentPage() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-lg p-6">
+        {/* <div className="bg-card border border-border rounded-lg p-6"> */}
+        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Active Subjects</p>
@@ -75,7 +76,7 @@ export default async function CurriculumAssessmentPage() {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Assessments</p>
@@ -85,7 +86,7 @@ export default async function CurriculumAssessmentPage() {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
@@ -99,7 +100,7 @@ export default async function CurriculumAssessmentPage() {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
@@ -121,7 +122,8 @@ export default async function CurriculumAssessmentPage() {
           {canManage && (
             <Link
               href="/curriculum-assessment/subjects/new"
-              className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              //className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              className="flex items-center space-x-3 p-4  border-border bg-white dark:bg-slate-700  border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <div className="p-2 bg-primary/10 rounded-lg">
                 <BookOpen className="h-5 w-5 text-primary" />
@@ -137,7 +139,8 @@ export default async function CurriculumAssessmentPage() {
 
           <Link
             href="/curriculum-assessment/assessments/new"
-            className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+            // className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+            className="flex items-center space-x-3 p-4  border-border bg-white dark:bg-slate-700  border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <div className="p-2 bg-blue-100 rounded-lg">
               <ClipboardList className="h-5 w-5 text-blue-600" />
@@ -152,7 +155,8 @@ export default async function CurriculumAssessmentPage() {
 
           <Link
             href="/curriculum-assessment/memorization/track"
-            className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+            //className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+            className="flex items-center space-x-3 p-4  border-border bg-white dark:bg-slate-700  border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <div className="p-2 bg-purple-100 rounded-lg">
               <Brain className="h-5 w-5 text-purple-600" />
@@ -168,7 +172,8 @@ export default async function CurriculumAssessmentPage() {
           {canManage && (
             <Link
               href="/curriculum-assessment/certificates/generate"
-              className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              //className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              className="flex items-center space-x-3 p-4  border-border bg-white dark:bg-slate-700  border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
             >
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <Award className="h-5 w-5 text-yellow-600" />
@@ -249,6 +254,7 @@ export default async function CurriculumAssessmentPage() {
         <Link
           href="/curriculum-assessment/subjects"
           className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all"
+          //className="bg-card border border-border bg-white dark:bg-slate-700  border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
         >
           <div className="flex items-start space-x-4">
             <div className="p-3 bg-primary/10 rounded-lg">

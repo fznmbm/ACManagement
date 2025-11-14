@@ -127,7 +127,9 @@ export default function CertificatesList({
               {certificates.map((cert) => (
                 <tr
                   key={cert.id}
-                  className="hover:bg-muted/30 transition-colors"
+                  //className="hover:bg-muted/30 transition-colors"
+                  //className="form-input bg-background text-foreground border-border"
+                  className="table-row-hover"
                 >
                   <td className="px-6 py-4 text-sm font-mono">
                     {cert.certificate_number}

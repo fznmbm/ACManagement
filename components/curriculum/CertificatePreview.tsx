@@ -53,6 +53,7 @@ export default function CertificatePreview({
 
   const schoolName = schoolInfo?.school_name || "Islamic Education Center";
   const schoolLogo = schoolInfo?.logo_url;
+  console.log(schoolName);
 
   return (
     <div id="certificate-container" className="bg-white">

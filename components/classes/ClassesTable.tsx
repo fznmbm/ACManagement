@@ -80,7 +80,8 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
             {classes.map((classItem) => (
               <tr
                 key={classItem.id}
-                className="hover:bg-muted/30 transition-colors"
+                // className="hover:bg-muted/30 transition-colors"
+                className="table-row-hover"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>

@@ -76,7 +76,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
                 placeholder="Search by name or student number..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <button type="submit" className="btn-primary">
@@ -94,7 +94,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
               onChange={(e) => {
                 setSelectedClass(e.target.value);
               }}
-              className="px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
             >
               <option value="">All Classes</option>
               {classes.map((cls) => (
@@ -110,7 +110,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
               onChange={(e) => {
                 setSelectedStatus(e.target.value);
               }}
-              className="px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -122,7 +122,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
             <button
               type="button"
               onClick={updateFilters}
-              className="btn-secondary"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
               Apply Filters
             </button>
