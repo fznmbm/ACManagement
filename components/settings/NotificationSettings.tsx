@@ -16,24 +16,57 @@ export default function NotificationSettings({
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const notificationEnabled = settings.notification_enabled || {
-    email: true,
-    sms: false,
-    telegram: false,
-  };
+  const notificationData = settings.notifications || {};
 
   const handleSave = async () => {
     setLoading(true);
     setSaved(false);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const form = document.querySelector("form");
+      if (!form) throw new Error("Form not found");
+
+      const formData = new FormData(form);
+      const data: Record<string, any> = {
+        email_enabled: false,
+        sms_enabled: false,
+        telegram_enabled: false,
+        email_daily_summary: false,
+        email_absence_alerts: false,
+        email_low_attendance: false,
+        email_weekly_reports: false,
+      };
+
+      formData.forEach((value, key) => {
+        if (
+          key === "email_enabled" ||
+          key === "sms_enabled" ||
+          key === "telegram_enabled" ||
+          key.startsWith("email_")
+        ) {
+          data[key] = true; // Checkbox checked
+        } else {
+          data[key] = value;
+        }
+      });
+
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: "notifications",
+          data: data,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to save");
+
       setSaved(true);
       router.refresh();
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Failed to save settings");
+      alert("Failed to save settings: " + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -48,7 +81,7 @@ export default function NotificationSettings({
         </p>
       </div>
 
-      <div className="space-y-6">
+      <form className="space-y-6">
         {/* Email Notifications */}
         <div className="border border-border rounded-lg p-4">
           <div className="flex items-start space-x-3 mb-4">
@@ -62,7 +95,8 @@ export default function NotificationSettings({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                defaultChecked={notificationEnabled.email}
+                name="email_enabled"
+                defaultChecked={notificationData.email_enabled}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
@@ -73,7 +107,8 @@ export default function NotificationSettings({
             <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                defaultChecked
+                name="email_daily_summary"
+                defaultChecked={notificationData.email_daily_summary}
                 className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
               />
               <span className="text-sm">Daily attendance summary</span>
@@ -81,7 +116,8 @@ export default function NotificationSettings({
             <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                defaultChecked
+                name="email_absence_alerts"
+                defaultChecked={notificationData.email_absence_alerts}
                 className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
               />
               <span className="text-sm">Absence alerts</span>
@@ -89,7 +125,8 @@ export default function NotificationSettings({
             <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                defaultChecked
+                name="email_low_attendance"
+                defaultChecked={notificationData.email_low_attendance}
                 className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
               />
               <span className="text-sm">Low attendance warnings</span>
@@ -97,6 +134,8 @@ export default function NotificationSettings({
             <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
+                name="email_weekly_reports"
+                defaultChecked={notificationData.email_weekly_reports}
                 className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
               />
               <span className="text-sm">Weekly progress reports</span>
@@ -117,7 +156,8 @@ export default function NotificationSettings({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                defaultChecked={notificationEnabled.sms}
+                name="sms_enabled"
+                defaultChecked={notificationData.sms_enabled}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
@@ -129,6 +169,8 @@ export default function NotificationSettings({
               <label className="form-label text-xs">Twilio Account SID</label>
               <input
                 type="text"
+                name="twilio_account_sid"
+                defaultValue={notificationData.twilio_account_sid}
                 placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 className="form-input text-sm"
               />
@@ -137,6 +179,8 @@ export default function NotificationSettings({
               <label className="form-label text-xs">Twilio Auth Token</label>
               <input
                 type="password"
+                name="twilio_auth_token"
+                defaultValue={notificationData.twilio_auth_token}
                 placeholder="••••••••••••••••••••••••••••••••"
                 className="form-input text-sm"
               />
@@ -145,6 +189,8 @@ export default function NotificationSettings({
               <label className="form-label text-xs">Twilio Phone Number</label>
               <input
                 type="tel"
+                name="twilio_phone"
+                defaultValue={notificationData.twilio_phone}
                 placeholder="+1234567890"
                 className="form-input text-sm"
               />
@@ -165,7 +211,8 @@ export default function NotificationSettings({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                defaultChecked={notificationEnabled.telegram}
+                name="telegram_enabled"
+                defaultChecked={notificationData.telegram_enabled}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
@@ -177,6 +224,8 @@ export default function NotificationSettings({
               <label className="form-label text-xs">Telegram Bot Token</label>
               <input
                 type="text"
+                name="telegram_bot_token"
+                defaultValue={notificationData.telegram_bot_token}
                 placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
                 className="form-input text-sm"
               />
@@ -193,11 +242,22 @@ export default function NotificationSettings({
           <div className="space-y-4">
             <div>
               <label className="form-label">Send daily summary at</label>
-              <input type="time" defaultValue="18:00" className="form-input" />
+              <input
+                type="time"
+                name="daily_summary_time"
+                defaultValue={notificationData.daily_summary_time || "18:00"}
+                className="form-input"
+              />
             </div>
             <div>
               <label className="form-label">Send absence alerts</label>
-              <select className="form-input">
+              <select
+                name="absence_alert_timing"
+                defaultValue={
+                  notificationData.absence_alert_timing || "immediately"
+                }
+                className="form-input"
+              >
                 <option value="immediately">
                   Immediately after attendance is marked
                 </option>
@@ -208,7 +268,7 @@ export default function NotificationSettings({
             </div>
           </div>
         </div>
-      </div>
+      </form>
 
       {/* Save Button */}
       <div className="flex items-center justify-end space-x-4 pt-4 border-t">
