@@ -46,7 +46,12 @@ export default async function AttendancePage({
     searchParams.date || new Date().toISOString().split("T")[0];
 
   // Get students for selected class
-  let students = [];
+  let students: Array<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    student_number: string;
+  }> = [];
   let existingAttendance = [];
 
   if (selectedClassId) {
