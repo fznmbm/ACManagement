@@ -98,7 +98,7 @@ export default function AcademicReportGenerator({
       records: reportData,
       statistics: {
         total: reportData.length,
-        average: calculateAverage(),
+        average: calculateAverage().toString(),
         students: new Set(reportData.map((r: any) => r.student_id)).size,
       },
       filters: appliedFilters,

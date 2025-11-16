@@ -5,7 +5,7 @@ import { formatDate } from "./helpers";
 
 // PDF styling constants
 const COLORS = {
-  primary: [34, 197, 94] as [number, number, number], // Green
+  primary: [34, 197, 94] as [number, number, number],
   secondary: [107, 114, 128] as [number, number, number],
   success: [34, 197, 94] as [number, number, number],
   danger: [239, 68, 68] as [number, number, number],
@@ -753,7 +753,7 @@ export function exportMemorizationToPDF(data: {
 
   let xPos = 20;
   stats.forEach((stat) => {
-    doc.setFillColor(...stat.color);
+    doc.setFillColor(...(stat.color as [number, number, number]));
     doc.rect(xPos, yPos, 55, 20, "F");
 
     doc.setTextColor(255, 255, 255);
@@ -887,7 +887,7 @@ export function exportCertificateToPDF(data: {
 
   let xPos = 20;
   stats.forEach((stat) => {
-    doc.setFillColor(...stat.color);
+    doc.setFillColor(...(stat.color as [number, number, number]));
     doc.rect(xPos, yPos, 80, 20, "F");
 
     doc.setTextColor(255, 255, 255);
