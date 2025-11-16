@@ -58,7 +58,7 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
       const schedule = {
         days: formData.schedule_days
           .split(",")
-          .map((d) => d.trim())
+          .map((d: string) => d.trim())
           .filter(Boolean),
         time: formData.schedule_time,
         room: formData.schedule_room,
