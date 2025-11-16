@@ -146,7 +146,7 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Development Quick Login Buttons */}
+      {/* Development Quick Login Buttons
       <div className="mt-6 pt-6 border-t border-border">
         <p className="text-sm text-muted-foreground text-center mb-3">
           Quick Login (Testing):
@@ -170,7 +170,7 @@ export default function LoginPage() {
         <p className="text-xs text-muted-foreground text-center mt-3">
           Note: Update passwords in the code to match your actual test accounts
         </p>
-      </div>
+      </div> */}
 
       {/* Uncomment when you add registration
       <p className="text-center text-sm text-muted-foreground mt-4">
