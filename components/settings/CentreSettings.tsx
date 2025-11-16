@@ -74,8 +74,6 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
       generalData.logo_url = logoUrl;
       generalData.seal_url = sealUrl;
 
-      console.log("Saving form data:", generalData);
-
       // Save general settings to database
       const response = await fetch("/api/settings", {
         method: "POST",

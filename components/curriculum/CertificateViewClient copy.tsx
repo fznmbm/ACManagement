@@ -1,10 +1,9 @@
+// components/curriculum/CertificateViewClient.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Printer, Download } from "lucide-react";
 import CertificatePreview from "./CertificatePreview";
-import { createClient } from "@/lib/supabase/client";
 
 interface CertificateViewClientProps {
   certificate: any;
@@ -13,42 +12,8 @@ interface CertificateViewClientProps {
 
 export default function CertificateViewClient({
   certificate,
-  schoolInfo: serverSchoolInfo,
+  schoolInfo,
 }: CertificateViewClientProps) {
-  const [schoolInfo, setSchoolInfo] = useState(serverSchoolInfo);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      const supabase = createClient();
-
-      const { data, error } = await supabase
-        .from("system_settings")
-        .select("setting_value")
-        .eq("setting_key", "centre_info")
-        .maybeSingle();
-
-      if (!data) {
-        console.log("❌ No data returned!");
-        return;
-      }
-
-      if (!data.setting_value) {
-        console.log("❌ setting_value is empty!");
-        return;
-      }
-
-      let parsedSettings = data.setting_value;
-
-      if (typeof parsedSettings === "string") {
-        parsedSettings = JSON.parse(parsedSettings);
-      }
-
-      setSchoolInfo(parsedSettings);
-    };
-
-    fetchSettings();
-  }, []);
-
   const handlePrint = () => {
     window.print();
   };

@@ -63,6 +63,7 @@ export default async function DashboardPage() {
       value: totalStudents || 0,
       icon: Users,
       color: "text-blue-600 bg-blue-100",
+      hoverBorderColor: "hover:border-blue-600",
       href: "/students",
     },
     {
@@ -70,6 +71,7 @@ export default async function DashboardPage() {
       value: totalClasses || 0,
       icon: BookOpen,
       color: "text-green-600 bg-green-100",
+      hoverBorderColor: "hover:border-primary",
       href: "/classes",
     },
     {
@@ -77,6 +79,7 @@ export default async function DashboardPage() {
       value: todayAttendance || 0,
       icon: CheckCircle,
       color: "text-purple-600 bg-purple-100",
+      hoverBorderColor: "hover:border-purple-600",
       href: "/attendance",
     },
     {
@@ -84,6 +87,7 @@ export default async function DashboardPage() {
       value: `${attendancePercentage}%`,
       icon: TrendingUp,
       color: "text-orange-600 bg-orange-100",
+      hoverBorderColor: "hover:border-yellow-600",
       href: "/reports",
     },
   ];
@@ -108,7 +112,7 @@ export default async function DashboardPage() {
             <Link
               key={stat.name}
               href={stat.href}
-              className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow"
+              className={`bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer ${stat.hoverBorderColor}`}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -132,18 +136,21 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             href="/attendance"
-            className="flex items-center justify-center px-6 py-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg"
+            //  className="flex items-center justify-center px-6 py-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="btn-primary flex items-center justify-center px-6 py-4 rounded-lg shadow-md hover:shadow-lg"
           >
             Mark Attendance
           </Link>
           <Link
             href="/students?action=new"
+            // className="flex items-center justify-center px-6 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
             className="flex items-center justify-center px-6 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             Add New Student
           </Link>
           <Link
             href="/reports"
+            //className="flex items-center justify-center px-6 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
             className="flex items-center justify-center px-6 py-4 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             Generate Report

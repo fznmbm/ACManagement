@@ -50,8 +50,6 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
         }
       });
 
-      console.log("Saving academic data:", data);
-
       const response = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

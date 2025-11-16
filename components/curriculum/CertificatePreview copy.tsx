@@ -79,7 +79,7 @@ export default function CertificatePreview({
               <img
                 src={schoolLogo}
                 alt="School Logo"
-                className="h-32 w-auto object-contain max-w-[300px]"
+                className="h-24 w-auto object-contain max-w-[200px]"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                   e.currentTarget.nextElementSibling?.classList.remove(
@@ -89,11 +89,11 @@ export default function CertificatePreview({
               />
             ) : null}
             <div
-              className={`h-32 w-32 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-full flex items-center justify-center ${
+              className={`h-24 w-24 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-full flex items-center justify-center ${
                 schoolLogo ? "hidden" : ""
               }`}
             >
-              <Award className="h-16 w-16 text-white" />
+              <Award className="h-12 w-12 text-white" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-1">
@@ -186,7 +186,7 @@ export default function CertificatePreview({
                   <img
                     src={schoolSeal}
                     alt="Official Seal"
-                    className="w-32 h-32 object-contain"
+                    className="w-24 h-24 object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                       e.currentTarget.nextElementSibling?.classList.remove(
@@ -196,11 +196,11 @@ export default function CertificatePreview({
                   />
                 ) : null}
                 <div
-                  className={`w-32 h-32 rounded-full border-4 border-yellow-600 flex items-center justify-center bg-yellow-50 ${
+                  className={`w-24 h-24 rounded-full border-4 border-yellow-600 flex items-center justify-center bg-yellow-50 ${
                     schoolSeal ? "hidden" : ""
                   }`}
                 >
-                  <BadgeCheck className="h-16 w-16 text-yellow-700" />
+                  <BadgeCheck className="h-12 w-12 text-yellow-700" />
                 </div>
                 {!schoolSeal && (
                   <div
@@ -209,9 +209,7 @@ export default function CertificatePreview({
                   />
                 )}
               </div>
-              <p className="text-xs text-gray-600 uppercase tracking-wide font-semibold">
-                Official Seal
-              </p>
+              <p className="text-xs text-gray-600 uppercase">Official Seal</p>
             </div>
 
             <div className="text-center space-y-3">

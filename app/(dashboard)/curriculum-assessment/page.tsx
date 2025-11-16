@@ -66,7 +66,10 @@ export default async function CurriculumAssessmentPage() {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* <div className="bg-card border border-border rounded-lg p-6"> */}
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/curriculum-assessment/subjects"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-primary"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Active Subjects</p>
@@ -74,9 +77,12 @@ export default async function CurriculumAssessmentPage() {
             </div>
             <BookOpen className="h-8 w-8 text-primary" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/curriculum-assessment/assessments"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-blue-600"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Assessments</p>
@@ -84,9 +90,12 @@ export default async function CurriculumAssessmentPage() {
             </div>
             <ClipboardList className="h-8 w-8 text-blue-600" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/curriculum-assessment/memorization"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-purple-600"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
@@ -98,9 +107,12 @@ export default async function CurriculumAssessmentPage() {
             </div>
             <Brain className="h-8 w-8 text-purple-600" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/curriculum-assessment/certificates"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-yellow-600"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
@@ -112,7 +124,7 @@ export default async function CurriculumAssessmentPage() {
             </div>
             <Award className="h-8 w-8 text-yellow-600" />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick Actions */}

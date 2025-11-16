@@ -1,10 +1,11 @@
 // components/curriculum/CertificatesList.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Award, Download, Eye, X } from "lucide-react";
 import { formatDate } from "@/lib/utils/helpers";
 import CertificatePreview from "./CertificatePreview";
+import { createClient } from "@/lib/supabase/client";
 
 interface Certificate {
   id: string;
@@ -41,6 +42,33 @@ export default function CertificatesList({
 }: CertificatesListProps) {
   const [selectedCertificate, setSelectedCertificate] =
     useState<Certificate | null>(null);
+  const [schoolInfo, setSchoolInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "centre_info")
+        .maybeSingle();
+
+      if (data?.setting_value) {
+        let parsedSettings = data.setting_value;
+
+        if (typeof parsedSettings === "string") {
+          parsedSettings = JSON.parse(parsedSettings);
+        }
+
+        setSchoolInfo(parsedSettings);
+      } else {
+        console.log("⚠️ [CertificatesList] No settings found");
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -236,7 +264,7 @@ export default function CertificatesList({
             <div className="p-6">
               <CertificatePreview
                 certificate={selectedCertificate}
-                schoolInfo={null}
+                schoolInfo={schoolInfo}
               />
             </div>
           </div>

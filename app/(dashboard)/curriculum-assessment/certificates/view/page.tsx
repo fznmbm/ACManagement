@@ -48,14 +48,23 @@ export default async function CertificateViewPage({
     notFound();
   }
 
-  // Get system settings for logo
-  const { data: settings } = await supabase
+  // Get centre info settings
+  const { data: centreSettings, error: settingsError } = await supabase
     .from("system_settings")
     .select("setting_value")
-    .eq("setting_key", "school_info")
-    .single();
+    .eq("setting_key", "centre_info")
+    .maybeSingle();
 
-  const schoolInfo = settings?.setting_value as any;
+  let schoolInfo = centreSettings?.setting_value || {};
+  // Parse if it's a string
+  if (typeof schoolInfo === "string") {
+    try {
+      schoolInfo = JSON.parse(schoolInfo);
+    } catch (e) {
+      console.error("Failed to parse settings:", e);
+      schoolInfo = {};
+    }
+  }
 
   return (
     <CertificateViewClient certificate={certificate} schoolInfo={schoolInfo} />

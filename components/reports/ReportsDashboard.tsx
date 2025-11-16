@@ -9,10 +9,18 @@ import {
   Users,
   BookOpen,
   TrendingUp,
+  Brain,
+  Award,
+  AlertTriangle,
 } from "lucide-react";
 import AttendanceReportGenerator from "./AttendanceReportGenerator";
 import StudentReportGenerator from "./StudentReportGenerator";
 import ClassReportGenerator from "./ClassReportGenerator";
+import Link from "next/link";
+import AcademicReportGenerator from "./AcademicReportGenerator";
+import MemorizationReportGenerator from "./MemorizationReportGenerator";
+import CertificateReportGenerator from "./CertificateReportGenerator";
+import LowAttendanceReportGenerator from "./LowAttendanceReportGenerator";
 
 interface ReportsDashboardProps {
   classes: Array<{ id: string; name: string }>;
@@ -30,7 +38,15 @@ interface ReportsDashboardProps {
   userRole: string;
 }
 
-type ReportType = "attendance" | "student" | "class" | "summary" | null;
+type ReportType =
+  | "attendance"
+  | "student"
+  | "class"
+  | "academic"
+  | "memorization"
+  | "certificates"
+  | "low_attendance"
+  | null;
 
 export default function ReportsDashboard({
   classes,
@@ -66,12 +82,32 @@ export default function ReportsDashboard({
       color: "bg-purple-100 text-purple-600",
     },
     {
-      id: "summary" as ReportType,
-      name: "Summary Report",
-      description: "Overall system statistics and analytics (Coming Soon)",
+      id: "academic" as ReportType,
+      name: "Academic Progress Report",
+      description: "Track assessment scores and grades by subject and student",
       icon: TrendingUp,
       color: "bg-orange-100 text-orange-600",
-      disabled: true,
+    },
+    {
+      id: "memorization" as ReportType,
+      name: "Memorization Progress Report",
+      description: "Track Duas, Surahs, and Hadiths completion progress",
+      icon: Brain,
+      color: "bg-indigo-100 text-indigo-600",
+    },
+    {
+      id: "certificates" as ReportType,
+      name: "Certificate Report",
+      description: "List of all issued certificates with student details",
+      icon: Award,
+      color: "bg-yellow-100 text-yellow-600",
+    },
+    {
+      id: "low_attendance" as ReportType,
+      name: "Low Attendance Alert",
+      description: "Students with attendance below threshold percentage",
+      icon: AlertTriangle,
+      color: "bg-red-100 text-red-600",
     },
   ];
 
@@ -79,7 +115,10 @@ export default function ReportsDashboard({
     <div className="space-y-6">
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/students"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-primary"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Students</p>
@@ -87,9 +126,12 @@ export default function ReportsDashboard({
             </div>
             <Users className="h-8 w-8 text-primary" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/classes"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-primary"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Active Classes</p>
@@ -97,9 +139,12 @@ export default function ReportsDashboard({
             </div>
             <BookOpen className="h-8 w-8 text-primary" />
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+        <Link
+          href="/attendance"
+          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all cursor-pointer hover:border-primary"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Last Attendance</p>
@@ -111,7 +156,7 @@ export default function ReportsDashboard({
             </div>
             <Calendar className="h-8 w-8 text-primary" />
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Report Type Selection */}
@@ -120,15 +165,10 @@ export default function ReportsDashboard({
           {reportTypes.map((report) => {
             const Icon = report.icon;
             return (
-              <button
+              <div
                 key={report.id}
-                onClick={() => !report.disabled && setSelectedReport(report.id)}
-                disabled={report.disabled}
-                className={`bg-card border border-border rounded-lg p-6 text-left hover:shadow-lg transition-all ${
-                  report.disabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:border-primary"
-                }`}
+                onClick={() => setSelectedReport(report.id)}
+                className="bg-card border border-border rounded-lg p-6 text-left hover:shadow-lg transition-all cursor-pointer hover:border-primary"
               >
                 <div className="flex items-start space-x-4">
                   <div className={`p-3 rounded-lg ${report.color}`}>
@@ -137,26 +177,19 @@ export default function ReportsDashboard({
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold mb-1">
                       {report.name}
-                      {report.disabled && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          (Coming Soon)
-                        </span>
-                      )}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {report.description}
                     </p>
-                    {!report.disabled && (
-                      <div className="flex items-center space-x-2 mt-3 text-primary">
-                        <FileText className="h-4 w-4" />
-                        <span className="text-sm font-medium">
-                          Generate Report →
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2 mt-3 text-primary">
+                      <FileText className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        Generate Report →
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -183,6 +216,37 @@ export default function ReportsDashboard({
           )}
           {selectedReport === "class" && (
             <ClassReportGenerator classes={classes} />
+          )}
+          {selectedReport === "academic" && (
+            // <div className="text-center py-8 text-muted-foreground">
+            //   <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            //   <p>Academic Progress Report - Coming Soon</p>
+            // </div>
+            <AcademicReportGenerator students={students} classes={classes} />
+          )}
+          {selectedReport === "memorization" && (
+            // <div className="text-center py-8 text-muted-foreground">
+            //   <Brain className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            //   <p>Memorization Progress Report - Coming Soon</p>
+            // </div>
+            <MemorizationReportGenerator students={students} />
+          )}
+          {selectedReport === "certificates" && (
+            // <div className="text-center py-8 text-muted-foreground">
+            //   <Award className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            //   <p>Certificate Report - Coming Soon</p>
+            // </div>
+            <CertificateReportGenerator students={students} />
+          )}
+          {selectedReport === "low_attendance" && (
+            // <div className="text-center py-8 text-muted-foreground">
+            //   <AlertTriangle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            //   <p>Low Attendance Alert Report - Coming Soon</p>
+            // </div>
+            <LowAttendanceReportGenerator
+              classes={classes}
+              students={students}
+            />
           )}
         </div>
       )}

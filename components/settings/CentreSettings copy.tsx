@@ -27,8 +27,6 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
     arabic_name: "مركز النور الإسلامي",
   };
 
-  console.log("Centre Info:", settings);
-
   const [logoUrl, setLogoUrl] = useState(centreInfo.logo_url || "");
   const [sealUrl, setSealUrl] = useState(centreInfo.seal_url || "");
 
