@@ -94,7 +94,7 @@ export default function StudentMemorizationTracker({
         proficiency_rating: proficiencyRating || null,
         teacher_id: user.id,
         ...(status === "learning" &&
-          !existingProgress?.started_date && {
+          !(existingProgress as any)?.started_date && {
             started_date: new Date().toISOString().split("T")[0],
           }),
         ...(status === "memorized" && {
