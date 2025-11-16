@@ -51,7 +51,7 @@ export default function CertificatePreview({
     }
   };
 
-  const schoolName = schoolInfo?.school_name || "Islamic Education Center";
+  const schoolName = schoolInfo?.centre_name || "Islamic Education Center";
   const schoolLogo = schoolInfo?.logo_url;
   const schoolSeal = schoolInfo?.seal_url;
 
@@ -119,7 +119,7 @@ export default function CertificatePreview({
             </p>
 
             {/* Student Name */}
-            <div className="space-y-2">
+            <div className="space-y-3 py-4">
               <h3 className="text-5xl font-serif font-bold text-gray-800 tracking-wide">
                 {studentName}
               </h3>

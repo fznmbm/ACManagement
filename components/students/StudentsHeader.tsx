@@ -52,7 +52,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
         <div>
           <h2 className="text-2xl font-bold">Students</h2>
           <p className="text-muted-foreground">
-            Manage and track all students in your madrasa
+            Manage and track all students in your centre
           </p>
         </div>
         <Link

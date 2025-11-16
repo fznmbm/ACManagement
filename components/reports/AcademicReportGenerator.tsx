@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, TrendingUp } from "lucide-react";
+import { Download, Loader2, TrendingUp, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { exportAcademicToPDF } from "@/lib/utils/pdfExport";
 
 interface AcademicReportGeneratorProps {
   students: Array<{
@@ -75,6 +76,33 @@ export default function AcademicReportGenerator({
       0
     );
     return (total / reportData.length).toFixed(1);
+  };
+
+  const exportToPDF = () => {
+    if (!reportData || reportData.length === 0) return;
+
+    const appliedFilters = {
+      student_name: selectedStudent
+        ? students.find((s) => s.id === selectedStudent)?.first_name +
+          " " +
+          students.find((s) => s.id === selectedStudent)?.last_name
+        : undefined,
+      class_name: selectedClass
+        ? classes.find((c) => c.id === selectedClass)?.name
+        : undefined,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+    };
+
+    exportAcademicToPDF({
+      records: reportData,
+      statistics: {
+        total: reportData.length,
+        average: calculateAverage(),
+        students: new Set(reportData.map((r: any) => r.student_id)).size,
+      },
+      filters: appliedFilters,
+    });
   };
 
   return (
@@ -153,6 +181,16 @@ export default function AcademicReportGenerator({
           </>
         )}
       </button>
+
+      {reportData && (
+        <button
+          onClick={exportToPDF}
+          className="btn-outline flex items-center space-x-2"
+        >
+          <FileText className="h-4 w-4" />
+          <span>Export PDF</span>
+        </button>
+      )}
 
       {/* Report Results */}
       {reportData && (

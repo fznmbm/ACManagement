@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, User, Printer } from "lucide-react";
+import { Download, Loader2, User, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { exportStudentToPDF } from "@/lib/utils/pdfExport";
 
 interface StudentReportGeneratorProps {
   students: Array<{
@@ -204,8 +205,31 @@ export default function StudentReportGenerator({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const exportToPDF = () => {
+    if (!reportData) return;
+
+    exportStudentToPDF({
+      student: reportData.student,
+      attendance: {
+        total: reportData.attendanceStats.total,
+        present: reportData.attendanceStats.present,
+        absent: reportData.attendanceStats.absent,
+        late: reportData.attendanceStats.late,
+        rate: reportData.attendanceStats.percentage,
+        recent: reportData.attendanceRecords,
+      },
+      quranProgress: reportData.memorization.map((item: any) => ({
+        surah_name: item.memorization_items?.title || "N/A",
+        verses_memorized: item.proficiency_rating || 0,
+        verses_total: 5,
+        progress_type: item.status,
+        proficiency_level: item.proficiency_rating
+          ? `${item.proficiency_rating}/5`
+          : "N/A",
+        teacher_notes: item.notes || "",
+      })),
+      academicProgress: reportData.academicProgress,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -272,9 +296,9 @@ export default function StudentReportGenerator({
           </button>
 
           {reportData && (
-            <button onClick={handlePrint} className="btn-outline">
-              <Printer className="h-4 w-4 mr-2" />
-              Print
+            <button onClick={exportToPDF} className="btn-outline">
+              <FileText className="h-4 w-4 mr-2" />
+              Export PDF
             </button>
           )}
         </div>

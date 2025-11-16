@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, Brain } from "lucide-react";
+import { Download, Loader2, Brain, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { exportMemorizationToPDF } from "@/lib/utils/pdfExport";
 
 interface MemorizationReportGeneratorProps {
   students: Array<{
@@ -28,32 +29,62 @@ export default function MemorizationReportGenerator({
     const supabase = createClient();
 
     try {
+      // First get student_memorization data
       let query = supabase
         .from("student_memorization")
-        .select(
-          `
-          *,
-          students (first_name, last_name, student_number),
-          memorization_items (title, title_arabic, item_type)
-        `
-        )
+        .select("*")
         .order("updated_at", { ascending: false });
 
       if (selectedStudent) {
         query = query.eq("student_id", selectedStudent);
       }
-      if (itemType) {
-        query = query.eq("memorization_items.item_type", itemType);
-      }
       if (status) {
         query = query.eq("status", status);
       }
 
-      const { data, error } = await query;
+      const { data: memorizationData, error: memError } = await query;
+      if (memError) throw memError;
 
-      if (error) throw error;
+      if (!memorizationData || memorizationData.length === 0) {
+        setReportData([]);
+        return;
+      }
 
-      setReportData(data);
+      // Get student details
+      const studentIds = [
+        ...new Set(memorizationData.map((m) => m.student_id)),
+      ];
+      const { data: students } = await supabase
+        .from("students")
+        .select("id, first_name, last_name, student_number")
+        .in("id", studentIds);
+
+      // Get memorization items
+      const itemIds = [
+        ...new Set(memorizationData.map((m) => m.memorization_item_id)),
+      ];
+      const { data: items } = await supabase
+        .from("memorization_items")
+        .select("id, title, title_arabic, item_type")
+        .in("id", itemIds);
+
+      // Combine the data
+      const combinedData = memorizationData.map((mem) => ({
+        ...mem,
+        students: students?.find((s) => s.id === mem.student_id),
+        memorization_items: items?.find(
+          (i) => i.id === mem.memorization_item_id
+        ),
+      }));
+
+      // Filter by item type if selected
+      const finalData = itemType
+        ? combinedData.filter(
+            (item) => item.memorization_items?.item_type === itemType
+          )
+        : combinedData;
+
+      setReportData(finalData);
     } catch (error) {
       console.error("Error generating report:", error);
       alert("Failed to generate report");
@@ -78,6 +109,26 @@ export default function MemorizationReportGenerator({
       mastered,
       learning,
     };
+  };
+
+  const exportToPDF = () => {
+    if (!reportData || reportData.length === 0) return;
+
+    const appliedFilters = {
+      student_name: selectedStudent
+        ? students.find((s) => s.id === selectedStudent)?.first_name +
+          " " +
+          students.find((s) => s.id === selectedStudent)?.last_name
+        : undefined,
+      item_type: itemType || undefined,
+      status: status || undefined,
+    };
+
+    exportMemorizationToPDF({
+      records: reportData,
+      statistics: stats,
+      filters: appliedFilters,
+    });
   };
 
   const stats = calculateStats();
@@ -165,6 +216,15 @@ export default function MemorizationReportGenerator({
         )}
       </button>
 
+      {reportData && (
+        <button
+          onClick={exportToPDF}
+          className="btn-outline flex items-center space-x-2"
+        >
+          <FileText className="h-4 w-4" />
+          <span>Export PDF</span>
+        </button>
+      )}
       {/* Report Results */}
       {reportData && (
         <div className="space-y-4">

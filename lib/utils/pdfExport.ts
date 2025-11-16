@@ -5,12 +5,14 @@ import { formatDate } from "./helpers";
 
 // PDF styling constants
 const COLORS = {
-  primary: [34, 197, 94], // Green
-  secondary: [107, 114, 128],
-  success: [34, 197, 94],
-  danger: [239, 68, 68],
-  warning: [249, 115, 22],
-  light: [243, 244, 246],
+  primary: [34, 197, 94] as [number, number, number], // Green
+  secondary: [107, 114, 128] as [number, number, number],
+  success: [34, 197, 94] as [number, number, number],
+  danger: [239, 68, 68] as [number, number, number],
+  warning: [249, 115, 22] as [number, number, number],
+  light: [243, 244, 246] as [number, number, number],
+  purple: [147, 51, 234] as [number, number, number],
+  yellow: [234, 179, 8] as [number, number, number],
 };
 
 /**
@@ -26,7 +28,7 @@ function initializePDF(title: string): jsPDF {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text("Madrasa Attendance System", 105, 20, { align: "center" });
+  doc.text("Attendance & Curriculum System", 105, 20, { align: "center" });
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "normal");
@@ -545,5 +547,513 @@ export function exportClassToPDF(data: {
     `class-report-${data.classInfo.name.replace(/\s+/g, "-")}-${
       new Date().toISOString().split("T")[0]
     }.pdf`
+  );
+}
+
+/**
+ * Export Academic Report to PDF
+ */
+export function exportAcademicToPDF(data: {
+  records: any[];
+  statistics: { total: number; average: string; students: number };
+  filters?: {
+    student_name?: string;
+    class_name?: string;
+    date_from?: string;
+    date_to?: string;
+  };
+}) {
+  const doc = initializePDF("Academic Progress Report");
+
+  let yPos = 50;
+
+  // Report Filters
+  if (data.filters) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Report Filters:", 20, yPos);
+    yPos += 6;
+
+    if (data.filters.student_name) {
+      doc.text(`Student: ${data.filters.student_name}`, 25, yPos);
+      yPos += 5;
+    }
+    if (data.filters.class_name) {
+      doc.text(`Class: ${data.filters.class_name}`, 25, yPos);
+      yPos += 5;
+    }
+    if (data.filters.date_from && data.filters.date_to) {
+      doc.text(
+        `Date Range: ${formatDate(data.filters.date_from)} to ${formatDate(
+          data.filters.date_to
+        )}`,
+        25,
+        yPos
+      );
+      yPos += 5;
+    }
+    yPos += 5;
+  }
+
+  // Summary Statistics
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary Statistics", 20, yPos);
+  yPos += 8;
+
+  const stats = [
+    {
+      label: "Total Assessments",
+      value: data.statistics.total,
+      color: COLORS.secondary,
+    },
+    {
+      label: "Average Score",
+      value: `${data.statistics.average}%`,
+      color: COLORS.primary,
+    },
+    {
+      label: "Students",
+      value: data.statistics.students,
+      color: COLORS.success,
+    },
+  ];
+
+  let xPos = 20;
+  stats.forEach((stat) => {
+    doc.setFillColor(...stat.color);
+    doc.rect(xPos, yPos, 55, 20, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(stat.value), xPos + 27.5, yPos + 10, { align: "center" });
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(stat.label, xPos + 27.5, yPos + 16, { align: "center" });
+
+    xPos += 60;
+  });
+
+  yPos += 30;
+
+  // Assessment Records Table
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Assessment Records", 20, yPos);
+  yPos += 5;
+
+  const tableData = data.records.map((record) => [
+    formatDate(record.assessment_date, "short"),
+    record.students
+      ? `${record.students.first_name} ${record.students.last_name}`
+      : "N/A",
+    record.subjects?.name || "N/A",
+    record.assessment_type || "N/A",
+    record.score && record.max_score
+      ? `${record.score}/${record.max_score}`
+      : "N/A",
+    `${record.percentage}%`,
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [["Date", "Student", "Subject", "Type", "Score", "Percentage"]],
+    body: tableData,
+    theme: "striped",
+    headStyles: {
+      fillColor: COLORS.primary,
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    columnStyles: {
+      0: { cellWidth: 28 },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 35 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 25 },
+      5: { cellWidth: 27 },
+    },
+    didDrawPage: (data) => {
+      const pageCount = doc.getNumberOfPages();
+      addFooter(doc, data.pageNumber, pageCount);
+    },
+  });
+
+  doc.save(`academic-report-${new Date().toISOString().split("T")[0]}.pdf`);
+}
+
+/**
+ * Export Memorization Report to PDF
+ */
+export function exportMemorizationToPDF(data: {
+  records: any[];
+  statistics: { total: number; mastered: number; learning: number };
+  filters?: {
+    student_name?: string;
+    item_type?: string;
+    status?: string;
+  };
+}) {
+  const doc = initializePDF("Memorization Progress Report");
+
+  let yPos = 50;
+
+  // Report Filters
+  if (data.filters) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Report Filters:", 20, yPos);
+    yPos += 6;
+
+    if (data.filters.student_name) {
+      doc.text(`Student: ${data.filters.student_name}`, 25, yPos);
+      yPos += 5;
+    }
+    if (data.filters.item_type) {
+      doc.text(`Type: ${data.filters.item_type}`, 25, yPos);
+      yPos += 5;
+    }
+    if (data.filters.status) {
+      doc.text(`Status: ${data.filters.status}`, 25, yPos);
+      yPos += 5;
+    }
+    yPos += 5;
+  }
+
+  // Summary Statistics
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary Statistics", 20, yPos);
+  yPos += 8;
+
+  const stats = [
+    {
+      label: "Total Items",
+      value: data.statistics.total,
+      color: COLORS.secondary,
+    },
+    {
+      label: "Mastered",
+      value: data.statistics.mastered,
+      color: [147, 51, 234],
+    }, // purple
+    {
+      label: "In Progress",
+      value: data.statistics.learning,
+      color: COLORS.primary,
+    },
+  ];
+
+  let xPos = 20;
+  stats.forEach((stat) => {
+    doc.setFillColor(...stat.color);
+    doc.rect(xPos, yPos, 55, 20, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(stat.value), xPos + 27.5, yPos + 10, { align: "center" });
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(stat.label, xPos + 27.5, yPos + 16, { align: "center" });
+
+    xPos += 60;
+  });
+
+  yPos += 30;
+
+  // Memorization Records Table
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Memorization Progress Records", 20, yPos);
+  yPos += 5;
+
+  const tableData = data.records.map((record) => [
+    record.students
+      ? `${record.students.first_name} ${record.students.last_name}`
+      : "N/A",
+    record.memorization_items?.title || "N/A",
+    record.memorization_items?.item_type || "N/A",
+    record.status ? record.status.replace("_", " ") : "N/A",
+    record.proficiency_rating ? `${record.proficiency_rating}/5` : "N/A",
+    formatDate(record.updated_at, "short"),
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [
+      ["Student", "Item", "Type", "Status", "Proficiency", "Last Updated"],
+    ],
+    body: tableData,
+    theme: "striped",
+    headStyles: {
+      fillColor: COLORS.primary,
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    columnStyles: {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 30 },
+      4: { cellWidth: 25 },
+      5: { cellWidth: 25 },
+    },
+    didDrawPage: (data) => {
+      const pageCount = doc.getNumberOfPages();
+      addFooter(doc, data.pageNumber, pageCount);
+    },
+  });
+
+  doc.save(`memorization-report-${new Date().toISOString().split("T")[0]}.pdf`);
+}
+
+/**
+ * Export Certificate Report to PDF
+ */
+export function exportCertificateToPDF(data: {
+  records: any[];
+  statistics: { total: number; students: number };
+  filters?: {
+    student_name?: string;
+    certificate_type?: string;
+    date_from?: string;
+    date_to?: string;
+  };
+}) {
+  const doc = initializePDF("Certificate Report");
+
+  let yPos = 50;
+
+  // Report Filters
+  if (data.filters) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Report Filters:", 20, yPos);
+    yPos += 6;
+
+    if (data.filters.student_name) {
+      doc.text(`Student: ${data.filters.student_name}`, 25, yPos);
+      yPos += 5;
+    }
+    if (data.filters.certificate_type) {
+      doc.text(`Type: ${data.filters.certificate_type}`, 25, yPos);
+      yPos += 5;
+    }
+    if (data.filters.date_from && data.filters.date_to) {
+      doc.text(
+        `Date Range: ${formatDate(data.filters.date_from)} to ${formatDate(
+          data.filters.date_to
+        )}`,
+        25,
+        yPos
+      );
+      yPos += 5;
+    }
+    yPos += 5;
+  }
+
+  // Summary Statistics
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Summary Statistics", 20, yPos);
+  yPos += 8;
+
+  const stats = [
+    {
+      label: "Total Certificates",
+      value: data.statistics.total,
+      color: [234, 179, 8], // yellow
+    },
+    {
+      label: "Students",
+      value: data.statistics.students,
+      color: COLORS.primary,
+    },
+  ];
+
+  let xPos = 20;
+  stats.forEach((stat) => {
+    doc.setFillColor(...stat.color);
+    doc.rect(xPos, yPos, 80, 20, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(stat.value), xPos + 40, yPos + 10, { align: "center" });
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(stat.label, xPos + 40, yPos + 16, { align: "center" });
+
+    xPos += 85;
+  });
+
+  yPos += 30;
+
+  // Certificate Records Table
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Certificate Records", 20, yPos);
+  yPos += 5;
+
+  const tableData = data.records.map((record) => [
+    record.certificate_number || "N/A",
+    record.students
+      ? `${record.students.first_name} ${record.students.last_name}`
+      : "N/A",
+    record.certificate_type
+      ? record.certificate_type.replace(/_/g, " ")
+      : "N/A",
+    formatDate(record.issue_date, "short"),
+    record.details || "-",
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [["Certificate #", "Student", "Type", "Issue Date", "Details"]],
+    body: tableData,
+    theme: "striped",
+    headStyles: {
+      fillColor: COLORS.primary,
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    columnStyles: {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 40 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 37 },
+    },
+    didDrawPage: (data) => {
+      const pageCount = doc.getNumberOfPages();
+      addFooter(doc, data.pageNumber, pageCount);
+    },
+  });
+
+  doc.save(`certificate-report-${new Date().toISOString().split("T")[0]}.pdf`);
+}
+
+/**
+ * Export Low Attendance Report to PDF
+ */
+export function exportLowAttendanceToPDF(data: {
+  records: any[];
+  threshold: number;
+}) {
+  const doc = initializePDF("Low Attendance Alert Report");
+
+  let yPos = 50;
+
+  // Alert Banner
+  doc.setFillColor(239, 68, 68); // red
+  doc.rect(20, yPos, 170, 15, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `ALERT: ${data.records.length} Student${
+      data.records.length !== 1 ? "s" : ""
+    } Below ${data.threshold}% Attendance`,
+    105,
+    yPos + 10,
+    { align: "center" }
+  );
+
+  yPos += 25;
+
+  // Description
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(
+    "These students require immediate attention and follow-up with parents.",
+    20,
+    yPos
+  );
+  yPos += 10;
+
+  // Student Records Table
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Student Details", 20, yPos);
+  yPos += 5;
+
+  const tableData = data.records.map((record) => [
+    record.student_number || "N/A",
+    record.first_name && record.last_name
+      ? `${record.first_name} ${record.last_name}`
+      : "N/A",
+    record.className || "N/A",
+    `${record.percentage}%`,
+    `${record.present}/${record.total}`,
+    String(record.absent),
+    record.parent_name || "N/A",
+    record.parent_phone || "N/A",
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [
+      [
+        "Student #",
+        "Name",
+        "Class",
+        "Rate",
+        "Present/Total",
+        "Absent",
+        "Parent",
+        "Phone",
+      ],
+    ],
+    body: tableData,
+    theme: "striped",
+    headStyles: {
+      fillColor: COLORS.danger,
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+    },
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 35 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 18, fontStyle: "bold" },
+      4: { cellWidth: 22 },
+      5: { cellWidth: 18 },
+      6: { cellWidth: 25 },
+      7: { cellWidth: 25 },
+    },
+    didDrawPage: (data) => {
+      const pageCount = doc.getNumberOfPages();
+      addFooter(doc, data.pageNumber, pageCount);
+    },
+  });
+
+  doc.save(
+    `low-attendance-alert-${new Date().toISOString().split("T")[0]}.pdf`
   );
 }

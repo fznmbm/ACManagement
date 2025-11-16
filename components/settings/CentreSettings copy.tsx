@@ -78,7 +78,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
       <div>
         <h3 className="text-lg font-semibold mb-4">Centre Information</h3>
         <p className="text-sm text-muted-foreground">
-          Configure your madrasa or Islamic centre details
+          Configure your Islamic centre details
         </p>
       </div>
 

@@ -150,23 +150,26 @@ export default function AttendanceReportGenerator({
   const exportToPDF = () => {
     if (!reportData) return;
 
-    const filters = {
+    const appliedFilters = {
       class_name: filters.class_id
-        ? classes.find((c) => c.id === filters.class_id)?.name
+        ? classes.find((c) => c.id === filters.class_id)?.name || null
         : null,
       student_name: filters.student_id
-        ? students.find((s) => s.id === filters.student_id)?.first_name +
-          " " +
-          students.find((s) => s.id === filters.student_id)?.last_name
+        ? (() => {
+            const student = students.find((s) => s.id === filters.student_id);
+            return student
+              ? `${student.first_name} ${student.last_name}`
+              : null;
+          })()
         : null,
-      from_date: filters.from_date,
-      to_date: filters.to_date,
+      from_date: filters.from_date || null,
+      to_date: filters.to_date || null,
     };
 
     exportAttendanceToPDF({
       records: reportData.records,
       statistics: reportData.statistics,
-      filters: filters,
+      filters: appliedFilters,
     });
   };
 

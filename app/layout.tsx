@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Madrasa Attendance System",
+  title: "Attendance & Curriculum System",
   description:
     "Comprehensive attendance and management system for Islamic educational centres",
   keywords: [

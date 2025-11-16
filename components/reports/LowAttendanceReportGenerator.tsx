@@ -2,9 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, AlertTriangle } from "lucide-react";
+import { Download, Loader2, AlertTriangle, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { exportLowAttendanceToPDF } from "@/lib/utils/pdfExport";
 
 interface LowAttendanceReportGeneratorProps {
   classes: Array<{ id: string; name: string }>;
@@ -26,6 +27,15 @@ export default function LowAttendanceReportGenerator({
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [reportData, setReportData] = useState<any>(null);
+
+  const exportToPDF = () => {
+    if (!reportData || reportData.length === 0) return;
+
+    exportLowAttendanceToPDF({
+      records: reportData,
+      threshold: parseFloat(threshold),
+    });
+  };
 
   const generateReport = async () => {
     setLoading(true);
@@ -201,6 +211,16 @@ export default function LowAttendanceReportGenerator({
           </>
         )}
       </button>
+
+      {reportData && reportData.length > 0 && (
+        <button
+          onClick={exportToPDF}
+          className="btn-outline flex items-center space-x-2"
+        >
+          <FileText className="h-4 w-4" />
+          <span>Export PDF</span>
+        </button>
+      )}
 
       {/* Report Results */}
       {reportData && (

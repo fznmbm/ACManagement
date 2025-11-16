@@ -100,7 +100,7 @@ export default async function DashboardPage() {
           Welcome back, {profile?.full_name}!
         </h2>
         <p className="text-muted-foreground mt-1">
-          Here's what's happening with your madrasa today.
+          Here's what's happening with your centre today.
         </p>
       </div>
 

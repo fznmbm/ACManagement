@@ -2,9 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, Award } from "lucide-react";
+import { Download, Loader2, Award, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { exportCertificateToPDF } from "@/lib/utils/pdfExport";
 
 interface CertificateReportGeneratorProps {
   students: Array<{
@@ -74,6 +75,32 @@ export default function CertificateReportGenerator({
       year_completion: "Year Completion",
     };
     return types[type] || type;
+  };
+
+  const exportToPDF = () => {
+    if (!reportData || reportData.length === 0) return;
+
+    const appliedFilters = {
+      student_name: selectedStudent
+        ? students.find((s) => s.id === selectedStudent)?.first_name +
+          " " +
+          students.find((s) => s.id === selectedStudent)?.last_name
+        : undefined,
+      certificate_type: certificateType
+        ? getCertificateTypeName(certificateType)
+        : undefined,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+    };
+
+    exportCertificateToPDF({
+      records: reportData,
+      statistics: {
+        total: reportData.length,
+        students: new Set(reportData.map((r: any) => r.student_id)).size,
+      },
+      filters: appliedFilters,
+    });
   };
 
   return (
@@ -153,6 +180,16 @@ export default function CertificateReportGenerator({
           </>
         )}
       </button>
+
+      {reportData && (
+        <button
+          onClick={exportToPDF}
+          className="btn-outline flex items-center space-x-2"
+        >
+          <FileText className="h-4 w-4" />
+          <span>Export PDF</span>
+        </button>
+      )}
 
       {/* Report Results */}
       {reportData && (

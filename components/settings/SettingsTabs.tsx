@@ -40,7 +40,10 @@ export default function SettingsTabs({
   ];
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
+    <div
+      suppressHydrationWarning
+      className="bg-card border border-border rounded-lg overflow-hidden"
+    >
       {/* Tabs */}
       <div className="border-b border-border">
         <div className="flex overflow-x-auto">
