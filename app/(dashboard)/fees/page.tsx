@@ -36,8 +36,15 @@ export default function FeesPage() {
   const [dateToFilter, setDateToFilter] = useState("");
   const [feeTypeFilter, setFeeTypeFilter] = useState("");
 
-  const [students, setStudents] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState<
+    {
+      id: string;
+      first_name: string;
+      last_name: string;
+      student_number: string;
+    }[]
+  >([]);
+  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
 
   const supabase = createClient();
 
@@ -531,8 +538,15 @@ export default function FeesPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-xs">
-                        <p>{formatDate(invoice.period_start)}</p>
-                        <p>to {formatDate(invoice.period_end)}</p>
+                        <p>{invoice.period_name}</p>
+                        <p>({formatDate(invoice.period_start)}</p>
+                        <p>to {formatDate(invoice.period_end)})</p>
+                        {/* <p>
+                          {invoice.period_name ||
+                            `${formatDate(
+                              invoice.period_start
+                            )} to ${formatDate(invoice.period_end)}`}
+                        </p> */}
                       </div>
                     </td>
                     <td className="px-4 py-3">

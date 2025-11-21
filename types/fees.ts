@@ -16,6 +16,7 @@ export interface FeeInvoice {
   fee_structure_id: string;
   period_start: string;
   period_end: string;
+  period_name?: string; // Add this line
   due_date: string;
   amount_due: number;
   amount_paid: number;

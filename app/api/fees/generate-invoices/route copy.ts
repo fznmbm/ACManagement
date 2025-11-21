@@ -6,20 +6,10 @@ interface FeeStructure {
   frequency: string;
   due_day: number;
   amount: number;
-  use_custom_quarters?: boolean;
 }
 
 interface Assignment {
   student_id: string;
-  fee_structures: FeeStructure;
-}
-
-interface Quarter {
-  id: string;
-  quarter_number: number;
-  quarter_name: string;
-  start_month: number;
-  end_month: number;
 }
 
 export async function POST() {
@@ -44,36 +34,15 @@ export async function POST() {
     const currentDate = new Date();
     const errors = [];
 
-    // Get custom quarters for quarterly fee structures
-    const { data: customQuarters, error: quartersError } = await supabase
-      .from("fee_quarter_settings")
-      .select("*")
-      .eq("is_active", true)
-      .order("quarter_number");
-
-    if (quartersError) {
-      console.error("Error fetching quarters:", quartersError);
-    }
-
     for (const assignment of assignments) {
       try {
         const structure = assignment.fee_structures;
 
         // Calculate period dates
-        const periodResult = await calculatePeriod(
+        const { periodStart, periodEnd, dueDate } = calculatePeriod(
           structure,
-          currentDate,
-          customQuarters || []
+          currentDate
         );
-
-        if (!periodResult) {
-          errors.push(
-            `Failed to calculate period for student ${assignment.student_id}`
-          );
-          continue;
-        }
-
-        const { periodStart, periodEnd, dueDate, periodName } = periodResult;
 
         // Check if invoice already exists for this period
         const { data: existingInvoice } = await supabase
@@ -108,7 +77,6 @@ export async function POST() {
               fee_structure_id: structure.id,
               period_start: periodStart,
               period_end: periodEnd,
-              period_name: periodName, // Add period name for custom quarters
               due_date: dueDate,
               amount_due: structure.amount,
               amount_paid: 0,
@@ -125,7 +93,7 @@ export async function POST() {
             totalGenerated++;
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error processing assignment:", error);
         errors.push(`Error processing assignment: ${error.message}`);
       }
@@ -146,23 +114,13 @@ export async function POST() {
   }
 }
 
-async function calculatePeriod(
-  structure: FeeStructure,
-  currentDate: Date,
-  customQuarters: Quarter[]
-): Promise<{
-  periodStart: string;
-  periodEnd: string;
-  dueDate: string;
-  periodName: string;
-} | null> {
+function calculatePeriod(structure: FeeStructure, currentDate: Date) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth(); // 0-11
 
   let periodStart: string;
   let periodEnd: string;
   let dueDate: string;
-  let periodName: string;
 
   switch (structure.frequency) {
     case "monthly":
@@ -172,55 +130,25 @@ async function calculatePeriod(
       dueDate = new Date(year, month, Math.min(structure.due_day || 5, 28))
         .toISOString()
         .split("T")[0];
-      periodName = `${getMonthName(month)} ${year}`;
       break;
 
     case "quarterly":
-      if (structure.use_custom_quarters && customQuarters.length > 0) {
-        // Use custom quarters
-        const currentQuarter = getCurrentCustomQuarter(
-          currentDate,
-          customQuarters
-        );
-        if (!currentQuarter) {
-          console.error("Could not determine current custom quarter");
-          return null;
-        }
-
-        const quarterDates = getCustomQuarterDateRange(currentQuarter, year);
-        periodStart = quarterDates.startDate.toISOString().split("T")[0];
-        periodEnd = quarterDates.endDate.toISOString().split("T")[0];
-        dueDate = new Date(quarterDates.startDate.getTime())
-          .toISOString()
-          .split("T")[0];
-
-        // Handle cross-year quarters
-        const endYear =
-          currentQuarter.start_month > currentQuarter.end_month
-            ? year + 1
-            : year;
-        periodName = `${currentQuarter.quarter_name} ${year}${
-          endYear !== year ? "/" + endYear : ""
-        }`;
-      } else {
-        // Use standard calendar quarters
-        const currentQuarter = Math.floor(month / 3); // 0,1,2,3
-        const quarterStartMonth = currentQuarter * 3;
-        periodStart = new Date(year, quarterStartMonth, 1)
-          .toISOString()
-          .split("T")[0];
-        periodEnd = new Date(year, quarterStartMonth + 3, 0)
-          .toISOString()
-          .split("T")[0];
-        dueDate = new Date(
-          year,
-          quarterStartMonth,
-          Math.min(structure.due_day || 15, 28)
-        )
-          .toISOString()
-          .split("T")[0];
-        periodName = `Q${currentQuarter + 1} ${year}`;
-      }
+      // Current quarter
+      const currentQuarter = Math.floor(month / 3); // 0,1,2,3
+      const quarterStartMonth = currentQuarter * 3;
+      periodStart = new Date(year, quarterStartMonth, 1)
+        .toISOString()
+        .split("T")[0];
+      periodEnd = new Date(year, quarterStartMonth + 3, 0)
+        .toISOString()
+        .split("T")[0];
+      dueDate = new Date(
+        year,
+        quarterStartMonth,
+        Math.min(structure.due_day || 15, 28)
+      )
+        .toISOString()
+        .split("T")[0];
       break;
 
     case "annually":
@@ -230,7 +158,6 @@ async function calculatePeriod(
       dueDate = new Date(year, 0, Math.min(structure.due_day || 15, 31))
         .toISOString()
         .split("T")[0]; // Due in January
-      periodName = `Academic Year ${year}`;
       break;
 
     case "one_time":
@@ -240,7 +167,6 @@ async function calculatePeriod(
       dueDate = new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0]; // Due in 30 days
-      periodName = `One-time Fee ${year}`;
       break;
 
     default:
@@ -249,65 +175,7 @@ async function calculatePeriod(
       dueDate = new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
-      periodName = `Custom Fee ${year}`;
   }
 
-  return { periodStart, periodEnd, dueDate, periodName };
-}
-
-function getCurrentCustomQuarter(
-  date: Date,
-  quarters: Quarter[]
-): Quarter | null {
-  const month = date.getMonth() + 1; // JavaScript months are 0-based
-
-  return (
-    quarters.find((quarter) => {
-      const { start_month, end_month } = quarter;
-
-      if (start_month <= end_month) {
-        // Normal quarter (e.g., March to May)
-        return month >= start_month && month <= end_month;
-      } else {
-        // Cross-year quarter (e.g., December to February)
-        return month >= start_month || month <= end_month;
-      }
-    }) || null
-  );
-}
-
-function getCustomQuarterDateRange(
-  quarter: Quarter,
-  year: number
-): { startDate: Date; endDate: Date } {
-  const startDate = new Date(year, quarter.start_month - 1, 1);
-
-  let endYear = year;
-  if (quarter.start_month > quarter.end_month) {
-    // Cross-year quarter - end month is in the next year
-    endYear = year + 1;
-  }
-
-  // Last day of the end month
-  const endDate = new Date(endYear, quarter.end_month, 0);
-
-  return { startDate, endDate };
-}
-
-function getMonthName(month: number): string {
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  return monthNames[month];
+  return { periodStart, periodEnd, dueDate };
 }
