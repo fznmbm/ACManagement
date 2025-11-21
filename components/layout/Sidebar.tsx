@@ -15,6 +15,8 @@ import {
   Settings,
   GraduationCap,
   BookMarked,
+  Coins,
+  Receipt,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -76,6 +78,18 @@ export default function Sidebar({ profile }: SidebarProps) {
       href: "/reports",
       icon: BarChart3,
       roles: ["super_admin", "admin", "teacher"],
+    },
+    {
+      name: "Fine Management",
+      href: "/fines",
+      icon: Coins,
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: "Fee Management",
+      href: "/fees",
+      icon: Receipt,
+      roles: ["admin", "super_admin"],
     },
     {
       name: "Settings",

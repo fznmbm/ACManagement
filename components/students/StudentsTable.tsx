@@ -3,7 +3,16 @@
 
 import Link from "next/link";
 import { formatDate, calculateAge } from "@/lib/utils/helpers";
-import { Eye, Edit, Trash2 } from "lucide-react";
+//import { Eye, Edit, Trash2 } from "lucide-react";
+import FeeIndicator from "@/components/fees/FeeIndicator";
+import FineIndicator from "@/components/fines/FineIndicator";
+import { useFees } from "@/hooks/useFees";
+import { useFines } from "@/hooks/useFines";
+import FeePaymentModal from "@/components/fees/FeePaymentModal";
+import FineCollectionModal from "@/components/fines/FineCollectionModal";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import StudentActionButtons from "./StudentActionButtons";
 
 interface Student {
   id: string;
@@ -22,9 +31,26 @@ interface Student {
 
 interface StudentsTableProps {
   students: Student[];
+  onStudentUpdated: () => void;
 }
 
-export default function StudentsTable({ students }: StudentsTableProps) {
+export default function StudentsTable({
+  students,
+  onStudentUpdated,
+}: StudentsTableProps) {
+  const { getStudentFees, refreshFees } = useFees();
+  const { getStudentFines, refreshFines } = useFines();
+  const [showFeeModal, setShowFeeModal] = useState(false);
+  const [showFineModal, setShowFineModal] = useState(false);
+  const [selectedStudentForFees, setSelectedStudentForFees] =
+    useState<any>(null);
+  const [selectedStudentForFines, setSelectedStudentForFines] =
+    useState<any>(null);
+  const [studentFeeInvoices, setStudentFeeInvoices] = useState([]);
+  const [studentFineDetails, setStudentFineDetails] = useState([]);
+
+  const supabase = createClient();
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       active: "bg-green-100 text-green-800",
@@ -47,6 +73,59 @@ export default function StudentsTable({ students }: StudentsTableProps) {
       </div>
     );
   }
+
+  const handleOpenFeeCollection = async (student: any) => {
+    try {
+      const { data, error } = await supabase
+        .from("fee_invoices")
+        .select(
+          `
+        *,
+        fee_structures (name, frequency)
+      `
+        )
+        .eq("student_id", student.id)
+        .in("status", ["pending", "partial", "overdue"])
+        .order("due_date", { ascending: true });
+
+      if (error) throw error;
+
+      setSelectedStudentForFees({
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        student_number: student.student_number,
+      });
+      setStudentFeeInvoices(data || []);
+      setShowFeeModal(true);
+    } catch (error) {
+      console.error("Error fetching student fees:", error);
+    }
+  };
+
+  const handleOpenFineCollection = async (student: any) => {
+    try {
+      const { data, error } = await supabase
+        .from("fines")
+        .select("*")
+        .eq("student_id", student.id)
+        .eq("status", "pending")
+        .order("issued_date", { ascending: false });
+
+      if (error) throw error;
+
+      setSelectedStudentForFines({
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        student_number: student.student_number,
+      });
+      setStudentFineDetails(data || []);
+      setShowFineModal(true);
+    } catch (error) {
+      console.error("Error fetching student fines:", error);
+    }
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -93,10 +172,34 @@ export default function StudentsTable({ students }: StudentsTableProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <p className="text-sm font-medium">
-                      {student.first_name} {student.last_name}
-                    </p>
+                  <div className="flex items-center space-x-3">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {student.first_name} {student.last_name}
+                      </p>
+                    </div>
+
+                    {/* Fee Indicator */}
+                    <FeeIndicator
+                      pendingInvoices={
+                        getStudentFees(student.id).pending_invoices
+                      }
+                      overdueInvoices={
+                        getStudentFees(student.id).overdue_invoices
+                      }
+                      outstandingAmount={
+                        getStudentFees(student.id).outstanding_amount
+                      }
+                      onClick={() => handleOpenFeeCollection(student)} // CHANGED
+                      size="sm"
+                    />
+                    {/* Fine Indicator */}
+                    <FineIndicator
+                      pendingFines={getStudentFines(student.id).pending_fines}
+                      pendingAmount={getStudentFines(student.id).pending_amount}
+                      onClick={() => handleOpenFineCollection(student)}
+                      size="sm"
+                    />
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -110,7 +213,7 @@ export default function StudentsTable({ students }: StudentsTableProps) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {student.classes?.name || (
                     <span className="text-muted-foreground italic">
-                      No class
+                      ⚠️ Unassigned
                     </span>
                   )}
                 </td>
@@ -127,7 +230,7 @@ export default function StudentsTable({ students }: StudentsTableProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <div className="flex items-center space-x-2">
+                  {/* <div className="flex items-center space-x-2">
                     <Link
                       href={`/students/${student.id}`}
                       className="p-1 hover:bg-accent rounded"
@@ -158,7 +261,12 @@ export default function StudentsTable({ students }: StudentsTableProps) {
                     >
                       <Trash2 className="h-4 w-4 text-red-600" />
                     </button>
-                  </div>
+                  </div> */}
+
+                  <StudentActionButtons
+                    student={student}
+                    onStudentUpdated={onStudentUpdated}
+                  />
                 </td>
               </tr>
             ))}
@@ -173,6 +281,35 @@ export default function StudentsTable({ students }: StudentsTableProps) {
         </p>
         {/* Add pagination controls here later */}
       </div>
+
+      {/* Fee Payment Modal */}
+      {selectedStudentForFees && (
+        <FeePaymentModal
+          isOpen={showFeeModal}
+          onClose={() => setShowFeeModal(false)}
+          student={selectedStudentForFees}
+          invoices={studentFeeInvoices}
+          onSuccess={() => {
+            setShowFeeModal(false);
+            // Could refresh data here
+          }}
+        />
+      )}
+
+      {/* Fine Collection Modal */}
+      {selectedStudentForFines && (
+        <FineCollectionModal
+          isOpen={showFineModal}
+          onClose={() => setShowFineModal(false)}
+          student={selectedStudentForFines}
+          fines={studentFineDetails}
+          onSuccess={() => {
+            setShowFineModal(false);
+            refreshFees();
+            refreshFines();
+          }}
+        />
+      )}
     </div>
   );
 }

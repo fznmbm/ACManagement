@@ -13,6 +13,14 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils/helpers";
+import FineIndicator from "@/components/fines/FineIndicator";
+import FineCollectionModal from "@/components/fines/FineCollectionModal";
+import { useFines } from "@/hooks/useFines";
+import { Fine, StudentFineData } from "@/types/fines";
+import FeeIndicator from "@/components/fees/FeeIndicator";
+import FeePaymentModal from "@/components/fees/FeePaymentModal";
+import { useFees } from "@/hooks/useFees";
+import { FeeInvoice } from "@/types/fees";
 
 interface Student {
   id: string;
@@ -38,6 +46,23 @@ interface AttendanceMarkingInterfaceProps {
   userRole: string;
 }
 
+// interface FineDetail {
+//   id: string;
+//   fine_type: string;
+//   amount: number;
+//   status: string;
+//   issued_date: string;
+//   paid_date?: string;
+//   attendance_record_id: string;
+// }
+
+// interface SelectedStudent {
+//   id: string;
+//   first_name: string;
+//   last_name: string;
+//   student_number: string;
+// }
+
 type AttendanceStatus = "present" | "absent" | "late" | "excused" | "sick";
 
 export default function AttendanceMarkingInterface({
@@ -57,6 +82,22 @@ export default function AttendanceMarkingInterface({
   const [notesMap, setNotesMap] = useState<Map<string, string>>(new Map());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const [selectedStudentForFines, setSelectedStudentForFines] =
+    useState<StudentFineData | null>(null);
+  const [showFineModal, setShowFineModal] = useState(false);
+  const [studentFineDetails, setStudentFineDetails] = useState<Fine[]>([]);
+
+  const { getStudentFines, fetchStudentFineDetails, refreshFines } = useFines();
+
+  const [selectedStudentForFees, setSelectedStudentForFees] =
+    useState<StudentData | null>(null);
+  const [showFeeModal, setShowFeeModal] = useState(false);
+  const [studentFeeInvoices, setStudentFeeInvoices] = useState<FeeInvoice[]>(
+    []
+  );
+
+  const { getStudentFees, fetchStudentInvoices, refreshFees } = useFees();
 
   // Initialize attendance from existing data
   useEffect(() => {
@@ -130,7 +171,7 @@ export default function AttendanceMarkingInterface({
         student_id: student.id,
         class_id: selectedClassId,
         date: selectedDate,
-        status: attendanceMap.get(student.id) || "absent",
+        status: attendanceMap.get(student.id) || "present",
         session_type: "regular",
         notes: notesMap.get(student.id) || null,
         marked_by: user?.id,
@@ -153,11 +194,45 @@ export default function AttendanceMarkingInterface({
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       router.refresh();
+      refreshFines();
+      refreshFees(); // add this
     } catch (error) {
       console.error("Error saving attendance:", error);
       alert("Failed to save attendance. Please try again.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOpenFineCollection = async (student: any) => {
+    try {
+      const fineDetails = await fetchStudentFineDetails(student.id);
+      setSelectedStudentForFines({
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        student_number: student.student_number,
+      });
+      setStudentFineDetails(fineDetails);
+      setShowFineModal(true);
+    } catch (error) {
+      console.error("Error fetching student fines:", error);
+    }
+  };
+
+  const handleOpenFeeCollection = async (student: any) => {
+    try {
+      const invoices = await fetchStudentInvoices(student.id);
+      setSelectedStudentForFees({
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        student_number: student.student_number,
+      });
+      setStudentFeeInvoices(invoices);
+      setShowFeeModal(true);
+    } catch (error) {
+      console.error("Error fetching student fees:", error);
     }
   };
 
@@ -318,6 +393,27 @@ export default function AttendanceMarkingInterface({
                           #{student.student_number}
                         </p>
                       </div>
+                      {/* Fine Indicator */}
+                      <FineIndicator
+                        pendingFines={getStudentFines(student.id).pending_fines}
+                        pendingAmount={
+                          getStudentFines(student.id).pending_amount
+                        }
+                        onClick={() => handleOpenFineCollection(student)}
+                      />
+                      {/* Fee Indicator */}
+                      <FeeIndicator
+                        pendingInvoices={
+                          getStudentFees(student.id).pending_invoices
+                        }
+                        overdueInvoices={
+                          getStudentFees(student.id).overdue_invoices
+                        }
+                        outstandingAmount={
+                          getStudentFees(student.id).outstanding_amount
+                        }
+                        onClick={() => handleOpenFeeCollection(student)}
+                      />
                     </div>
 
                     {/* Status Buttons */}
@@ -393,6 +489,32 @@ export default function AttendanceMarkingInterface({
             )}
           </button>
         </div>
+      )}
+
+      {selectedStudentForFines && (
+        <FineCollectionModal
+          isOpen={showFineModal}
+          onClose={() => setShowFineModal(false)}
+          student={selectedStudentForFines}
+          fines={studentFineDetails}
+          onSuccess={() => {
+            refreshFines();
+            setShowFineModal(false);
+          }}
+        />
+      )}
+
+      {selectedStudentForFees && (
+        <FeePaymentModal
+          isOpen={showFeeModal}
+          onClose={() => setShowFeeModal(false)}
+          student={selectedStudentForFees}
+          invoices={studentFeeInvoices}
+          onSuccess={() => {
+            refreshFees();
+            setShowFeeModal(false);
+          }}
+        />
       )}
     </div>
   );

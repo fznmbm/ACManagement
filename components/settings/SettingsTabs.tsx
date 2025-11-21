@@ -9,12 +9,16 @@ import {
   Users,
   Building2,
   Shield,
+  Coins,
+  Receipt,
 } from "lucide-react";
 import GeneralSettings from "./GeneralSettings";
 import AcademicSettings from "./AcademicSettings";
 import NotificationSettings from "./NotificationSettings";
 import UserManagement from "./UserManagement";
 import CentreSettings from "./CentreSettings";
+import FineSettings from "./FineSettings";
+import FeeSettings from "./FeeSettings";
 
 interface SettingsTabsProps {
   initialSettings: Record<string, any>;
@@ -22,7 +26,14 @@ interface SettingsTabsProps {
   currentUserId: string;
 }
 
-type TabId = "general" | "academic" | "notifications" | "users" | "centre";
+type TabId =
+  | "general"
+  | "academic"
+  | "notifications"
+  | "users"
+  | "centre"
+  | "fines"
+  | "fees";
 
 export default function SettingsTabs({
   initialSettings,
@@ -37,6 +48,8 @@ export default function SettingsTabs({
     { id: "notifications" as TabId, name: "Notifications", icon: Bell },
     { id: "users" as TabId, name: "Users", icon: Users },
     { id: "centre" as TabId, name: "Centre Info", icon: Building2 },
+    { id: "fines" as TabId, name: "Fine Settings", icon: Coins }, // Add this
+    { id: "fees" as TabId, name: "Fee Settings", icon: Receipt }, // Add this
   ];
 
   return (
@@ -84,6 +97,8 @@ export default function SettingsTabs({
         {activeTab === "centre" && (
           <CentreSettings settings={initialSettings} />
         )}
+        {activeTab === "fines" && <FineSettings />}
+        {activeTab === "fees" && <FeeSettings />}
       </div>
     </div>
   );

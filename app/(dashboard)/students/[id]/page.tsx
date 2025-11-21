@@ -13,6 +13,12 @@ import {
 } from "lucide-react";
 import { formatDate, calculateAge } from "@/lib/utils/helpers";
 
+import StudentFeeAssignment from "@/components/fees/StudentFeeAssignment";
+import FeeIndicator from "@/components/fees/FeeIndicator";
+import { useFees } from "@/hooks/useFees";
+import StudentProfileClient from "@/components/students/StudentProfileClient";
+import StudentFeeHistory from "@/components/students/StudentFeeHistory";
+
 export default async function StudentDetailPage({
   params,
 }: {
@@ -35,7 +41,8 @@ export default async function StudentDetailPage({
         id,
         name,
         level
-      )
+      ),
+       status_changed_by:profiles!students_status_changed_by_fkey (full_name)
     `
     )
     .eq("id", params.id)
@@ -155,7 +162,7 @@ export default async function StudentDetailPage({
                 <p className="text-sm text-muted-foreground">Gender</p>
                 <p className="font-medium capitalize">{student.gender}</p>
               </div>
-              <div>
+              {/* <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -166,6 +173,33 @@ export default async function StudentDetailPage({
                 >
                   {student.status}
                 </span>
+              </div> */}
+              {/* Status Information Section */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Status
+                </label>
+                <div className="mt-1">
+                  <span
+                    className={`
+      px-3 py-1 text-sm font-medium rounded-full
+      ${
+        student.status === "active"
+          ? "bg-green-100 text-green-800"
+          : student.status === "withdrawn"
+          ? "bg-red-100 text-red-800"
+          : student.status === "graduated"
+          ? "bg-blue-100 text-blue-800"
+          : "bg-yellow-100 text-yellow-800"
+      }
+    `}
+                  >
+                    {student.status.charAt(0).toUpperCase() +
+                      student.status.slice(1)}
+                    {student.withdrawal_date &&
+                      ` since ${formatDate(student.withdrawal_date)}`}
+                  </span>
+                </div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Enrollment Date</p>
@@ -314,6 +348,22 @@ export default async function StudentDetailPage({
               <p className="text-muted-foreground">No class assigned</p>
             )}
           </div>
+
+          {/* ADD THE FEE INFORMATION SECTION RIGHT HERE */}
+          <StudentProfileClient studentId={student.id} />
+
+          {/* Fee History & Status - ADD THIS */}
+          <StudentFeeHistory studentId={student.id} />
+          {/* Fee Information - ADD THIS NEW SECTION
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Fee Information</h3>
+            <StudentFeeAssignment
+              studentId={student.id}
+              onUpdate={() => {
+                // Could add refresh logic here if needed
+              }}
+            />
+          </div> */}
 
           {/* Attendance Statistics */}
           <div className="bg-card border border-border rounded-lg p-6">
