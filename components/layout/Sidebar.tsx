@@ -17,6 +17,7 @@ import {
   BookMarked,
   Coins,
   Receipt,
+  FileText,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -43,6 +44,12 @@ export default function Sidebar({ profile }: SidebarProps) {
       href: "/students",
       icon: Users,
       roles: ["super_admin", "admin", "teacher"],
+    },
+    {
+      name: "Applications",
+      href: "/applications",
+      icon: FileText,
+      roles: ["super_admin", "admin"],
     },
     {
       name: "Classes",

@@ -11,6 +11,7 @@ import {
   Shield,
   Coins,
   Receipt,
+  FileText,
 } from "lucide-react";
 import GeneralSettings from "./GeneralSettings";
 import AcademicSettings from "./AcademicSettings";
@@ -19,6 +20,7 @@ import UserManagement from "./UserManagement";
 import CentreSettings from "./CentreSettings";
 import FineSettings from "./FineSettings";
 import FeeSettings from "./FeeSettings";
+import ApplicationSettings from "@/components/settings/ApplicationSettings";
 
 interface SettingsTabsProps {
   initialSettings: Record<string, any>;
@@ -33,7 +35,8 @@ type TabId =
   | "users"
   | "centre"
   | "fines"
-  | "fees";
+  | "fees"
+  | "applications";
 
 export default function SettingsTabs({
   initialSettings,
@@ -50,6 +53,11 @@ export default function SettingsTabs({
     { id: "centre" as TabId, name: "Centre Info", icon: Building2 },
     { id: "fines" as TabId, name: "Fine Settings", icon: Coins }, // Add this
     { id: "fees" as TabId, name: "Fee Settings", icon: Receipt }, // Add this
+    {
+      id: "applications" as TabId,
+      name: "Applications Settings",
+      icon: FileText,
+    }, // Add this
   ];
 
   return (
@@ -99,6 +107,7 @@ export default function SettingsTabs({
         )}
         {activeTab === "fines" && <FineSettings />}
         {activeTab === "fees" && <FeeSettings />}
+        {activeTab === "applications" && <ApplicationSettings />}
       </div>
     </div>
   );

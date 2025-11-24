@@ -42,7 +42,12 @@ export default async function AuthLayout({
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">{centreName}</h1>
+          <h1
+            className="text-3xl font-bold text-primary mb-2"
+            suppressHydrationWarning
+          >
+            {centreName}
+          </h1>
           <p className="text-muted-foreground">
             Islamic Educational Centre Management
           </p>
