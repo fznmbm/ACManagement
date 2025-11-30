@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendApplicationAcceptedEmail } from "@/lib/email/send-application-email";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export async function POST(
   request: NextRequest,
@@ -138,6 +139,9 @@ export async function POST(
         reviewed_by: user.id,
         review_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        converted_to_student_id: newStudent.id, // ← ADD THIS LINE
+        converted_at: new Date().toISOString(), // ← ADD THIS LINE
+        converted_by: user.id, // ← ADD THIS LINE
       })
       .eq("id", application.id);
 
@@ -152,18 +156,101 @@ export async function POST(
       .from("student_consents")
       .insert({
         student_id: newStudent.id,
-        consent_type: "photo_video",
-        consent_granted: application.photo_consent !== "none",
-        consent_level: application.photo_consent,
-        parent_name: application.parent_name,
-        granted_date:
-          application.photo_consent_granted_date || new Date().toISOString(),
-        academic_year: application.academic_year,
+        photo_consent: application.photo_consent !== "none",
+        consent_date:
+          application.photo_consent_granted_date ||
+          new Date().toISOString().split("T")[0],
       });
 
     if (consentError) {
       console.error("Error creating consent record:", consentError);
       // Don't fail the whole operation if consent fails
+    }
+
+    // ============================================
+    // CREATE PARENT PROFILE & LINK
+    // ============================================
+    let parentUserId = null;
+
+    // Create service role client for admin operations
+    const supabaseAdmin = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
+    // Check if parent profile already exists
+    const { data: existingParent } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", application.parent_email)
+      .single();
+
+    parentUserId = existingParent?.id;
+
+    if (!existingParent && application.parent_email) {
+      // Create auth user for parent using admin API with service role
+      const { data: authUser, error: authError } =
+        await supabaseAdmin.auth.admin.createUser({
+          email: application.parent_email,
+          email_confirm: true,
+          user_metadata: {
+            full_name: application.parent_name,
+            role: "parent",
+          },
+        });
+
+      if (authError) {
+        console.error("Error creating parent auth user:", authError);
+        // Don't fail - parent can be created later manually
+      } else {
+        parentUserId = authUser.user.id;
+
+        // Create parent profile
+        const { error: profileError } = await supabaseAdmin
+          .from("profiles")
+          .insert({
+            id: parentUserId,
+            email: application.parent_email,
+            full_name: application.parent_name,
+            role: "parent",
+            phone: application.parent_phone,
+            is_active: true,
+          });
+
+        if (profileError) {
+          console.error("Error creating parent profile:", profileError);
+        } else {
+          console.log("✅ Parent profile created:", application.parent_email);
+        }
+      }
+    }
+
+    // Create parent-student link
+    if (parentUserId) {
+      const { error: linkError } = await supabase
+        .from("parent_student_links")
+        .insert({
+          parent_user_id: parentUserId,
+          student_id: newStudent.id,
+          relationship: "parent",
+          is_primary: true,
+          can_view_attendance: true,
+          can_view_grades: true,
+          can_view_financial: true,
+          can_receive_notifications: true,
+        });
+
+      if (linkError) {
+        console.error("Error creating parent-student link:", linkError);
+      } else {
+        console.log("✅ Parent-student link created");
+      }
     }
 
     // Send acceptance email - NEW EMAIL INTEGRATION
@@ -190,6 +277,9 @@ export async function POST(
     console.log(`Application: ${application.application_number}`);
     console.log(`Student Created: ${studentNumber}`);
     console.log(`Parent Email: ${application.parent_email}`);
+    console.log(
+      `Parent Account: ${parentUserId ? "Created/Linked" : "Pending"}`
+    );
     console.log(`Status Updated: accepted`);
     console.log("===========================");
 
@@ -200,6 +290,8 @@ export async function POST(
         student_number: studentNumber,
         student_id: newStudent.id,
         application_status: "accepted", // Confirm status
+        parent_created: !!parentUserId,
+        parent_user_id: parentUserId,
       },
       { status: 200 }
     );

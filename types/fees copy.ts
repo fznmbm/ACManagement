@@ -3,11 +3,10 @@ export interface FeeStructure {
   name: string;
   amount: number;
   frequency: "monthly" | "quarterly" | "annually" | "one_time";
-  description?: string | null;
+  description?: string;
   is_active: boolean;
   due_day: number;
   grace_period_days: number;
-  use_custom_quarters?: boolean;
 }
 
 export interface FeeInvoice {
@@ -17,13 +16,13 @@ export interface FeeInvoice {
   fee_structure_id: string;
   period_start: string;
   period_end: string;
-  period_name?: string | null;
+  period_name?: string; // Add this line
   due_date: string;
   amount_due: number;
   amount_paid: number;
   status: "pending" | "partial" | "paid" | "overdue" | "cancelled";
   generated_date: string;
-  notes?: string | null;
+  notes?: string;
   students?: {
     first_name: string;
     last_name: string;
@@ -38,12 +37,12 @@ export interface FeeInvoice {
 export interface FeePayment {
   id: string;
   invoice_id: string;
-  payment_reference?: string | null;
+  payment_reference?: string;
   amount: number;
   payment_date: string;
   payment_method: "cash" | "card" | "bank_transfer" | "cheque" | "online";
-  collected_by?: string | null;
-  notes?: string | null;
+  collected_by?: string;
+  notes?: string;
 }
 
 export interface StudentFeeData {
@@ -59,37 +58,4 @@ export interface StudentData {
   first_name: string;
   last_name: string;
   student_number: string;
-}
-
-// Parent portal interfaces
-export interface ParentInvoice {
-  id: string;
-  invoice_number: string;
-  invoice_date: string;
-  due_date: string;
-  amount: number;
-  status: "paid" | "pending" | "overdue";
-  paid_date?: string | null;
-  payment_method?: string | null;
-  description?: string | null;
-  student: {
-    first_name: string;
-    last_name: string;
-    student_number: string;
-  };
-}
-
-export interface ParentFeeInvoice {
-  id: string;
-  invoice_number: string;
-  amount: number;
-  paid_amount: number;
-  balance: number;
-  status: "pending" | "paid" | "partially_paid" | "overdue";
-  issue_date: string;
-  due_date: string;
-  billing_period_start: string;
-  billing_period_end: string;
-  description?: string | null;
-  fee_payments: FeePayment[];
 }

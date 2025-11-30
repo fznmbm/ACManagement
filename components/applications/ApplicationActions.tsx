@@ -10,6 +10,8 @@ interface Application {
   status: string;
   child_first_name: string;
   child_last_name: string;
+  parent_email?: string;
+  converted_to_student_id?: string;
 }
 
 interface ApplicationActionsProps {
@@ -167,13 +169,81 @@ export default function ApplicationActions({
               </>
             )}
           </button>
-        ) : application.status === "accepted" ? (
-          <div className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-center">
-            <CheckCircle className="h-5 w-5 text-green-600 mx-auto mb-1" />
-            <p className="text-sm font-medium text-green-800 dark:text-green-400">
-              Application Accepted
-            </p>
-          </div>
+        ) : // ) : application.status === "accepted" ? (
+        //   <div className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-center">
+        //     <CheckCircle className="h-5 w-5 text-green-600 mx-auto mb-1" />
+        //     <p className="text-sm font-medium text-green-800 dark:text-green-400">
+        //       Application Accepted
+        //     </p>
+        //   </div>
+        // ) : null}
+        application.status === "accepted" ? (
+          <>
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-center">
+              <CheckCircle className="h-5 w-5 text-green-600 mx-auto mb-1" />
+              <p className="text-sm font-medium text-green-800 dark:text-green-400">
+                Application Accepted
+              </p>
+            </div>
+
+            {/* Send Parent Login Details Button */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                Parent account ready. Send login details when ready.
+              </p>
+              <button
+                onClick={async () => {
+                  // Check if student ID exists
+                  if (!(application as any).converted_to_student_id) {
+                    setError(
+                      "Student record not found. Please refresh and try again."
+                    );
+                    return;
+                  }
+
+                  setIsProcessing(true);
+                  setError("");
+                  try {
+                    const response = await fetch(
+                      "/api/parent/send-login-details",
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          parentEmail: (application as any).parent_email,
+                          studentId: (application as any)
+                            .converted_to_student_id,
+                        }),
+                      }
+                    );
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                      alert("✅ Login details sent to parent!");
+                    } else {
+                      setError(data.error || "Failed to send login details");
+                    }
+                  } catch (err) {
+                    setError("Error sending login details");
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}
+                disabled={isProcessing}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "📧 Send Parent Login Details"
+                )}
+              </button>
+            </div>
+          </>
         ) : null}
 
         {/* Reject Button - Show for pending, under_review, AND waitlist */}
