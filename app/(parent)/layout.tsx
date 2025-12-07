@@ -15,7 +15,10 @@ import {
   Moon,
   Users,
   CreditCard,
+  MessageSquare,
+  Calendar,
 } from "lucide-react";
+import { useParentNotifications } from "@/hooks/useParentNotifications";
 
 interface ParentLayoutProps {
   children: React.ReactNode;
@@ -30,6 +33,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { unreadMessages, newEvents } = useParentNotifications();
 
   // useEffect(() => {
   //   const checkUser = async () => {
@@ -138,11 +142,28 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   };
 
   const navigation = [
-    { name: "Dashboard", href: "/parent/dashboard", icon: Home },
-    { name: "My Children", href: "/parent/children", icon: Users },
-    { name: "Finances", href: "/parent/finances", icon: CreditCard },
-    { name: "Applications", href: "/parent/applications", icon: FileText },
-    { name: "Profile", href: "/parent/profile", icon: User },
+    { name: "Dashboard", href: "/parent/dashboard", icon: Home, badge: 0 },
+    { name: "My Children", href: "/parent/children", icon: Users, badge: 0 },
+    {
+      name: "Messages",
+      href: "/parent/messages",
+      icon: MessageSquare,
+      badge: unreadMessages,
+    },
+    {
+      name: "Events",
+      href: "/parent/events",
+      icon: Calendar,
+      badge: newEvents,
+    },
+    { name: "Finances", href: "/parent/finances", icon: CreditCard, badge: 0 },
+    {
+      name: "Applications",
+      href: "/parent/applications",
+      icon: FileText,
+      badge: 0,
+    },
+    { name: "Profile", href: "/parent/profile", icon: User, badge: 0 },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -187,7 +208,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
                     isActive(item.href)
                       ? "bg-primary text-white"
                       : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
@@ -195,6 +216,11 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
                 >
                   <item.icon className="h-4 w-4 mr-2" />
                   {item.name}
+                  {item.badge > 0 && (
+                    <span className="ml-auto px-2 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               ))}
             </nav>

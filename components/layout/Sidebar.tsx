@@ -18,6 +18,9 @@ import {
   Coins,
   Receipt,
   FileText,
+  MessageSquare,
+  Calendar,
+  Bell,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -73,6 +76,24 @@ export default function Sidebar({ profile }: SidebarProps) {
           href: "/attendance/history",
         },
       ],
+    },
+    {
+      name: "Messages",
+      href: "/messages",
+      icon: MessageSquare,
+      roles: ["super_admin", "admin", "teacher"],
+    },
+    {
+      name: "Events",
+      href: "/events",
+      icon: Calendar,
+      roles: ["super_admin", "admin", "teacher", "parent"],
+    },
+    {
+      name: "Alerts",
+      href: "/alerts",
+      icon: Bell,
+      roles: ["super_admin", "admin"],
     },
     {
       name: "Curriculum & Assessment",
