@@ -1,4 +1,5 @@
 // app/(dashboard)/classes/[id]/page.tsx
+
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -352,12 +353,24 @@ export default async function ClassDetailPage({
               >
                 Mark Attendance
               </Link>
+
+              {/* ADD THIS NEW BUTTON 👇 */}
+              <Link
+                href={`/classes/${classData.id}/feedback`}
+                className="block w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
+              >
+                📝 Send End of Class Feedback
+              </Link>
+
+              {/* View Attendance History Button */}
               <Link
                 href={`/attendance/history?class=${classData.id}`}
                 className="btn-outline w-full"
               >
                 View Attendance History
               </Link>
+
+              {/* Manage Students Button */}
               <Link
                 href={`/students?class=${classData.id}`}
                 className="btn-outline w-full"

@@ -90,6 +90,12 @@ export default function Sidebar({ profile }: SidebarProps) {
       roles: ["super_admin", "admin", "teacher", "parent"],
     },
     {
+      name: "Notifications",
+      href: "/notifications",
+      icon: Bell,
+      roles: ["super_admin", "admin"],
+    },
+    {
       name: "Alerts",
       href: "/alerts",
       icon: Bell,

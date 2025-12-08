@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Calendar, Clock, MapPin, Filter, AlertCircle } from "lucide-react";
+import WhatsAppEventModal from "@/components/events/WhatsAppEventModal";
 
 interface Event {
   id: string;
@@ -12,6 +14,7 @@ interface Event {
   end_time: string | null;
   location: string | null;
   event_type: "holiday" | "exam" | "meeting" | "celebration" | "general";
+  priority: "normal" | "urgent" | "critical";
   show_to_all: boolean;
   visible_to_parents: boolean;
   created_at: string;
@@ -20,11 +23,25 @@ interface Event {
   };
 }
 
+interface Class {
+  id: string;
+  name: string;
+}
+
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [userRole, setUserRole] = useState("");
+
+  // WhatsApp modal states
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [createdEvent, setCreatedEvent] = useState<Event | null>(null);
+
+  // Filter states
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -35,13 +52,16 @@ export default function EventsPage() {
     end_time: "",
     location: "",
     event_type: "general" as Event["event_type"],
+    priority: "normal" as Event["priority"],
     show_to_all: true,
+    class_id: "",
     visible_to_parents: true,
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadEvents();
+    loadClasses();
     loadUserRole();
   }, []);
 
@@ -61,6 +81,22 @@ export default function EventsPage() {
       }
     } catch (error) {
       console.error("Error loading user role:", error);
+    }
+  }
+
+  async function loadClasses() {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("classes")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+
+      if (error) throw error;
+      setClasses(data || []);
+    } catch (error) {
+      console.error("Error loading classes:", error);
     }
   }
 
@@ -106,14 +142,41 @@ export default function EventsPage() {
 
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("events").insert({
-        ...formData,
+      const eventData: any = {
+        title: formData.title,
+        description: formData.description || null,
+        event_date: formData.event_date,
+        event_time: formData.event_time || null,
+        end_time: formData.end_time || null,
+        location: formData.location || null,
+        event_type: formData.event_type,
+        priority: formData.priority,
+        show_to_all: formData.show_to_all,
+        visible_to_parents: formData.visible_to_parents,
         created_by: user.id,
-      });
+      };
+
+      // Add class_id only if not show_to_all
+      if (!formData.show_to_all && formData.class_id) {
+        eventData.class_id = formData.class_id;
+      }
+
+      const { data: newEvent, error } = await supabase
+        .from("events")
+        .insert(eventData)
+        .select()
+        .single();
 
       if (error) throw error;
 
-      alert("Event created successfully!");
+      // Store created event and show WhatsApp modal
+      setCreatedEvent({
+        ...newEvent,
+        description: newEvent.description || null,
+      });
+      setShowWhatsAppModal(true);
+
+      // Reset form
       setShowForm(false);
       setFormData({
         title: "",
@@ -123,9 +186,12 @@ export default function EventsPage() {
         end_time: "",
         location: "",
         event_type: "general",
+        priority: "normal",
         show_to_all: true,
+        class_id: "",
         visible_to_parents: true,
       });
+
       loadEvents();
     } catch (error: any) {
       console.error("Error creating event:", error);
@@ -177,7 +243,38 @@ export default function EventsPage() {
     return colors[type];
   }
 
+  function getPriorityBadge(priority: Event["priority"]) {
+    const badges = {
+      normal: {
+        text: "Normal",
+        classes:
+          "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
+        icon: null,
+      },
+      urgent: {
+        text: "Urgent",
+        classes:
+          "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
+        icon: "⚠️",
+      },
+      critical: {
+        text: "Critical",
+        classes: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
+        icon: "🚨",
+      },
+    };
+    return badges[priority];
+  }
+
   const canCreateEvent = ["super_admin", "admin", "teacher"].includes(userRole);
+
+  // Filter events
+  const filteredEvents = events.filter((event) => {
+    if (filterType !== "all" && event.event_type !== filterType) return false;
+    if (filterPriority !== "all" && event.priority !== filterPriority)
+      return false;
+    return true;
+  });
 
   return (
     <div className="p-6">
@@ -200,6 +297,46 @@ export default function EventsPage() {
               {showForm ? "Cancel" : "+ Create Event"}
             </button>
           )}
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 p-4 border border-input rounded-lg bg-card">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filters</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Event Type
+              </label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+              >
+                <option value="all">All Types</option>
+                <option value="general">General</option>
+                <option value="holiday">Holiday</option>
+                <option value="exam">Exam</option>
+                <option value="meeting">Meeting</option>
+                <option value="celebration">Celebration</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Priority</label>
+              <select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+              >
+                <option value="all">All Priorities</option>
+                <option value="normal">Normal</option>
+                <option value="urgent">Urgent</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Create Event Form */}
@@ -248,6 +385,30 @@ export default function EventsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
+                    Priority *
+                  </label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        priority: e.target.value as Event["priority"],
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="urgent">Urgent ⚠️</option>
+                    <option value="critical">Critical 🚨</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Urgent/Critical events send priority notifications to
+                    parents
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
                     Date *
                   </label>
                   <input
@@ -285,7 +446,7 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium mb-2">
                     Location
                   </label>
@@ -315,7 +476,47 @@ export default function EventsPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 space-y-3">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.show_to_all}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          show_to_all: e.target.checked,
+                          class_id: e.target.checked ? "" : formData.class_id,
+                        })
+                      }
+                      className="rounded"
+                    />
+                    <span className="text-sm">
+                      School-wide event (all classes)
+                    </span>
+                  </label>
+
+                  {!formData.show_to_all && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Specific Class
+                      </label>
+                      <select
+                        value={formData.class_id}
+                        onChange={(e) =>
+                          setFormData({ ...formData, class_id: e.target.value })
+                        }
+                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                      >
+                        <option value="">Select a class</option>
+                        {classes.map((cls) => (
+                          <option key={cls.id} value={cls.id}>
+                            {cls.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -358,62 +559,121 @@ export default function EventsPage() {
           <div className="text-center py-12 text-muted-foreground">
             Loading events...
           </div>
-        ) : events.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            No upcoming events
+            {events.length === 0
+              ? "No upcoming events"
+              : "No events match the selected filters"}
           </div>
         ) : (
           <div className="space-y-4">
-            {events.map((event) => (
-              <div
-                key={event.id}
-                className="p-6 border border-input rounded-lg bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span
-                        className={`px-3 py-1 text-xs font-medium rounded-full ${getEventTypeColor(
-                          event.event_type
-                        )}`}
-                      >
-                        {event.event_type.charAt(0).toUpperCase() +
-                          event.event_type.slice(1)}
-                      </span>
-                      {event.classes && (
-                        <span className="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
-                          {event.classes.name}
+            {filteredEvents.map((event) => {
+              const priorityBadge = getPriorityBadge(event.priority);
+              return (
+                <div
+                  key={event.id}
+                  className="p-6 border border-input rounded-lg bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${getEventTypeColor(
+                            event.event_type
+                          )}`}
+                        >
+                          {event.event_type.charAt(0).toUpperCase() +
+                            event.event_type.slice(1)}
                         </span>
+
+                        {event.priority !== "normal" && (
+                          <span
+                            className={`px-3 py-1 text-xs font-medium rounded-full ${priorityBadge.classes}`}
+                          >
+                            {priorityBadge.icon} {priorityBadge.text}
+                          </span>
+                        )}
+
+                        {event.classes && (
+                          <span className="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
+                            {event.classes.name}
+                          </span>
+                        )}
+
+                        {event.show_to_all && (
+                          <span className="px-3 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100">
+                            School-wide
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-semibold mb-1">
+                        {event.title}
+                      </h3>
+                      <div className="text-sm text-muted-foreground mb-2 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>{formatDate(event.event_date)}</span>
+                        </div>
+                        {event.event_time && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            <span>
+                              {event.event_time}
+                              {event.end_time && ` - ${event.end_time}`}
+                            </span>
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{event.location}</span>
+                          </div>
+                        )}
+                      </div>
+                      {event.description && (
+                        <p className="text-muted-foreground mt-2">
+                          {event.description}
+                        </p>
                       )}
                     </div>
-                    <h3 className="text-xl font-semibold mb-1">
-                      {event.title}
-                    </h3>
-                    <div className="text-sm text-muted-foreground mb-2">
-                      📅 {formatDate(event.event_date)}
-                      {event.event_time && ` • 🕐 ${event.event_time}`}
-                      {event.end_time && ` - ${event.end_time}`}
-                      {event.location && ` • 📍 ${event.location}`}
-                    </div>
-                    {event.description && (
-                      <p className="text-muted-foreground mt-2">
-                        {event.description}
-                      </p>
+
+                    {canCreateEvent && (
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => {
+                            setCreatedEvent(event);
+                            setShowWhatsAppModal(true);
+                          }}
+                          className="px-3 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors whitespace-nowrap"
+                        >
+                          📱 WhatsApp
+                        </button>
+                        <button
+                          onClick={() => handleDelete(event.id)}
+                          className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
-
-                  {canCreateEvent && (
-                    <button
-                      onClick={() => handleDelete(event.id)}
-                      className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                    >
-                      Delete
-                    </button>
-                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+        )}
+
+        {/* WhatsApp Modal */}
+        {createdEvent && (
+          <WhatsAppEventModal
+            isOpen={showWhatsAppModal}
+            onClose={() => {
+              setShowWhatsAppModal(false);
+              setCreatedEvent(null);
+            }}
+            event={createdEvent}
+            isClassSpecific={!createdEvent.show_to_all}
+          />
         )}
       </div>
     </div>

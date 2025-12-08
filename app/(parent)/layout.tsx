@@ -15,10 +15,11 @@ import {
   Moon,
   Users,
   CreditCard,
-  MessageSquare,
   Calendar,
+  Bell,
 } from "lucide-react";
-import { useParentNotifications } from "@/hooks/useParentNotifications";
+// CHANGE 1: Replace old hook with new unified hook
+import { useUnifiedNotifications } from "@/hooks/useUnifiedNotifications";
 
 interface ParentLayoutProps {
   children: React.ReactNode;
@@ -33,48 +34,9 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const { unreadMessages, newEvents } = useParentNotifications();
 
-  // useEffect(() => {
-  //   const checkUser = async () => {
-  //     const {
-  //       data: { session },
-  //     } = await supabase.auth.getSession();
-
-  //     if (!session) {
-  //       router.push("/parent/login");
-  //       return;
-  //     }
-
-  //     // Check if user is a parent
-  //     const { data: profile } = await supabase
-  //       .from("profiles")
-  //       .select("*")
-  //       .eq("id", session.user.id)
-  //       .single();
-
-  //     if (!profile || profile.role !== "parent") {
-  //       await supabase.auth.signOut();
-  //       router.push("/parent/login");
-  //       return;
-  //     }
-
-  //     setUser(profile);
-  //     setLoading(false);
-  //   };
-
-  //   checkUser();
-
-  //   // Check theme
-  //   const savedTheme = localStorage.getItem("parent-theme") as
-  //     | "light"
-  //     | "dark"
-  //     | null;
-  //   if (savedTheme) {
-  //     setTheme(savedTheme);
-  //     document.documentElement.classList.toggle("dark", savedTheme === "dark");
-  //   }
-  // }, []);
+  // CHANGE 2: Use new unified notifications hook
+  const { counts } = useUnifiedNotifications();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -141,20 +103,22 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
     router.push("/parent/login");
   };
 
+  // CHANGE 3: Updated navigation - single Inbox instead of 3 separate tabs
   const navigation = [
     { name: "Dashboard", href: "/parent/dashboard", icon: Home, badge: 0 },
     { name: "My Children", href: "/parent/children", icon: Users, badge: 0 },
     {
-      name: "Messages",
-      href: "/parent/messages",
-      icon: MessageSquare,
-      badge: unreadMessages,
+      name: "Inbox", // RENAMED from "Notifications"
+      href: "/parent/inbox", // CHANGED from "/parent/notifications"
+      icon: Bell,
+      badge: counts.total, // CHANGED: unified badge count
     },
+    // REMOVED: Messages tab (merged into Inbox)
     {
-      name: "Events",
+      name: "Calendar", // RENAMED from "Events"
       href: "/parent/events",
       icon: Calendar,
-      badge: newEvents,
+      badge: 0, // REMOVED: no badge on calendar
     },
     { name: "Finances", href: "/parent/finances", icon: CreditCard, badge: 0 },
     {
@@ -273,14 +237,21 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
                 key={item.name}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive(item.href)
                     ? "bg-primary text-white"
                     : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                 }`}
               >
-                <item.icon className="h-4 w-4 mr-2" />
-                {item.name}
+                <div className="flex items-center">
+                  <item.icon className="h-4 w-4 mr-2" />
+                  {item.name}
+                </div>
+                {item.badge > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
