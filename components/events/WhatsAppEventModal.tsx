@@ -9,13 +9,19 @@ import {
 
 interface EventData {
   title: string;
-  description?: string;
+  description?: string | null | undefined;
   event_date: string;
-  event_time?: string;
-  end_time?: string;
-  location?: string;
+  event_time?: string | null | undefined;
+  end_time?: string | null | undefined;
+  location?: string | null | undefined;
   event_type: string;
   priority: "normal" | "urgent" | "critical";
+  // RSVP fields
+  rsvp_required?: boolean;
+  rsvp_type?: "none" | "adults_only" | "family" | "students_only";
+  rsvp_collect_age_breakdown?: boolean;
+  rsvp_deadline?: string | null | undefined;
+  max_capacity?: number | null | undefined;
 }
 
 interface WhatsAppEventModalProps {

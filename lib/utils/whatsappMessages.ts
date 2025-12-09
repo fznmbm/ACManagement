@@ -2,11 +2,11 @@
 
 interface EventData {
   title: string;
-  description: string | null; // CHANGE from string | undefined to string | null
+  description?: string | null | undefined; // Add ? here
   event_date: string;
-  event_time: string | null; // CHANGE from string | undefined to string | null
-  end_time: string | null; // CHANGE from string | undefined to string | null
-  location: string | null; // CHANGE from string | undefined to string | null
+  event_time?: string | null | undefined; // Add ? here
+  end_time?: string | null | undefined; // Add ? here
+  location?: string | null | undefined; // Add ? here
   event_type: string;
   priority: "normal" | "urgent" | "critical";
 }

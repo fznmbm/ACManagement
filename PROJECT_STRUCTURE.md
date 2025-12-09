@@ -62,6 +62,71 @@ supabase/
     008_messages system.sql
     009_notification_system.sql
     010_automated_alerts.sql
+# Project Structure for ACManagement (SchoolRegister)
+
+This file documents the current project structure and all files/folders. Regenerated from the workspace on December 8, 2025.
+
+## Root Configuration Files
+
+```
+vercel.json
+tsconfig.json
+tailwind.config.ts
+PROJECT_STRUCTURE.md
+postcss.config.js
+package.json
+package-lock.json
+next.config.js
+middleware.ts
+middleware copy.ts
+.gitignore
+.env.example
+GITHUB_RAW_LINKS.md
+GITHUB_RAW_LINKS copy.md
+Excellent.docx
+```
+
+## Styles
+
+```
+styles/
+  globals.css
+```
+
+## Types
+
+```
+types/
+  fees.ts
+  fees copy.ts
+  fines.ts
+  fines copy.ts
+```
+
+## Logos / Assets
+
+```
+logo/
+  ahlogo.jpg
+  ahseal.png
+```
+
+## Supabase Migrations
+
+```
+supabase/
+  migrations/
+    001_initial_schema.sql
+    002_rls_policies.sql
+    003_seed.sql
+    004_memorization_certificates.sql
+    005_fine-setup.sql
+    006_fee_management.sql
+    007_applications_and_parent_portal.sql
+    008_messages system.sql
+    009_notification_system.sql
+    010_automated_alerts.sql
+    011_event_rsvp_system.sql
 ```
 
 ## App Directory (Next.js App Router)
@@ -109,6 +174,7 @@ app/(parent)/
     messages/page.tsx
     notifications/page.tsx
     events/page.tsx
+    inbox/page.tsx
 ```
 
 ### Legacy Parent Routes
@@ -237,6 +303,7 @@ components/
     AlertManagement.tsx
   notifications/
     ParentNotificationCenter.tsx
+    WhatsAppNotificationModal.tsx
 ```
 
 ### Attendance Components
@@ -301,19 +368,22 @@ components/
     FineIndicator.tsx
 ```
 
+### Events & Messaging
+```
+components/
+  events/
+    EventRSVPConfig.tsx
+    WhatsAppEventModal.tsx
+  messages/
+    ClassMessageForm.tsx
+    StudentMessageForm.tsx
+```
+
 ### Feedback Components
 ```
 components/
   feedback/
     EndOfClassFeedback.tsx
-```
-
-### Messages Components
-```
-components/
-  messages/
-    ClassMessageForm.tsx
-    StudentMessageForm.tsx
 ```
 
 ### Public Components
@@ -391,6 +461,7 @@ components/
 
 ```
 hooks/
+  useUnifiedNotifications.ts
   useCustomQuarters.ts
   useFees.ts
   useFines.ts
@@ -439,25 +510,26 @@ lib/
 ```
 lib/
   utils/
-    gradeCalculator.ts
-    helpers.ts
-    pdfExport.ts
+    whatsappNotifications.ts
+    whatsappMessages.ts
     quarterInvoiceGenerator.ts
+    helpers.ts
+    gradeCalculator.ts
+    pdfExport.ts
 ```
 
 ## Summary
 
-- **Total files:** 212 (including copies and duplicate/backup files)
-- **Production files:** ~195 (excluding `* copy.*` files)
+- **Total files:** 222 (including copies and duplicate/backup files)
+- **Production files:** ~205 (excluding `* copy.*` files)
 - **Key technologies:** Next.js (app router), TypeScript/TSX, Supabase, Tailwind CSS, React
 - **Main sections:** App routes, Components, Hooks, Lib utilities, Supabase migrations, Types, Styles
 
 ## Notes
 
 - Copy files (e.g., `* copy.ts`, `* copy.tsx`) are included in the count but are typically backups.
-- New migrations added: `008_messages system.sql`, `009_notification_system.sql`, `010_automated_alerts.sql`
-- New parent dashboard routes and messaging/notification features added since last update.
-- New hooks: `useParentNotifications.ts` and copy.
-- New components: Feedback, Notifications, Messages, Alerts components added.
+- New migrations: `011_event_rsvp_system.sql` added for event RSVP features.
+- New hooks: `useUnifiedNotifications.ts` and `useParentNotifications.ts`.
+- New components: WhatsApp notifications, events RSVP components, message/inbox screens.
 
-Generated on: December 7, 2025
+Generated on: December 8, 2025

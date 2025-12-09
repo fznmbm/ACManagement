@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Calendar, Clock, MapPin, AlertCircle, Users } from "lucide-react";
-import ParentEventRSVP from "@/components/events/ParentEventRSVP";
+import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
 
 interface Event {
   id: string;
@@ -15,12 +14,6 @@ interface Event {
   location: string | null;
   event_type: "holiday" | "exam" | "meeting" | "celebration" | "general";
   priority: "normal" | "urgent" | "critical";
-  // RSVP fields
-  rsvp_required: boolean;
-  rsvp_type: "none" | "adults_only" | "family" | "students_only";
-  rsvp_collect_age_breakdown: boolean;
-  rsvp_deadline: string | null;
-  max_capacity: number | null;
   classes?: {
     name: string;
   };
@@ -29,11 +22,9 @@ interface Event {
 export default function ParentEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [rsvpCounts, setRsvpCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadEvents();
-    loadRSVPCounts();
   }, []);
 
   async function loadEvents() {
@@ -61,30 +52,6 @@ export default function ParentEventsPage() {
       console.error("Error loading events:", error);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function loadRSVPCounts() {
-    try {
-      const supabase = createClient();
-
-      // Get RSVP counts for all events
-      const { data, error } = await supabase
-        .from("event_rsvps")
-        .select("event_id, rsvp_status")
-        .eq("rsvp_status", "attending");
-
-      if (error) throw error;
-
-      // Count attending families per event
-      const counts: Record<string, number> = {};
-      data?.forEach((rsvp) => {
-        counts[rsvp.event_id] = (counts[rsvp.event_id] || 0) + 1;
-      });
-
-      setRsvpCounts(counts);
-    } catch (error) {
-      console.error("Error loading RSVP counts:", error);
     }
   }
 
@@ -262,35 +229,11 @@ export default function ParentEventsPage() {
                                   <span>{event.location}</span>
                                 </div>
                               )}
-                              {event.rsvp_required &&
-                                rsvpCounts[event.id] > 0 && (
-                                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                    <Users className="h-4 w-4" />
-                                    <span>
-                                      {rsvpCounts[event.id]} families attending
-                                    </span>
-                                  </div>
-                                )}
                             </div>
                             {event.description && (
                               <p className="text-foreground bg-muted/30 p-3 rounded-md">
                                 {event.description}
                               </p>
-                            )}
-
-                            {/* RSVP Component (NEW) */}
-                            {event.rsvp_required && (
-                              <ParentEventRSVP
-                                eventId={event.id}
-                                eventTitle={event.title}
-                                eventDate={event.event_date}
-                                rsvpType={event.rsvp_type}
-                                collectAgeBreakdown={
-                                  event.rsvp_collect_age_breakdown
-                                }
-                                rsvpDeadline={event.rsvp_deadline}
-                                maxCapacity={event.max_capacity}
-                              />
                             )}
                           </div>
                         </div>
@@ -365,35 +308,11 @@ export default function ParentEventsPage() {
                                   <span>{event.location}</span>
                                 </div>
                               )}
-                              {event.rsvp_required &&
-                                rsvpCounts[event.id] > 0 && (
-                                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                    <Users className="h-4 w-4" />
-                                    <span>
-                                      {rsvpCounts[event.id]} families attending
-                                    </span>
-                                  </div>
-                                )}
                             </div>
                             {event.description && (
                               <p className="text-muted-foreground">
                                 {event.description}
                               </p>
-                            )}
-
-                            {/* RSVP Component (NEW) */}
-                            {event.rsvp_required && (
-                              <ParentEventRSVP
-                                eventId={event.id}
-                                eventTitle={event.title}
-                                eventDate={event.event_date}
-                                rsvpType={event.rsvp_type}
-                                collectAgeBreakdown={
-                                  event.rsvp_collect_age_breakdown
-                                }
-                                rsvpDeadline={event.rsvp_deadline}
-                                maxCapacity={event.max_capacity}
-                              />
                             )}
                           </div>
                         </div>
@@ -464,35 +383,11 @@ export default function ParentEventsPage() {
                                   <span>{event.location}</span>
                                 </div>
                               )}
-                              {event.rsvp_required &&
-                                rsvpCounts[event.id] > 0 && (
-                                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                    <Users className="h-4 w-4" />
-                                    <span>
-                                      {rsvpCounts[event.id]} families attending
-                                    </span>
-                                  </div>
-                                )}
                             </div>
                             {event.description && (
                               <p className="mt-3 text-muted-foreground">
                                 {event.description}
                               </p>
-                            )}
-
-                            {/* RSVP Component (NEW) */}
-                            {event.rsvp_required && (
-                              <ParentEventRSVP
-                                eventId={event.id}
-                                eventTitle={event.title}
-                                eventDate={event.event_date}
-                                rsvpType={event.rsvp_type}
-                                collectAgeBreakdown={
-                                  event.rsvp_collect_age_breakdown
-                                }
-                                rsvpDeadline={event.rsvp_deadline}
-                                maxCapacity={event.max_capacity}
-                              />
                             )}
                           </div>
                         </div>
