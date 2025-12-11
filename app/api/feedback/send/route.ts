@@ -159,7 +159,7 @@ ${performanceText}${feedbackText}${classSummaryText}${homeworkText}
 
 JazakAllah Khair,
 ${teacherName}
-Al Hikma Institute Crawley`;
+Al Hikmah Institute Crawley`;
 
       // Create notification in database (for parent portal)
       const notificationTitle = `Class Feedback - ${student.first_name}`;

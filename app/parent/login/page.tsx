@@ -70,7 +70,7 @@ export default function ParentLoginPage() {
             Parent Portal
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Al Hikma Institute Crawley
+            Al Hikmah Institute Crawley
           </p>
         </div>
 

@@ -16,6 +16,17 @@ const nextConfig = {
         hostname: "**.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+
+      // GEmini
+
+      {
+        protocol: "https",
+        hostname: "raw.githubusercontent.com",
+        // This pathname is specific to your project's logo location
+        // The '**' allows any path under this repo's main branch.
+        pathname: "/fznmbm/ACManagement/**",
+      },
+      //GEmini
     ],
   },
 

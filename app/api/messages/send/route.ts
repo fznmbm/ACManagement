@@ -124,20 +124,20 @@ export async function POST(request: Request) {
         try {
           // Send email via Resend
           await resend.emails.send({
-            from: "Al Hikma Institute <noreply@alhikmainstitute.org>",
+            from: "Al Hikmah Institute <noreply@alhikmainstitute.org>",
             to: parentEmail,
             subject: subject || "Message from Teacher",
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
-                  <h1 style="margin: 0;">Al Hikma Institute</h1>
+                  <h1 style="margin: 0;">Al Hikmah Institute</h1>
                 </div>
                 <div style="padding: 30px; background-color: #f9fafb;">
                   <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                     <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${message}</pre>
                   </div>
                   <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;">
-                    <p>This is an automated message from Al Hikma Institute</p>
+                    <p>This is an automated message from Al Hikmah Institute</p>
                   </div>
                 </div>
               </div>
@@ -331,13 +331,13 @@ export async function POST(request: Request) {
         for (const student of studentsWithEmail) {
           try {
             await resend.emails.send({
-              from: "Al Hikma Institute <noreply@alhikmainstitute.org>",
+              from: "Al Hikmah Institute <noreply@alhikmainstitute.org>",
               to: student.parent_email,
               subject: subject || `Class Message - ${classData.name}`,
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
-                    <h1 style="margin: 0;">Al Hikma Institute</h1>
+                    <h1 style="margin: 0;">Al Hikmah Institute</h1>
                     <p style="margin: 5px 0 0 0; opacity: 0.9;">${classData.name}</p>
                   </div>
                   <div style="padding: 30px; background-color: #f9fafb;">
@@ -345,7 +345,7 @@ export async function POST(request: Request) {
                       <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${message}</pre>
                     </div>
                     <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;">
-                      <p>This is an automated message from Al Hikma Institute</p>
+                      <p>This is an automated message from Al Hikmah Institute</p>
                     </div>
                   </div>
                 </div>

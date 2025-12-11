@@ -209,7 +209,7 @@ async function sendConfirmationEmail(application: any, settings: any) {
 
   console.log("=== CONFIRMATION EMAIL ===");
   console.log(`To: ${application.parent_email}`);
-  console.log(`Subject: Application Received - Al Hikma Institute Crawley`);
+  console.log(`Subject: Application Received - Al Hikmah Institute Crawley`);
   console.log(`Application Number: ${application.application_number}`);
   console.log(
     `Child Name: ${application.child_first_name} ${application.child_last_name}`

@@ -17,13 +17,13 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              About Al Hikma Institute Crawley
+              About Al Hikmah Institute Crawley
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
               With Knowledge and Faith, We Build the Future
             </p>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Al Hikma Institute Crawley (AHIC) is dedicated to providing
+              Al Hikmah Institute Crawley (AHIC) is dedicated to providing
               comprehensive Islamic education to children in Crawley and the
               surrounding areas of West Sussex.
             </p>

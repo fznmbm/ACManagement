@@ -8,7 +8,7 @@ export const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email configuration
 export const emailConfig = {
-  from: "Al Hikmah Institute Crawley <onboarding@resend.dev>", // Resend test domain
+  from: "Al Hikmah Institute Crawley <noreply@al-hikmah.org>", // Resend test domain
   //replyTo: 'info@alhikmah.org.uk', // Your actual email for replies
-  replyTo: "elitequk@gmail.com", // Your actual email for replies
+  replyTo: "alhikmahinstitutecrawley@gmail.com", // Your actual email for replies
 };

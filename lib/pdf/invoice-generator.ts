@@ -40,12 +40,16 @@ export function generateFeeInvoicePDF(data: InvoiceData, schoolInfo: any) {
   // School Logo and Header
   doc.setFontSize(20);
   doc.setTextColor(34, 197, 94); // Primary green
-  doc.text(schoolInfo.name || "Al Hikma Institute Crawley", 15, 20);
+  doc.text(schoolInfo.name || "Al Hikmah Institute Crawley", 15, 20);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
   doc.text(schoolInfo.address || "West Sussex, UK", 15, 28);
-  doc.text(`Email: ${schoolInfo.email || "info@alhikma.ac.uk"}`, 15, 33);
+  doc.text(
+    `Email: ${schoolInfo.email || "alhikmahinstitutecrawley@gmail.com"}`,
+    15,
+    33
+  );
   doc.text(`Phone: ${schoolInfo.phone || "+44 7700 900000"}`, 15, 38);
 
   // Invoice Title
@@ -190,12 +194,16 @@ export function generateFineReceiptPDF(data: FineReceiptData, schoolInfo: any) {
   // School Logo and Header
   doc.setFontSize(20);
   doc.setTextColor(34, 197, 94);
-  doc.text(schoolInfo.name || "Al Hikma Institute Crawley", 15, 20);
+  doc.text(schoolInfo.name || "Al Hikmah Institute Crawley", 15, 20);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
   doc.text(schoolInfo.address || "West Sussex, UK", 15, 28);
-  doc.text(`Email: ${schoolInfo.email || "info@alhikma.ac.uk"}`, 15, 33);
+  doc.text(
+    `Email: ${schoolInfo.email || "alhikmahinstitutecrawley@gmail.com"}`,
+    15,
+    33
+  );
   doc.text(`Phone: ${schoolInfo.phone || "+44 7700 900000"}`, 15, 38);
 
   // Receipt Title

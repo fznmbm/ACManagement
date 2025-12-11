@@ -17,7 +17,7 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
               Welcome to{" "}
-              <span className="text-primary">Al Hikma Institute</span> Crawley
+              <span className="text-primary">Al Hikmah Institute</span> Crawley
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8">
               Nurturing Young Muslims with Quality Islamic Education
@@ -97,7 +97,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              About Al Hikma Institute Crawley
+              About Al Hikmah Institute Crawley
             </h2>
             <p className="text-lg text-muted-foreground">
               Dedicated to providing quality Islamic education to the youth of
@@ -109,7 +109,7 @@ export default function HomePage() {
             <div className="space-y-6">
               <h3 className="text-2xl font-semibold">Our Mission</h3>
               <p className="text-muted-foreground leading-relaxed">
-                At Al Hikma Institute Crawley (AHIC), we are committed to
+                At Al Hikmah Institute Crawley (AHIC), we are committed to
                 nurturing the Islamic identity of young Muslims by providing
                 comprehensive religious education. We combine traditional
                 Islamic teachings with modern educational approaches to create
@@ -268,7 +268,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Choose Al Hikma Institute?
+              Why Choose Al Hikmah Institute?
             </h2>
             <p className="text-lg text-muted-foreground">
               We are committed to excellence in Islamic education

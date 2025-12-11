@@ -1,10 +1,18 @@
 // components/students/StudentsHeader.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Filter, Plus, Download } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Plus,
+  Download,
+  Link as LinkIcon,
+  AlertCircle,
+} from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 interface StudentsHeaderProps {
   classes: Array<{ id: string; name: string }>;
@@ -15,12 +23,49 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
   const searchParams = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [unlinkedCount, setUnlinkedCount] = useState<number>(0);
+  const supabase = createClient();
+
   const [selectedClass, setSelectedClass] = useState(
     searchParams.get("class") || ""
   );
   const [selectedStatus, setSelectedStatus] = useState(
     searchParams.get("status") || ""
   );
+
+  useEffect(() => {
+    const fetchUnlinkedCount = async () => {
+      try {
+        // Get all active students with their parent links in one query
+        const { data: students } = await supabase
+          .from("students")
+          .select(
+            `
+          id,
+          parent_student_links (
+            id
+          )
+        `
+          )
+          .eq("status", "active");
+
+        if (!students) return;
+
+        // Count students with no parent links
+        const count = students.filter(
+          (student: any) =>
+            !student.parent_student_links ||
+            student.parent_student_links.length === 0
+        ).length;
+
+        setUnlinkedCount(count);
+      } catch (error) {
+        console.error("Error fetching unlinked count:", error);
+      }
+    };
+
+    fetchUnlinkedCount();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,19 +95,75 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
       {/* Title and Add Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Students</h2>
+          <h2 className="text-2xl font-bold">All Students</h2>
           <p className="text-muted-foreground">
             Manage and track all students in your centre
           </p>
         </div>
-        <Link
+        {/* <Link
           href="/students/new"
           className="btn-primary flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
           <span>Add Student</span>
-        </Link>
+        </Link> */}
+
+        <div className="flex gap-3">
+          {/* Link Parents Button with Badge */}
+          <Link
+            href="/students/link-parents"
+            className="relative flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm"
+          >
+            <LinkIcon className="h-4 w-4" />
+            <span>Link Parents</span>
+
+            {unlinkedCount > 0 && (
+              // <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full border-2 border-background">
+              //   {unlinkedCount}
+              // </span>
+              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full border-2 border-background animate-pulse">
+                {unlinkedCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Add Student Button */}
+          <Link
+            href="/students/new"
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Student</span>
+          </Link>
+        </div>
       </div>
+
+      {/* test */}
+      {/* Alert Banner for Unlinked Students */}
+      {unlinkedCount > 0 && (
+        <div className="bg-yellow-500/10 dark:bg-yellow-500/20 border-l-4 border-yellow-500 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-yellow-900 dark:text-yellow-200">
+                {unlinkedCount} {unlinkedCount === 1 ? "student" : "students"}{" "}
+                without parent access
+              </h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                Parents need to be linked to access student information and
+                receive notifications.
+              </p>
+            </div>
+            <Link
+              href="/students/link-parents"
+              className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors text-sm whitespace-nowrap"
+            >
+              Link Now
+            </Link>
+          </div>
+        </div>
+      )}
+      {/* test */}
 
       {/* Search and Filters */}
       <div className="bg-card border border-border rounded-lg p-4">

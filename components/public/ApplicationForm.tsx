@@ -709,7 +709,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
 
             <div className="bg-muted/50 p-6 rounded-lg max-h-96 overflow-y-auto">
               <h3 className="font-semibold mb-4">
-                Al Hikma Institute Crawley - Terms and Conditions
+                Al Hikmah Institute Crawley - Terms and Conditions
               </h3>
               <ol className="space-y-3 text-sm">
                 <li>1. Applicants must be seven years or older.</li>
@@ -771,7 +771,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                     <br />
                     <span className="text-muted-foreground">
                       I have read and agree to comply with all the rules and
-                      regulations of Al Hikma Institute Crawley
+                      regulations of Al Hikmah Institute Crawley
                     </span>
                   </span>
                 </label>

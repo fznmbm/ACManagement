@@ -213,7 +213,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 name="email"
                 defaultValue={centreInfo.email}
                 className="form-input"
-                placeholder="info@alnoor.org"
+                placeholder="info@al-hikmah.org"
               />
             </div>
             <div>
@@ -223,7 +223,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 name="website"
                 defaultValue={centreInfo.website}
                 className="form-input"
-                placeholder="https://www.alnoor.org"
+                placeholder="https://www.al-hikmah.org"
               />
             </div>
           </div>

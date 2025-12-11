@@ -162,7 +162,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
                 )}
               </button>
               <h1 className="ml-3 md:ml-0 text-xl font-bold text-slate-900 dark:text-white">
-                Al Hikma <span className="text-primary">Parent Portal</span>
+                Al Hikmah <span className="text-primary">Parent Portal</span>
               </h1>
             </div>
 
@@ -267,8 +267,14 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
       <footer className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mt-12">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-            © {new Date().getFullYear()} Al Hikma Institute Crawley. All rights
-            reserved.
+            © {new Date().getFullYear()} Al Hikmah Institute Crawley. All rights
+            reserved. Designed by{" "}
+            <a
+              href="www.elitestack.co.uk"
+              className="text-primary hover:underline"
+            >
+              elitestack.co.uk
+            </a>
           </p>
         </div>
       </footer>

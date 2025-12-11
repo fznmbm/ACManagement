@@ -31,7 +31,7 @@ export const ApplicationAcceptedEmail = ({
         textAlign: "center",
       }}
     >
-      <h1 style={{ color: "white", margin: 0 }}>Al Hikma Institute Crawley</h1>
+      <h1 style={{ color: "white", margin: 0 }}>Al Hikmah Institute Crawley</h1>
       <p style={{ color: "white", margin: "10px 0 0 0" }}>
         Islamic Educational Centre
       </p>
@@ -49,7 +49,7 @@ export const ApplicationAcceptedEmail = ({
         }}
       >
         <h2 style={{ color: "#166534", margin: 0, fontSize: "24px" }}>
-          🎉 Application Accepted! 🎉
+          Application Accepted!
         </h2>
       </div>
 
@@ -173,16 +173,20 @@ export const ApplicationAcceptedEmail = ({
 
       <p style={{ color: "#4b5563", lineHeight: "1.6" }}>
         We look forward to welcoming <strong>{childFirstName}</strong> to Al
-        Hikma Institute Crawley! If you have any questions, please contact us at{" "}
-        <a href="mailto:info@alhikma.org.uk" style={{ color: "#16a34a" }}>
-          info@alhikma.org.uk
+        Hikmah Institute Crawley! If you have any questions, please contact us
+        at{" "}
+        <a
+          href="mailto:alhikmahinstitutecrawley@gmail.com"
+          style={{ color: "#16a34a" }}
+        >
+          alhikmahinstitutecrawley@gmail.com
         </a>
       </p>
 
       <p style={{ color: "#4b5563", lineHeight: "1.6", marginBottom: 0 }}>
         <strong>JazakAllah Khair,</strong>
         <br />
-        Al Hikma Institute Crawley
+        Al Hikmah Institute Crawley
       </p>
     </div>
 
@@ -199,7 +203,7 @@ export const ApplicationAcceptedEmail = ({
         © 2025 Al Hikmah Institute Crawley. All rights reserved.
       </p>
       <p style={{ margin: "10px 0 0 0" }}>
-        Crawley, West Sussex | info@alhikmah.org.uk
+        Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com
       </p>
     </div>
   </div>

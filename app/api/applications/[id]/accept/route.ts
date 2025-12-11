@@ -7,6 +7,16 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // 🔍 DIAGNOSTIC: Check if service key exists
+  console.log(
+    "🔑 Service Role Key exists:",
+    !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  console.log(
+    "🔑 Service Role Key length:",
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0
+  );
+
   try {
     const supabase = await createClient();
 
@@ -207,27 +217,77 @@ export async function POST(
 
       if (authError) {
         console.error("Error creating parent auth user:", authError);
-        // Don't fail - parent can be created later manually
+        console.error("❌ Error creating parent auth user:", authError);
+        // FAIL THE OPERATION - don't continue silently
+        return NextResponse.json(
+          {
+            error: "Failed to create parent account",
+            details: authError.message,
+            student_number: studentNumber,
+            student_id: newStudent.id,
+          },
+          { status: 500 }
+        );
       } else {
-        parentUserId = authUser.user.id;
+        //   parentUserId = authUser.user.id;
 
-        // Create parent profile
-        const { error: profileError } = await supabaseAdmin
+        //   // Create parent profile
+        //   const { error: profileError } = await supabaseAdmin
+        //     .from("profiles")
+        //     .insert({
+        //       id: parentUserId,
+        //       email: application.parent_email,
+        //       full_name: application.parent_name,
+        //       role: "parent",
+        //       phone: application.parent_phone,
+        //       is_active: true,
+        //     });
+
+        //   if (profileError) {
+        //     console.error("❌ Error creating parent profile:", profileError);
+        //     // FAIL THE OPERATION
+        //     return NextResponse.json(
+        //       {
+        //         error: "Failed to create parent profile",
+        //         details: profileError.message,
+        //         parent_auth_id: parentUserId,
+        //         student_number: studentNumber,
+        //       },
+        //       { status: 500 }
+        //     );
+        //   } else {
+        //     console.log("✅ Parent profile created:", application.parent_email);
+        //   }
+        // }
+        parentUserId = authUser.user.id;
+        console.log("✅ Parent auth user created:", parentUserId);
+
+        // Profile is auto-created by handle_new_user trigger
+        // Wait for trigger to complete, then update it
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const { error: updateError } = await supabaseAdmin
           .from("profiles")
-          .insert({
-            id: parentUserId,
-            email: application.parent_email,
+          .update({
             full_name: application.parent_name,
             role: "parent",
             phone: application.parent_phone,
             is_active: true,
-          });
+          })
+          .eq("id", parentUserId);
 
-        if (profileError) {
-          console.error("Error creating parent profile:", profileError);
-        } else {
-          console.log("✅ Parent profile created:", application.parent_email);
+        if (updateError) {
+          console.error("❌ Error updating parent profile:", updateError);
+          return NextResponse.json(
+            {
+              error: "Failed to update parent profile",
+              details: updateError.message,
+            },
+            { status: 500 }
+          );
         }
+
+        console.log("✅ Parent profile updated with correct role");
       }
     }
 

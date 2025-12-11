@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+//import { Resend } from "resend";
+//const resend = new Resend(process.env.RESEND_API_KEY);
+import { resend, emailConfig } from "@/lib/email/resend";
 
 export async function POST(request: Request) {
   try {
@@ -290,20 +290,20 @@ export async function POST(request: Request) {
           console.log("📧 Sending welcome email...");
 
           await resend.emails.send({
-            from: "Al Hikma Institute <noreply@alhikma.ac.uk>",
+            from: emailConfig.from,
             to: normalizedEmail,
-            subject: "Welcome to Al Hikma Parent Portal",
+            subject: "Welcome to Al Hikmah Parent Portal",
             html: `
               <!DOCTYPE html>
               <html>
                 <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                    <h1 style="margin: 0; font-size: 28px;">Welcome to Al Hikma</h1>
+                    <h1 style="margin: 0; font-size: 28px;">Welcome to Al Hikmah</h1>
                     <p style="margin: 10px 0 0;">Parent Portal Access</p>
                   </div>
                   <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
                     <p>Dear ${full_name},</p>
-                    <p>A parent portal account has been created for you at Al Hikma Institute.</p>
+                    <p>A parent portal account has been created for you at Al Hikmah Institute.</p>
                     <div style="background: white; border: 2px solid #22c55e; border-radius: 8px; padding: 20px; margin: 25px 0;">
                       <p style="margin: 0 0 15px; font-weight: bold;">Your Login Email:</p>
                       <p style="margin: 0; font-size: 18px;">${normalizedEmail}</p>

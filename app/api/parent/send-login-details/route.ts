@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+//import { Resend } from "resend";
+//const resend = new Resend(process.env.RESEND_API_KEY);
+import { resend, emailConfig } from "@/lib/email/resend";
 
 export async function POST(request: NextRequest) {
   try {
@@ -104,12 +104,13 @@ export async function POST(request: NextRequest) {
     // Send welcome email with magic link
     try {
       await resend.emails.send({
-        from: "Al Hikma Institute <onboarding@resend.dev>",
+        from: emailConfig.from,
+        replyTo: emailConfig.replyTo,
         to: parentEmail,
-        subject: "Welcome to Al Hikma Parent Portal",
+        subject: "Welcome to Al Hikmah Parent Portal",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #22c55e;">Welcome to Al Hikma Parent Portal! 🎉</h2>
+            <h2 style="color: #22c55e;">Welcome to Al Hikmah Parent Portal! 🎉</h2>
             
             <p>Dear ${parentProfile.full_name},</p>
             
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
             <p>If you have any questions or need assistance, please contact us.</p>
             
             <p>JazakAllah Khair,<br>
-            Al Hikma Institute Team</p>
+            Al Hikmah Institute Team</p>
 
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             

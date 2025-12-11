@@ -21,6 +21,9 @@ import {
   MessageSquare,
   Calendar,
   Bell,
+  ChevronDown,
+  ChevronRight,
+  Link as LinkIcon,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -33,7 +36,17 @@ interface SidebarProps {
 
 export default function Sidebar({ profile }: SidebarProps) {
   const [centreName, setCentreName] = useState("Loading...");
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const pathname = usePathname();
+
+  // ADD THIS FUNCTION
+  const toggleExpand = (itemName: string) => {
+    setExpandedItems((prev) =>
+      prev.includes(itemName)
+        ? prev.filter((name) => name !== itemName)
+        : [...prev, itemName]
+    );
+  };
 
   const menuItems = [
     {
@@ -47,6 +60,21 @@ export default function Sidebar({ profile }: SidebarProps) {
       href: "/students",
       icon: Users,
       roles: ["super_admin", "admin", "teacher"],
+      submenu: [
+        // ADD THIS
+        {
+          name: "All Students",
+          href: "/students",
+        },
+        {
+          name: "Link Parents",
+          href: "/students/link-parents",
+        },
+        {
+          name: "Add New Student",
+          href: "/students/new",
+        },
+      ],
     },
     {
       name: "Applications",
@@ -181,21 +209,70 @@ export default function Sidebar({ profile }: SidebarProps) {
           {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const isExpanded = expandedItems.includes(item.name);
+            const hasSubmenu = item.submenu && item.submenu.length > 0;
 
             return (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
+                {/* Main Menu Item */}
+                {hasSubmenu ? (
+                  <button
+                    onClick={() => toggleExpand(item.name)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon className="h-5 w-5" />
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                )}
+
+                {/* Submenu Items */}
+                {hasSubmenu && isExpanded && (
+                  <ul className="ml-4 mt-2 space-y-1 border-l-2 border-border pl-4">
+                    {item.submenu!.map((subItem) => {
+                      const isSubActive = pathname === subItem.href;
+                      return (
+                        <li key={subItem.href}>
+                          <Link
+                            href={subItem.href}
+                            className={cn(
+                              "block px-4 py-2 rounded-lg text-sm transition-colors",
+                              isSubActive
+                                ? "bg-primary/10 text-primary font-medium"
+                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                            )}
+                          >
+                            {subItem.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </li>
             );
           })}

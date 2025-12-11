@@ -20,7 +20,7 @@ export default function ApplicationSuccessPage({
             Application Submitted Successfully!
           </h1>
           <p className="text-xl text-muted-foreground">
-            JazakAllah Khair for applying to Al Hikma Institute Crawley
+            JazakAllah Khair for applying to Al Hikmah Institute Crawley
           </p>
         </div>
 
@@ -112,10 +112,10 @@ export default function ApplicationSuccessPage({
             <p>
               <strong>Email:</strong>{" "}
               <a
-                href="mailto:info@alhikma.org.uk"
+                href="mailto:	alhikmahinstitutecrawley@gmail.com"
                 className="text-primary hover:underline"
               >
-                info@alhikma.org.uk
+                alhikmahinstitutecrawley@gmail.com
               </a>
             </p>
             <p>

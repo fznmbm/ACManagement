@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import Image from "next/image"; // <-- ADD THIS LINE
 
 export const metadata = {
-  title: "Al Hikma Institute Crawley - Islamic Education Centre",
+  title: "Al Hikmah Institute Crawley - Islamic Education Centre",
   description:
-    "Al Hikma Institute Crawley (AHIC) - Quality Islamic education for children in Crawley, West Sussex.",
+    "Al Hikmah Institute Crawley (AHIC) - Quality Islamic education for children in Crawley, West Sussex.",
 };
 
 export default function PublicLayout({
@@ -17,15 +18,27 @@ export default function PublicLayout({
       {/* Navigation Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-20 items-center justify-between">
             {/* Logo & Name */}
             <Link href="/home" className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              {/* Gemini  */}
+              {/* <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <span className="text-xl font-bold">AH</span>
-              </div>
+              </div> */}
+
+              <Image
+                src="https://raw.githubusercontent.com/fznmbm/ACManagement/refs/heads/main/logo/ahlogo.jpg"
+                alt="Al Hikmah Institute Crawley Logo"
+                width={72} // The width of the original container was 40
+                height={72} // The height of the original container was 40
+                className="h-20 w-20 rounded-lg" // Reusing the sizing and styling classes
+              />
+
+              {/* Gemini */}
+
               <div className="hidden md:block">
                 <div className="text-lg font-bold text-foreground">
-                  Al Hikma Institute Crawley
+                  Al Hikmah Institute Crawley
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Islamic Education Centre
@@ -101,7 +114,7 @@ export default function PublicLayout({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* About Column */}
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Al Hikma Institute</h3>
+              <h3 className="text-lg font-semibold">Al Hikmah Institute</h3>
               <p className="text-sm text-muted-foreground">
                 Quality Islamic education for children in Crawley, West Sussex.
               </p>
@@ -150,7 +163,7 @@ export default function PublicLayout({
             <div className="space-y-3">
               <h3 className="text-lg font-semibold">Contact</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>📧 info@alhikma.org.uk</li>
+                <li>📧 alhikmahinstitutecrawley@gmail.com</li>
                 <li>📞 +44 1293 XXX XXX</li>
                 <li>📍 Crawley, West Sussex</li>
               </ul>
@@ -174,8 +187,12 @@ export default function PublicLayout({
           {/* Copyright */}
           <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
             <p>
-              &copy; {new Date().getFullYear()} Al Hikma Institute Crawley. All
-              rights reserved.
+              &copy; {new Date().getFullYear()} Al Hikmah Institute Crawley. All
+              rights reserved. Designed by{" "}
+              <a href="https://elitestack.co.uk" className="underline">
+                elitestack.co.uk
+              </a>
+              .
             </p>
           </div>
         </div>

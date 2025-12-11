@@ -31,7 +31,7 @@ function getApplicationReceivedEmailHTML(
         <div style="max-width: 600px; margin: 0 auto; background-color: white;">
           <!-- Header -->
           <div style="background-color: #16a34a; padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">Al Hikma Institute Crawley</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">Al Hikmah Institute Crawley</h1>
             <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Islamic Educational Centre</p>
           </div>
           
@@ -48,7 +48,7 @@ function getApplicationReceivedEmailHTML(
             </p>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
-              Thank you for submitting an application for <strong>${childFirstName} ${childLastName}</strong> to Al Hikma Institute Crawley.
+              Thank you for submitting an application for <strong>${childFirstName} ${childLastName}</strong> to Al Hikmah Institute Crawley.
             </p>
             
             <!-- Details Box -->
@@ -80,19 +80,19 @@ function getApplicationReceivedEmailHTML(
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
               Please keep your application number for reference. If you have any questions, 
-              feel free to contact us at <a href="mailto:info@alhikma.org.uk" style="color: #16a34a; text-decoration: none;">info@alhikma.org.uk</a>
+              feel free to contact us at <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
             </p>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>JazakAllah Khair,</strong><br/>
-              Al Hikma Institute Crawley
+              Al Hikmah Institute Crawley
             </p>
           </div>
           
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© 2025 Al Hikma Institute Crawley. All rights reserved.</p>
-            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | info@alhikma.org.uk</p>
+            <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
+            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
       </body>
@@ -119,7 +119,7 @@ function getApplicationAcceptedEmailHTML(
         <div style="max-width: 600px; margin: 0 auto; background-color: white;">
           <!-- Header -->
           <div style="background-color: #16a34a; padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">Al Hikma Institute Crawley</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">Al Hikmah Institute Crawley</h1>
             <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Islamic Educational Centre</p>
           </div>
           
@@ -127,7 +127,7 @@ function getApplicationAcceptedEmailHTML(
           <div style="padding: 30px; background-color: #f9fafb;">
             <!-- Acceptance Banner -->
             <div style="background-color: #dcfce7; padding: 20px; border-radius: 8px; border: 2px solid #16a34a; text-align: center; margin: 0 0 30px 0;">
-              <h2 style="color: #166534; margin: 0; font-size: 24px;">🎉 Application Accepted! 🎉</h2>
+              <h2 style="color: #166534; margin: 0; font-size: 24px;">Application Accepted!</h2>
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
@@ -173,20 +173,20 @@ function getApplicationAcceptedEmailHTML(
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
-              We look forward to welcoming <strong>${childFirstName}</strong> to Al Hikma Institute Crawley! 
-              If you have any questions, please contact us at <a href="mailto:info@alhikma.org.uk" style="color: #16a34a; text-decoration: none;">info@alhikma.org.uk</a>
+              We look forward to welcoming <strong>${childFirstName}</strong> to Al Hikmah Institute Crawley! 
+              If you have any questions, please contact us at <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
             </p>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>JazakAllah Khair,</strong><br/>
-              Al Hikma Institute Crawley
+              Al Hikmah Institute Crawley
             </p>
           </div>
           
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© 2025 Al Hikma Institute Crawley. All rights reserved.</p>
-            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | info@alhikma.org.uk</p>
+            <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
+            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
       </body>
@@ -213,7 +213,7 @@ function getApplicationRejectedEmailHTML(
         <div style="max-width: 600px; margin: 0 auto; background-color: white;">
           <!-- Header -->
           <div style="background-color: #16a34a; padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">Al Hikma Institute Crawley</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">Al Hikmah Institute Crawley</h1>
             <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Islamic Educational Centre</p>
           </div>
           
@@ -230,7 +230,7 @@ function getApplicationRejectedEmailHTML(
             </p>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
-              Thank you for your interest in Al Hikma Institute Crawley and for submitting an 
+              Thank you for your interest in Al Hikmah Institute Crawley and for submitting an 
               application for <strong>${childFirstName} ${childLastName}</strong>.
             </p>
             
@@ -277,20 +277,20 @@ function getApplicationRejectedEmailHTML(
               <p style="color: #1e40af; margin: 0; line-height: 1.6;">
                 We encourage you to apply again in future academic years. If you have any 
                 questions or would like to discuss this further, please contact us at 
-                <a href="mailto:info@alhikma.org.uk" style="color: #16a34a; text-decoration: none;">info@alhikma.org.uk</a>
+                <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
               </p>
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0 0 0;">
               <strong>JazakAllah Khair,</strong><br/>
-              Al Hikma Institute Crawley
+              Al Hikmah Institute Crawley
             </p>
           </div>
           
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© 2025 Al Hikma Institute Crawley. All rights reserved.</p>
-            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | info@alhikma.org.uk</p>
+            <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
+            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
       </body>
@@ -305,7 +305,7 @@ export async function sendApplicationReceivedEmail(application: Application) {
       from: emailConfig.from,
       to: [application.parent_email],
       replyTo: emailConfig.replyTo,
-      subject: `Application Received - Al Hikma Institute Crawley`,
+      subject: `Application Received - Al Hikmah Institute Crawley`,
       html: getApplicationReceivedEmailHTML(
         application.parent_name,
         application.child_first_name,
@@ -339,7 +339,7 @@ export async function sendApplicationAcceptedEmail(
       from: emailConfig.from,
       to: [application.parent_email],
       replyTo: emailConfig.replyTo,
-      subject: `🎉 Application Accepted - Al Hikma Institute Crawley`,
+      subject: `Application Accepted - Al Hikmah Institute Crawley`,
       html: getApplicationAcceptedEmailHTML(
         application.parent_name,
         application.child_first_name,
@@ -373,7 +373,7 @@ export async function sendApplicationRejectedEmail(
       from: emailConfig.from,
       to: [application.parent_email],
       replyTo: emailConfig.replyTo,
-      subject: `Application Status Update - Al Hikma Institute Crawley`,
+      subject: `Application Status Update - Al Hikmah Institute Crawley`,
       html: getApplicationRejectedEmailHTML(
         application.parent_name,
         application.child_first_name,

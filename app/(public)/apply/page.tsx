@@ -109,7 +109,7 @@ export default async function ApplyPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:info@alhikma.org.uk"
+                href="mailto:	alhikmahinstitutecrawley@gmail.com"
                 className="inline-flex items-center justify-center rounded-lg border-2 border-primary px-6 py-3 font-semibold text-primary hover:bg-primary/10 transition-all"
               >
                 Email Us
@@ -138,7 +138,7 @@ export default async function ApplyPage() {
             Applications Open for {settings.academic_year}
           </div>
           <h1 className="text-4xl font-bold mb-4">
-            Apply to Al Hikma Institute
+            Apply to Al Hikmah Institute
           </h1>
           <p className="text-lg text-muted-foreground">
             Complete the application form below to enroll your child

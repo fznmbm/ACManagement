@@ -10,7 +10,7 @@ export default function ContactPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Contact Us</h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Get in touch with Al Hikma Institute Crawley
+              Get in touch with Al Hikmah Institute Crawley
             </p>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               We're here to answer your questions and help you learn more about
@@ -44,10 +44,10 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold mb-1">Email</h3>
                     <a
-                      href="mailto:info@alhikma.org.uk"
+                      href="mailto:	alhikmahinstitutecrawley@gmail.com"
                       className="text-sm text-muted-foreground hover:text-primary"
                     >
-                      info@alhikma.org.uk
+                      alhikmahinstitutecrawley@gmail.com
                     </a>
                   </div>
                 </div>

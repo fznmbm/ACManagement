@@ -32,13 +32,13 @@ export function generateNotificationWhatsAppMessage(
   }
 
   // Build message
-  let whatsappMessage = `🕌 *Al Hikma Institute Crawley*\n\n`;
+  let whatsappMessage = `🕌 *Al Hikmah Institute Crawley*\n\n`;
   whatsappMessage += priorityPrefix;
   whatsappMessage += `${emoji} *${notification.title}*\n\n`;
   whatsappMessage += `${notification.message}\n\n`;
   whatsappMessage += `_For more details, please check your parent portal._\n\n`;
   whatsappMessage += `_JazakAllah Khair,_\n`;
-  whatsappMessage += `_Al Hikma Institute Crawley_`;
+  whatsappMessage += `_Al Hikmah Institute Crawley_`;
 
   return whatsappMessage;
 }

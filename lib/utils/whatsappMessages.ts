@@ -33,7 +33,7 @@ export function generateEventWhatsAppMessage(
   }
 
   // Build message
-  let message = `🕌 *Al Hikma Institute Crawley*\n\n`;
+  let message = `🕌 *Al Hikmah Institute Crawley*\n\n`;
   message += priorityPrefix;
   message += `📅 *${event.title}*\n\n`;
 
@@ -65,7 +65,7 @@ export function generateEventWhatsAppMessage(
 
   message += `Please mark this on your calendar.\n\n`;
   message += `_JazakAllah Khair,_\n`;
-  message += `_Al Hikma Institute Crawley_`;
+  message += `_Al Hikmah Institute Crawley_`;
 
   return message;
 }

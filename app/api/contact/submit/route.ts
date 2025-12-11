@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resend, emailConfig } from "@/lib/email/resend";
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,6 +44,28 @@ export async function POST(request: NextRequest) {
         { error: "Failed to send message. Please try again." },
         { status: 500 }
       );
+    }
+
+    // Send notification email to admin
+    try {
+      await resend.emails.send({
+        from: emailConfig.from,
+        to: emailConfig.replyTo, // Sends to school's main email
+        replyTo: email, // Parent can reply directly
+        subject: `New Contact Form: ${subject || "General Inquiry"}`,
+        html: `
+      <h2>New Contact Form Submission</h2>
+      <p><strong>From:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+      <p><strong>Subject:</strong> ${subject || "General Inquiry"}</p>
+      <p><strong>Message:</strong></p>
+      <p>${message.replace(/\n/g, "<br>")}</p>
+    `,
+      });
+    } catch (emailError) {
+      console.error("Failed to send contact notification email:", emailError);
+      // Don't fail the request if email fails
     }
 
     // Log for admin notification (TODO: Send email)
