@@ -27,7 +27,7 @@ export default function PublicLayout({
               </div> */}
 
               <Image
-                src="https://raw.githubusercontent.com/fznmbm/ACManagement/refs/heads/main/logo/ahlogo.jpg"
+                src="https://raw.githubusercontent.com/fznmbm/ACManagement/refs/heads/main/logo/ahlogo_web.png"
                 alt="Al Hikmah Institute Crawley Logo"
                 width={72} // The width of the original container was 40
                 height={72} // The height of the original container was 40
