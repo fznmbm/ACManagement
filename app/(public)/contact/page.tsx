@@ -63,7 +63,7 @@ export default function ContactPage() {
                       href="tel:+441293XXXXXX"
                       className="text-sm text-muted-foreground hover:text-primary"
                     >
-                      +44 1293 XXX XXX
+                      +44 7411 061242
                     </a>
                     <p className="text-xs text-muted-foreground mt-1">
                       Available during class times

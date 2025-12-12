@@ -21,6 +21,8 @@ import CentreSettings from "./CentreSettings";
 import FineSettings from "./FineSettings";
 import FeeSettings from "./FeeSettings";
 import ApplicationSettings from "@/components/settings/ApplicationSettings";
+// Add this import with the other imports
+import OrphanedAuthCleanup from "@/components/admin/OrphanedAuthCleanup";
 
 interface SettingsTabsProps {
   initialSettings: Record<string, any>;
@@ -36,7 +38,8 @@ type TabId =
   | "centre"
   | "fines"
   | "fees"
-  | "applications";
+  | "applications"
+  | "maintenance"; // ← ADD THIS
 
 export default function SettingsTabs({
   initialSettings,
@@ -53,11 +56,13 @@ export default function SettingsTabs({
     { id: "centre" as TabId, name: "Centre Info", icon: Building2 },
     { id: "fines" as TabId, name: "Fine Settings", icon: Coins }, // Add this
     { id: "fees" as TabId, name: "Fee Settings", icon: Receipt }, // Add this
+
     {
       id: "applications" as TabId,
       name: "Applications Settings",
       icon: FileText,
     }, // Add this
+    { id: "maintenance" as TabId, name: "Maintenance", icon: Shield }, // ← ADD THIS
   ];
 
   return (
@@ -108,6 +113,8 @@ export default function SettingsTabs({
         {activeTab === "fines" && <FineSettings />}
         {activeTab === "fees" && <FeeSettings />}
         {activeTab === "applications" && <ApplicationSettings />}
+        {activeTab === "maintenance" && <OrphanedAuthCleanup />}{" "}
+        {/* ← ADD THIS */}
       </div>
     </div>
   );

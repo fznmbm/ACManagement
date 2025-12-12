@@ -121,6 +121,11 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
       if (!formData.city.trim()) newErrors.city = "City is required";
       if (!formData.postal_code.trim())
         newErrors.postal_code = "Postal code is required";
+      // English literacy check
+      if (!formData.can_read_write_english) {
+        newErrors.can_read_write_english =
+          "Child should be able to read and write English. This is required for admission.";
+      }
     }
 
     if (step === 3) {
@@ -586,6 +591,11 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                 </span>
               </label>
             </div>
+            {errors.can_read_write_english && (
+              <p className="text-sm text-destructive mt-2">
+                {errors.can_read_write_english}
+              </p>
+            )}
           </div>
         )}
 

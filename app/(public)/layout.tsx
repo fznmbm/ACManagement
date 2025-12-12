@@ -26,13 +26,15 @@ export default function PublicLayout({
                 <span className="text-xl font-bold">AH</span>
               </div> */}
 
-              <Image
-                src="https://raw.githubusercontent.com/fznmbm/ACManagement/refs/heads/main/logo/ahlogo_web.png"
-                alt="Al Hikmah Institute Crawley Logo"
-                width={72} // The width of the original container was 40
-                height={72} // The height of the original container was 40
-                className="h-20 w-20 rounded-lg" // Reusing the sizing and styling classes
-              />
+              <div className="h-20 w-20 rounded-lg bg-red-500 flex items-center justify-center">
+                <Image
+                  src="https://raw.githubusercontent.com/fznmbm/ACManagement/refs/heads/main/logo/ahlogo_web_nobg.png"
+                  alt="Al Hikmah Institute Crawley Logo"
+                  width={72} // The width of the original container was 40
+                  height={72} // The height of the original container was 40
+                  className="h-20 w-20 rounded-lg object-contain" // Reusing the sizing and styling classes
+                />
+              </div>
 
               {/* Gemini */}
 
@@ -164,7 +166,7 @@ export default function PublicLayout({
               <h3 className="text-lg font-semibold">Contact</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>📧 alhikmahinstitutecrawley@gmail.com</li>
-                <li>📞 +44 1293 XXX XXX</li>
+                <li>📞 +44 7411 061242</li>
                 <li>📍 Crawley, West Sussex</li>
               </ul>
             </div>

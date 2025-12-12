@@ -164,17 +164,36 @@ export const ApplicationAcceptedEmail = ({
             lineHeight: "1.8",
           }}
         >
-          <li>Complete the registration form (link will be sent separately)</li>
+          {/* <li>Complete the registration form (link will be sent separately)</li>
           <li>Submit required documents (ID proof, medical records)</li>
-          <li>Pay the registration fee</li>
-          <li>Attend the orientation session (date will be communicated)</li>
+          <li>Pay the registration fee</li> */}
+          <li>You will receive the confirmation on WhatsApp</li>
+          <li>Attend the parents meeting (date will be communicated)</li>
         </ol>
       </div>
 
-      <p style={{ color: "#4b5563", lineHeight: "1.6" }}>
+      {/* <p style={{ color: "#4b5563", lineHeight: "1.6" }}>
         We look forward to welcoming <strong>{childFirstName}</strong> to Al
         Hikmah Institute Crawley! If you have any questions, please contact us
         at{" "}
+        <a
+          href="mailto:alhikmahinstitutecrawley@gmail.com"
+          style={{ color: "#16a34a" }}
+        >
+          alhikmahinstitutecrawley@gmail.com
+        </a>
+      </p> */}
+
+      <p style={{ color: "#4b5563", lineHeight: "1.6" }}>
+        We look forward to welcoming <strong>{childFirstName}</strong> to Al
+        Hikmah Institute Crawley! If you have any questions, please contact us:
+        <br />
+        <strong>Phone:</strong>{" "}
+        <a href="tel:+447411061242" style={{ color: "#16a34a" }}>
+          +44 7411 061242
+        </a>
+        <br />
+        <strong>Email:</strong>{" "}
         <a
           href="mailto:alhikmahinstitutecrawley@gmail.com"
           style={{ color: "#16a34a" }}
@@ -203,7 +222,8 @@ export const ApplicationAcceptedEmail = ({
         © 2025 Al Hikmah Institute Crawley. All rights reserved.
       </p>
       <p style={{ margin: "10px 0 0 0" }}>
-        Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com
+        Crawley, West Sussex | +44 7411 061242|
+        alhikmahinstitutecrawley@gmail.com
       </p>
     </div>
   </div>

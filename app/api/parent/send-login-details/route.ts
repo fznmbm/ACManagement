@@ -142,12 +142,14 @@ export async function POST(request: NextRequest) {
             <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
               <h3 style="margin-top: 0; color: #d97706;">What You Can Do</h3>
               <ul style="margin: 10px 0;">
+              <li>Parent Dashboard</li>
                 <li>View real-time attendance records</li>
-                <li>Check academic progress and grades</li>
-                <li>Track Quranic memorization achievements</li>
+                <li>Check exam results and report cards</li>
+                <li>End of class teacher feedback</li>
                 <li>View fee information and payment history</li>
-                <li>Receive important announcements</li>
-                <li>View and download certificates</li>
+                <li>Receive important announcements and updates</li>
+                <li>Check academic progress</li>
+              
               </ul>
             </div>
 
@@ -158,7 +160,7 @@ export async function POST(request: NextRequest) {
 
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             
-            <p style="font-size: 12px; color: #6b7280;">
+            <p style="font-size: 14px; color: #6b7280;">
               <strong>Portal URL:</strong> ${process.env.NEXT_PUBLIC_APP_URL}/parent/login<br>
               <strong>Your Email:</strong> ${parentEmail}
             </p>

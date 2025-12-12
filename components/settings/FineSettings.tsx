@@ -184,9 +184,9 @@ export default function FineSettings() {
               <div>
                 <label className="form-label">Fine Amount (£)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                  {/* <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                     £
-                  </span>
+                  </span> */}
                   <input
                     type="number"
                     step="0.01"

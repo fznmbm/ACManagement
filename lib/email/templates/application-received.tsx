@@ -148,9 +148,16 @@ export const ApplicationReceivedEmail = ({
 
       <p style={{ color: "#4b5563", lineHeight: "1.6" }}>
         Please keep your application number for reference. If you have any
-        questions, feel free to contact us at{" "}
+        questions, feel free to contact us:
+        <br />
+        <strong>Phone:</strong>{" "}
+        <a href="tel:+447411061242" style={{ color: "#16a34a" }}>
+          +44 7411 061242
+        </a>
+        <br />
+        <strong>Email:</strong>{" "}
         <a
-          href="alhikmahinstitutecrawley@gmail.com"
+          href="mailto:alhikmahinstitutecrawley@gmail.com"
           style={{ color: "#16a34a" }}
         >
           alhikmahinstitutecrawley@gmail.com
@@ -177,7 +184,8 @@ export const ApplicationReceivedEmail = ({
         © 2025 Al Hikmah Institute Crawley. All rights reserved.
       </p>
       <p style={{ margin: "10px 0 0 0" }}>
-        Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com
+        Crawley, West Sussex | +44 7411 061242|
+        alhikmahinstitutecrawley@gmail.com
       </p>
     </div>
   </div>

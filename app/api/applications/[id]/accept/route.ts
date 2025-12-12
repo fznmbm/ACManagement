@@ -204,90 +204,45 @@ export async function POST(
     parentUserId = existingParent?.id;
 
     if (!existingParent && application.parent_email) {
-      // Create auth user for parent using admin API with service role
-      const { data: authUser, error: authError } =
-        await supabaseAdmin.auth.admin.createUser({
-          email: application.parent_email,
-          email_confirm: true,
-          user_metadata: {
-            full_name: application.parent_name,
-            role: "parent",
-          },
-        });
+      // Check if auth user already exists (for parents with multiple children)
+      const { data: existingAuthUsers } =
+        await supabaseAdmin.auth.admin.listUsers();
+      const existingAuthUser = existingAuthUsers.users.find(
+        (u) => u.email === application.parent_email
+      );
 
-      if (authError) {
-        console.error("Error creating parent auth user:", authError);
-        console.error("❌ Error creating parent auth user:", authError);
-        // FAIL THE OPERATION - don't continue silently
-        return NextResponse.json(
-          {
-            error: "Failed to create parent account",
-            details: authError.message,
-            student_number: studentNumber,
-            student_id: newStudent.id,
-          },
-          { status: 500 }
-        );
+      if (existingAuthUser) {
+        // Auth user exists - use existing parent
+        parentUserId = existingAuthUser.id;
+        console.log("✅ Parent already exists, linking to new child");
       } else {
-        //   parentUserId = authUser.user.id;
+        // Create NEW auth user (first child)
+        const { data: authUser, error: authError } =
+          await supabaseAdmin.auth.admin.createUser({
+            email: application.parent_email,
+            email_confirm: true,
+            user_metadata: {
+              full_name: application.parent_name,
+              role: "parent",
+            },
+          });
 
-        //   // Create parent profile
-        //   const { error: profileError } = await supabaseAdmin
-        //     .from("profiles")
-        //     .insert({
-        //       id: parentUserId,
-        //       email: application.parent_email,
-        //       full_name: application.parent_name,
-        //       role: "parent",
-        //       phone: application.parent_phone,
-        //       is_active: true,
-        //     });
-
-        //   if (profileError) {
-        //     console.error("❌ Error creating parent profile:", profileError);
-        //     // FAIL THE OPERATION
-        //     return NextResponse.json(
-        //       {
-        //         error: "Failed to create parent profile",
-        //         details: profileError.message,
-        //         parent_auth_id: parentUserId,
-        //         student_number: studentNumber,
-        //       },
-        //       { status: 500 }
-        //     );
-        //   } else {
-        //     console.log("✅ Parent profile created:", application.parent_email);
-        //   }
-        // }
-        parentUserId = authUser.user.id;
-        console.log("✅ Parent auth user created:", parentUserId);
-
-        // Profile is auto-created by handle_new_user trigger
-        // Wait for trigger to complete, then update it
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        const { error: updateError } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            full_name: application.parent_name,
-            role: "parent",
-            phone: application.parent_phone,
-            is_active: true,
-          })
-          .eq("id", parentUserId);
-
-        if (updateError) {
-          console.error("❌ Error updating parent profile:", updateError);
+        if (authError) {
+          console.error("❌ Error creating parent auth user:", authError);
           return NextResponse.json(
             {
-              error: "Failed to update parent profile",
-              details: updateError.message,
+              error: "Failed to create parent account",
+              details: authError.message,
             },
             { status: 500 }
           );
         }
 
-        console.log("✅ Parent profile updated with correct role");
+        parentUserId = authUser.user.id;
+        console.log("✅ New parent auth user created");
+
+        // Wait for trigger to create profile
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
 

@@ -20,8 +20,10 @@ interface Application {
   id: string;
   student_first_name: string;
   student_last_name: string;
-  student_date_of_birth: string;
-  student_gender: string;
+  //student_date_of_birth: string;
+  //student_gender: string;
+  date_of_birth: string;
+  gender: string;
   parent_name: string;
   parent_email: string;
   parent_phone: string;
@@ -289,9 +291,9 @@ export default function ApplicationsPage() {
                             Date of Birth:
                           </span>
                           <span className="ml-2 text-slate-900 dark:text-white">
-                            {new Date(
-                              app.student_date_of_birth
-                            ).toLocaleDateString("en-GB")}
+                            {new Date(app.date_of_birth).toLocaleDateString(
+                              "en-GB"
+                            )}
                           </span>
                         </div>
                         <div>
@@ -299,7 +301,7 @@ export default function ApplicationsPage() {
                             Gender:
                           </span>
                           <span className="ml-2 text-slate-900 dark:text-white capitalize">
-                            {app.student_gender}
+                            {app.gender}
                           </span>
                         </div>
                       </div>

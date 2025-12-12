@@ -80,6 +80,16 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
 
     checkUser();
 
+    // // Check theme
+    // const savedTheme = localStorage.getItem("parent-theme") as
+    //   | "light"
+    //   | "dark"
+    //   | null;
+    // if (savedTheme) {
+    //   setTheme(savedTheme);
+    //   document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    // }
+
     // Check theme
     const savedTheme = localStorage.getItem("parent-theme") as
       | "light"
@@ -87,15 +97,32 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
       | null;
     if (savedTheme) {
       setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
   }, [router, supabase, pathname]);
+
+  // const toggleTheme = () => {
+  //   const newTheme = theme === "light" ? "dark" : "light";
+  //   setTheme(newTheme);
+  //   localStorage.setItem("parent-theme", newTheme);
+  //   document.documentElement.classList.toggle("dark", newTheme === "dark");
+  // };
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     localStorage.setItem("parent-theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+
+    // Explicitly add/remove dark class
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   };
 
   const handleLogout = async () => {
@@ -270,7 +297,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
             © {new Date().getFullYear()} Al Hikmah Institute Crawley. All rights
             reserved. Designed by{" "}
             <a
-              href="www.elitestack.co.uk"
+              href="https://elitestack.co.uk"
               className="text-primary hover:underline"
             >
               elitestack.co.uk

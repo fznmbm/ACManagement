@@ -79,8 +79,9 @@ function getApplicationReceivedEmailHTML(
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
-              Please keep your application number for reference. If you have any questions, 
-              feel free to contact us at <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
+               Please keep your application number for reference. If you have any questions, feel free to contact us:<br/>
+  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a><br/>
+  <strong>Email:</strong> <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
             </p>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0 0 0;">
@@ -92,7 +93,7 @@ function getApplicationReceivedEmailHTML(
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
             <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
-            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com</p>
+            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | +44 7411 061242 | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
       </body>
@@ -165,16 +166,16 @@ function getApplicationAcceptedEmailHTML(
             <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
               <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 16px;">📋 Next Steps:</h3>
               <ol style="color: #1e40af; margin: 0; padding-left: 20px; line-height: 1.8;">
-                <li>Complete the registration form (link will be sent separately)</li>
-                <li>Submit required documents (ID proof, medical records)</li>
-                <li>Pay the registration fee</li>
-                <li>Attend the orientation session (date will be communicated)</li>
+               <li>You will receive the confirmation on WhatsApp</li>
+                <li>Attend the parents meeting (date will be communicated)</li>
               </ol>
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
               We look forward to welcoming <strong>${childFirstName}</strong> to Al Hikmah Institute Crawley! 
-              If you have any questions, please contact us at <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
+  If you have any questions, please contact us:<br/>
+  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a><br/>
+  <strong>Email:</strong> <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
             </p>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0 0 0;">
@@ -186,7 +187,7 @@ function getApplicationAcceptedEmailHTML(
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
             <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
-            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com</p>
+            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | +44 7411 061242 | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
       </body>
@@ -275,9 +276,10 @@ function getApplicationRejectedEmailHTML(
             <!-- Info Box -->
             <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
               <p style="color: #1e40af; margin: 0; line-height: 1.6;">
-                We encourage you to apply again in future academic years. If you have any 
-                questions or would like to discuss this further, please contact us at 
-                <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
+                 We encourage you to apply again in future academic years. If you have any 
+  questions or would like to discuss this further, please contact us:<br/>
+  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a><br/>
+  <strong>Email:</strong> <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
               </p>
             </div>
             
@@ -290,7 +292,7 @@ function getApplicationRejectedEmailHTML(
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
             <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
-            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | alhikmahinstitutecrawley@gmail.com</p>
+            <p style="margin: 10px 0 0 0;">Crawley, West Sussex | +44 7411 061242 | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
       </body>
