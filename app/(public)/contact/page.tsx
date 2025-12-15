@@ -1,3 +1,23 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contact Us | Al Hikmah Institute Crawley",
+  description:
+    "Get in touch with Al Hikmah Institute Crawley. Call +44 7411 061242 or email us for enrollment inquiries and information about our Islamic education programs.",
+  keywords: [
+    "contact Islamic school",
+    "madrasah contact",
+    "enrollment inquiry Crawley",
+  ],
+
+  openGraph: {
+    title: "Contact Al Hikmah Institute Crawley",
+    description: "Get in touch for enrollment inquiries and information.",
+    url: "https://al-hikmah.org/contact",
+    type: "website",
+  },
+};
+
 import { Mail, Phone, MapPin, Clock, Facebook } from "lucide-react";
 import ContactForm from "@/components/public/ContactForm";
 

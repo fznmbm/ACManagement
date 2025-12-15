@@ -1,3 +1,26 @@
+import type { Metadata } from "next";
+import { StaffSection } from "@/components/about/StaffSection";
+
+export const metadata: Metadata = {
+  title: "About Us | Al Hikmah Institute Crawley",
+  description:
+    "Learn about Al Hikmah Institute Crawley's mission, values, and commitment to providing quality Islamic education in West Sussex since 2018.",
+  keywords: [
+    "about AHIC",
+    "Islamic school history",
+    "madrasah teachers",
+    "Islamic education mission",
+  ],
+
+  openGraph: {
+    title: "About Al Hikmah Institute Crawley",
+    description:
+      "Our mission, values, and commitment to quality Islamic education in Crawley.",
+    url: "https://al-hikmah.org/about",
+    type: "website",
+  },
+};
+
 import Link from "next/link";
 import {
   BookOpen,
@@ -274,7 +297,7 @@ export default function AboutPage() {
       </section>
 
       {/* Our Teachers */}
-      <section className="py-20 bg-background">
+      {/* <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -335,14 +358,17 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
+
+      {/* Our Team - Staff Section */}
+      <StaffSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Join Our Community
+              Join Al Hikmah Institute Crawley
             </h2>
             <p className="text-xl mb-8 opacity-90">
               Enroll your child in quality Islamic education

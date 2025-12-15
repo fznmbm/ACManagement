@@ -33,7 +33,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "app/(dashboard)/events/page.tsx.backup",
-    "app/(parent)/parent/events/page.tsx.backup"
+    "app/(parent)/parent/events/page.tsx.backup",
+    "app/api/contact/submit/route.ts.backup"
   ],
   "exclude": ["node_modules"]
 }

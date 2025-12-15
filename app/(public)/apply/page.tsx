@@ -1,3 +1,24 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Apply Now for 2025-2026 | Al Hikmah Institute Crawley",
+  description:
+    "Enroll your child at Al Hikmah Institute Crawley for the 2025-2026 academic year. Simple online application for Islamic education programs in West Sussex.",
+  keywords: [
+    "enroll Islamic school",
+    "madrasah application",
+    "Quran classes enrollment",
+    "Islamic school admission Crawley",
+  ],
+
+  openGraph: {
+    title: "Apply for 2025-2026 | Al Hikmah Institute Crawley",
+    description: "Enroll your child for quality Islamic education in Crawley.",
+    url: "https://al-hikmah.org/apply",
+    type: "website",
+  },
+};
+
 import { createClient } from "@/lib/supabase/server";
 import ApplicationForm from "@/components/public/ApplicationForm";
 import { Calendar, XCircle, CheckCircle2 } from "lucide-react";

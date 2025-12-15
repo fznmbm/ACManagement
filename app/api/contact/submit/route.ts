@@ -1,13 +1,16 @@
+// File: app/api/contact/submit/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { resend, emailConfig } from "@/lib/email/resend";
+import { Resend } from "resend";
+
+// Initialize Resend with API key from environment
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    // Parse the request body
-    const { name, email, phone, subject, message } = await request.json();
+    // Parse form data from request
+    const body = await request.json();
+    const { name, email, phone, subject, message } = body;
 
     // Validate required fields
     if (!name || !email || !message) {
@@ -17,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -26,69 +29,165 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert contact inquiry into contact_inquiries table
-    const { error: insertError } = await supabase
-      .from("contact_inquiries")
-      .insert({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone?.trim() || null,
-        subject: subject || "General Inquiry",
-        message: message.trim(),
-        status: "new",
-      });
+    // Map subject codes to readable text
+    const subjectMap: { [key: string]: string } = {
+      general_inquiry: "General Inquiry",
+      admissions: "Admissions Information",
+      programs: "Programs & Classes",
+      fees: "Fees & Payments",
+      schedule: "Class Schedule",
+      other: "Other",
+    };
 
-    if (insertError) {
-      console.error("Database error:", insertError);
+    const subjectText = subject ? subjectMap[subject] || subject : "No Subject";
+
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: "Al Hikmah Institute <noreply@al-hikmah.org>", // Update with your verified domain
+      to: ["alhikmahinstitutecrawley@gmail.com"], // School email
+      replyTo: email, // User's email for easy reply
+      subject: `Contact Form: ${subjectText}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              .header {
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                color: white;
+                padding: 30px;
+                border-radius: 8px 8px 0 0;
+                text-align: center;
+              }
+              .content {
+                background: #f9fafb;
+                padding: 30px;
+                border: 1px solid #e5e7eb;
+                border-top: none;
+              }
+              .field {
+                margin-bottom: 20px;
+                padding: 15px;
+                background: white;
+                border-radius: 6px;
+                border-left: 4px solid #22c55e;
+              }
+              .label {
+                font-weight: bold;
+                color: #16a34a;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 5px;
+              }
+              .value {
+                color: #1f2937;
+                font-size: 15px;
+              }
+              .message-box {
+                background: white;
+                padding: 20px;
+                border-radius: 6px;
+                border: 1px solid #e5e7eb;
+                margin-top: 10px;
+              }
+              .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #e5e7eb;
+                color: #6b7280;
+                font-size: 12px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0; font-size: 24px;">New Contact Form Submission</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Al Hikmah Institute Crawley</p>
+              </div>
+              
+              <div class="content">
+                <div class="field">
+                  <div class="label">From</div>
+                  <div class="value">${name}</div>
+                </div>
+
+                <div class="field">
+                  <div class="label">Email Address</div>
+                  <div class="value"><a href="mailto:${email}" style="color: #22c55e;">${email}</a></div>
+                </div>
+
+                ${
+                  phone
+                    ? `
+                <div class="field">
+                  <div class="label">Phone Number</div>
+                  <div class="value"><a href="tel:${phone}" style="color: #22c55e;">${phone}</a></div>
+                </div>
+                `
+                    : ""
+                }
+
+                <div class="field">
+                  <div class="label">Subject</div>
+                  <div class="value">${subjectText}</div>
+                </div>
+
+                <div class="field">
+                  <div class="label">Message</div>
+                  <div class="message-box">
+                    ${message.replace(/\n/g, "<br>")}
+                  </div>
+                </div>
+
+                <div class="footer">
+                  <p>This message was sent from the contact form on your website.</p>
+                  <p>Reply directly to this email to respond to ${name}.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    });
+
+    // Check for errors
+    if (error) {
+      console.error("Resend error:", error);
       return NextResponse.json(
-        { error: "Failed to send message. Please try again." },
+        { error: "Failed to send email. Please try again later." },
         { status: 500 }
       );
     }
 
-    // Send notification email to admin
-    try {
-      await resend.emails.send({
-        from: emailConfig.from,
-        to: emailConfig.replyTo, // Sends to school's main email
-        replyTo: email, // Parent can reply directly
-        subject: `New Contact Form: ${subject || "General Inquiry"}`,
-        html: `
-      <h2>New Contact Form Submission</h2>
-      <p><strong>From:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
-      <p><strong>Subject:</strong> ${subject || "General Inquiry"}</p>
-      <p><strong>Message:</strong></p>
-      <p>${message.replace(/\n/g, "<br>")}</p>
-    `,
-      });
-    } catch (emailError) {
-      console.error("Failed to send contact notification email:", emailError);
-      // Don't fail the request if email fails
-    }
-
-    // Log for admin notification (TODO: Send email)
-    console.log("=== NEW CONTACT INQUIRY ===");
-    console.log(`From: ${name} (${email})`);
-    console.log(`Phone: ${phone || "N/A"}`);
-    console.log(`Subject: ${subject || "General Inquiry"}`);
-    console.log(`Message: ${message}`);
-    console.log("===========================");
-
-    // Return success
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Message sent successfully",
-      },
-      { status: 201 }
-    );
+    // Success response
+    return NextResponse.json({
+      success: true,
+      message: "Message sent successfully",
+      emailId: data?.id,
+    });
   } catch (error) {
     console.error("Contact form error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred. Please try again." },
+      { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
     );
   }
+}
+
+// Handle other HTTP methods
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
