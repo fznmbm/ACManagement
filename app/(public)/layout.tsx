@@ -4,6 +4,7 @@ import Image from "next/image"; // <-- ADD THIS LINE
 //import { PublicMobileMenu } from "@/components/layout/PublicMobileMenu";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import Script from "next/script";
+//import { getDomainUrls } from "@/lib/utils/domains";
 
 import dynamic from "next/dynamic";
 
@@ -74,6 +75,7 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
+  //const domains = getDomainUrls(); // ADD THIS LINE
   return (
     <>
       {/* Preconnect to Google Fonts - CRITICAL FOR PERFORMANCE */}
@@ -311,7 +313,11 @@ export default function PublicLayout({
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">For Parents</h3>
                 <Link
-                  href="/login"
+                  href={
+                    process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+                      ? "https://parent.al-hikmah.org/parent/login"
+                      : "https://ahic-parent.vercel.app/parent/login"
+                  }
                   className="inline-block rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                 >
                   Parent Portal Login

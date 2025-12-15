@@ -144,6 +144,22 @@ export default function LoginPage() {
             "Sign In"
           )}
         </button>
+
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          <p className="text-sm text-center text-muted-foreground">
+            Looking for the parent portal?{" "}
+            <a
+              href={
+                process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+                  ? "https://parent.al-hikmah.org/parent/login"
+                  : "https://ahic-parent.vercel.app/parent/login"
+              }
+              className="text-primary hover:underline font-medium"
+            >
+              Click here
+            </a>
+          </p>
+        </div>
       </form>
 
       {/* Development Quick Login Buttons

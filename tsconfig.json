@@ -37,7 +37,8 @@
     "app/api/contact/submit/route.ts.backup",
     "app/api/fees/generate-invoices/route copy.ts.backup",
     "components/ui/ThemeToggle.tsx.backup",
-    "middleware.ts.backup"
+    "middleware.ts",
+    "middleware-working.ts.backup"
   ],
   "exclude": ["node_modules"]
 }

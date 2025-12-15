@@ -16,10 +16,14 @@ import {
   Newspaper,
 } from "lucide-react";
 
+import { getDomainUrls } from "@/lib/utils/domains";
+
 export function PublicMobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
+
+  const domains = getDomainUrls();
 
   // Ensure component is mounted (for SSR)
   useEffect(() => {
@@ -227,7 +231,7 @@ export function PublicMobileMenu() {
               For Parents
             </p>
             <Link
-              href="/login"
+              href={`${domains.parent}/parent/login`}
               onClick={handleLinkClick}
               style={{
                 display: "flex",

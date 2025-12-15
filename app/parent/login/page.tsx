@@ -205,7 +205,11 @@ export default function ParentLoginPage() {
         {/* Footer */}
         <div className="mt-6 text-center">
           <Link
-            href="/"
+            href={
+              process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+                ? "https://al-hikmah.org"
+                : "https://ahic.vercel.app"
+            }
             className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
           >
             ← Back to main site
