@@ -35,7 +35,9 @@
     "app/(dashboard)/events/page.tsx.backup",
     "app/(parent)/parent/events/page.tsx.backup",
     "app/api/contact/submit/route.ts.backup",
-    "app/api/fees/generate-invoices/route copy.ts.backup"
+    "app/api/fees/generate-invoices/route copy.ts.backup",
+    "components/ui/ThemeToggle.tsx.backup",
+    "middleware.ts.backup"
   ],
   "exclude": ["node_modules"]
 }

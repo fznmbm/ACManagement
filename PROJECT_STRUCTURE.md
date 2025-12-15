@@ -1,7 +1,7 @@
 # Project Structure for ACManagement (SchoolRegister)
 
-**Generated:** December 9, 2025  
-**Total Files:** 227  
+**Generated:** December 15, 2025  
+**Total Files:** 257  
 **Workspace Root:** `f:\SchoolRegister`
 
 ---
@@ -10,18 +10,16 @@
 
 ```
 .env.example                 - Environment variables template
-.gitignore                   - Git ignore configuration
-Excellent.docx               - Document file
+.env.local                   - Local environment variables
 GITHUB_RAW_LINKS.md          - Raw GitHub links for all files
 GITHUB_RAW_LINKS copy.md     - Backup of raw links
-PROJECT_STRUCTURE.md         - This file
 middleware.ts                - Next.js middleware
-middleware copy.ts           - Middleware backup
 next-env.d.ts                - Next.js auto-generated types
 next.config.js               - Next.js configuration
 package.json                 - NPM dependencies & scripts
 package-lock.json            - NPM lock file
 postcss.config.js            - PostCSS configuration
+PROJECT_STRUCTURE.md         - This file
 tailwind.config.ts           - Tailwind CSS configuration
 tsconfig.json                - TypeScript configuration
 vercel.json                  - Vercel deployment configuration
@@ -38,6 +36,8 @@ vercel.json                  - Vercel deployment configuration
 app/
   layout.tsx                 - Root layout
   page.tsx                   - Root page
+  robots.ts                  - Robots.txt configuration
+  sitemap.ts                 - Sitemap configuration
 ```
 
 #### `/app/hooks`
@@ -54,44 +54,20 @@ app/(auth)/
     page.tsx                 - Login page
 ```
 
-#### `/app/(public)` - Public Routes
-```
-app/(public)/
-  layout.tsx                 - Public layout wrapper
-  home/
-    page.tsx                 - Home page
-  about/
-    page.tsx                 - About page
-  contact/
-    page.tsx                 - Contact page
-  programs/
-    page.tsx                 - Programs page
-  apply/
-    page.tsx                 - Application form page
-    success/
-      page.tsx               - Application success page
-```
-
 #### `/app/(dashboard)` - Admin Dashboard Routes
 ```
 app/(dashboard)/
   layout.tsx                 - Dashboard layout wrapper
-  dashboard/
-    page.tsx                 - Dashboard home
-  
   alerts/
     page.tsx                 - Alerts management
-  
   applications/
     page.tsx                 - Applications list
     [id]/
       page.tsx               - Application detail
-  
   attendance/
     page.tsx                 - Attendance marking
     history/
       page.tsx               - Attendance history
-  
   classes/
     page.tsx                 - Classes list
     new/
@@ -102,1040 +78,513 @@ app/(dashboard)/
         page.tsx             - Edit class
       feedback/
         page.tsx             - Class feedback
-  
-  students/
-    page.tsx                 - Students list
-    new/
-      page.tsx               - Create new student
-    link-parents/
-      page.tsx               - Link parents to students
-    [id]/
-      page.tsx               - Student detail
-      edit/
-        page.tsx             - Edit student
-  
-  fees/
-    page.tsx                 - Fees management
-  
-  fines/
-    page.tsx                 - Fines management
-  
-  messages/
-    page.tsx                 - Messages list
-    history/
-      page.tsx               - Message history
-  
-  events/
-    page.tsx                 - Events management
-    page.tsx.backup          - Events backup
-    page.tsx.backup1         - Events backup 2
-  
-  reports/
-    page.tsx                 - Reports dashboard
-  
-  settings/
-    page.tsx                 - Settings page
-  
-  notifications/
-    page.tsx                 - Notifications page
-  
   curriculum-assessment/
-    page.tsx                 - Curriculum assessment home
+    page.tsx                 - Curriculum assessment
     assessments/
       page.tsx               - Assessments list
       new/
-        page.tsx             - Create assessment
+        page.tsx             - New assessment
     certificates/
       page.tsx               - Certificates list
       generate/
         page.tsx             - Generate certificate
       view/
         page.tsx             - View certificate
+    memorization/
+      page.tsx               - Memorization tracking
+      new/
+        page.tsx             - New memorization item
+      track/
+        page.tsx             - Track memorization
     subjects/
       page.tsx               - Subjects list
       new/
-        page.tsx             - Create subject
+        page.tsx             - New subject
       [id]/
         page.tsx             - Subject detail
         edit/
           page.tsx           - Edit subject
-    memorization/
-      page.tsx               - Memorization tracking
-      new/
-        page.tsx             - Create memorization item
-      track/
-        page.tsx             - Track memorization progress
+  dashboard/
+    page.tsx                 - Dashboard home
+  events/
+    page.tsx                 - Events management
+    page.tsx.backup          - Backup of events page
+    page.tsx.backup1         - Another backup of events page
+  fees/
+    page.tsx                 - Fees management
+  fines/
+    page.tsx                 - Fines management
+  messages/
+    page.tsx                 - Messages
+    history/
+      page.tsx               - Message history
+  notifications/
+    page.tsx                 - Notifications
+  reports/
+    page.tsx                 - Reports
+  settings/
+    page.tsx                 - Settings
+  students/
+    page.tsx                 - Students list
+    link-parents/
+      page.tsx               - Link parents
+    new/
+      page.tsx               - New student
+    [id]/
+      page.tsx               - Student detail
+      edit/
+        page.tsx             - Edit student
 ```
 
 #### `/app/(parent)` - Parent Portal Routes
 ```
 app/(parent)/
-  layout.tsx                 - Parent portal layout wrapper
+  layout.tsx                 - Parent layout wrapper
   parent/
-    profile/
-      page.tsx               - Parent profile
+    applications/
+      page.tsx               - Parent applications
+    children/
+      page.tsx               - Parent children
     dashboard/
       page.tsx               - Parent dashboard
-    children/
-      page.tsx               - Child list
+    events/
+      page.tsx               - Parent events
+      page.tsx.backup        - Backup of parent events
+    finances/
+      page.tsx               - Parent finances
+    inbox/
+      page.tsx               - Parent inbox
+    messages/
+      page.tsx               - Parent messages
+    notifications/
+      page.tsx               - Parent notifications
+    profile/
+      page.tsx               - Parent profile
     student/
       [id]/
-        page.tsx             - Child detail/progress
-    finances/
-      page.tsx               - Finances & fees view
-    applications/
-      page.tsx               - Applications view
-    messages/
-      page.tsx               - Messages
-    notifications/
-      page.tsx               - Notifications
-    events/
-      page.tsx               - Events
-      page.tsx.backup        - Events backup
-    inbox/
-      page.tsx               - Inbox
+        page.tsx             - Parent student detail
 ```
 
-#### `/app/parent` - Legacy Parent Routes
+#### `/app/(public)` - Public Routes
+```
+app/(public)/
+  layout.tsx                 - Public layout wrapper
+  about/
+    page.tsx                 - About page
+  apply/
+    page.tsx                 - Application form
+    success/
+      page.tsx               - Application success
+  contact/
+    page.tsx                 - Contact page
+  cookies/
+    page.tsx                 - Cookies page
+  faq/
+    page.tsx                 - FAQ page
+  gallery/
+    page.tsx                 - Gallery page
+  home/
+    page.tsx                 - Home page
+  news/
+    page.tsx                 - News page
+  privacy/
+    page.tsx                 - Privacy page
+  programs/
+    page.tsx                 - Programs page
+  terms/
+    page.tsx                 - Terms page
+```
+
+#### `/app/api` - API Routes
+```
+app/api/
+  admin/
+    cleanup-orphaned-auth/
+      route.ts               - Cleanup orphaned auth
+    create-parent-account/
+      route.ts               - Create parent account
+  alerts/
+    check/
+      route.ts               - Check alerts
+  applications/
+    submit/
+      route.ts               - Submit application
+    [id]/
+      accept/
+        route.ts             - Accept application
+      reject/
+        route.ts             - Reject application
+      status/
+        route.ts             - Application status
+  contact/
+    submit/
+      route.ts               - Submit contact
+      route.ts.backup        - Backup of submit contact
+  cron/
+    daily-alerts/
+      route.ts               - Daily alerts cron
+  debug/
+    cookies/
+      route.ts               - Debug cookies
+  feedback/
+    send/
+      route.ts               - Send feedback
+  fees/
+    generate-invoices/
+      route.ts               - Generate invoices
+  messages/
+    send/
+      route.ts               - Send message
+    templates/
+      route.ts               - Message templates
+  notifications/
+    route.ts                 - Notifications
+    read/
+      route.ts               - Read notifications
+  parent/
+    fine/
+      [fineId]/
+        download/
+          route.ts           - Download fine
+    invoice/
+      [invoiceId]/
+        download/
+          route.ts           - Download invoice
+    send-login-details/
+      route.ts               - Send login details
+  settings/
+    route.ts                 - Settings
+    centre/
+      route.ts               - Centre settings
+```
+
+#### `/app/parent` - Parent Routes
 ```
 app/parent/
   login/
     page.tsx                 - Parent login
   set-password/
-    page.tsx                 - Set password page
+    page.tsx                 - Set password
 ```
-
-#### `/app/api` - API Routes
-
-##### Admin
-```
-app/api/admin/
-  create-parent-account/
-    route.ts                 - Create parent account endpoint
-```
-
-##### Alerts
-```
-app/api/alerts/
-  check/
-    route.ts                 - Check alerts endpoint
-```
-
-##### Applications
-```
-app/api/applications/
-  submit/
-    route.ts                 - Submit application
-  [id]/
-    accept/
-      route.ts               - Accept application
-    reject/
-      route.ts               - Reject application
-    status/
-      route.ts               - Get application status
-```
-
-##### Contact
-```
-app/api/contact/
-  submit/
-    route.ts                 - Submit contact form
-```
-
-##### Cron Jobs
-```
-app/api/cron/
-  daily-alerts/
-    route.ts                 - Daily alerts cron job
-```
-
-##### Debug
-```
-app/api/debug/
-  cookies/
-    route.ts                 - Debug cookies endpoint
-```
-
-##### Feedback
-```
-app/api/feedback/
-  send/
-    route.ts                 - Send feedback endpoint
-```
-
-##### Fees
-```
-app/api/fees/
-  generate-invoices/
-    route.ts                 - Generate invoices
-    route copy.ts            - Generate invoices backup
-```
-
-##### Messages
-```
-app/api/messages/
-  send/
-    route.ts                 - Send message endpoint
-  templates/
-    route.ts                 - Message templates endpoint
-```
-
-##### Notifications
-```
-app/api/notifications/
-  route.ts                   - Get/create notifications
-  read/
-    route.ts                 - Mark notification as read
-```
-
-##### Parent API
-```
-app/api/parent/
-  send-login-details/
-    route.ts                 - Send login details to parent
-  invoice/
-    [invoiceId]/
-      download/
-        route.ts             - Download invoice
-  fine/
-    [fineId]/
-      download/
-        route.ts             - Download fine
-```
-
-##### Settings
-```
-app/api/settings/
-  route.ts                   - Get/update settings
-  centre/
-    route.ts                 - Centre settings
-```
-
----
 
 ### `/components` - React Components
 
-#### Layout Components
+#### `/components/about`
 ```
-components/layout/
-  Header.tsx                 - Header/navigation component
-  Sidebar.tsx                - Sidebar component
-```
-
-#### Providers & UI
-```
-components/providers/
-  ThemeProvider.tsx          - Theme provider wrapper
-
-components/ui/
-  ThemeToggle.tsx            - Dark/light theme toggle
+components/about/
+  StaffSection.tsx           - Staff section component
 ```
 
-#### Alerts
+#### `/components/admin`
+```
+components/admin/
+  OrphanedAuthCleanup.tsx    - Orphaned auth cleanup component
+```
+
+#### `/components/alerts`
 ```
 components/alerts/
   AlertManagement.tsx        - Alert management component
 ```
 
-#### Applications
+#### `/components/applications`
 ```
 components/applications/
-  ApplicationsHeader.tsx      - Applications header
-  ApplicationsTable.tsx       - Applications table
-  ApplicationActions.tsx      - Application action buttons
-  AcademicYearSelector.tsx    - Academic year selector
+  AcademicYearSelector.tsx   - Academic year selector
+  ApplicationActions.tsx     - Application actions
+  ApplicationsHeader.tsx     - Applications header
+  ApplicationsTable.tsx      - Applications table
 ```
 
-#### Attendance
+#### `/components/attendance`
 ```
 components/attendance/
-  AttendanceFilters.tsx       - Attendance filters
-  AttendanceMarkingInterface.tsx - Attendance marking UI
-  AttendanceHistoryTable.tsx   - Attendance history table
+  AttendanceFilters.tsx      - Attendance filters
+  AttendanceHistoryTable.tsx - Attendance history table
+  AttendanceMarkingInterface.tsx - Attendance marking interface
 ```
 
-#### Classes
+#### `/components/classes`
 ```
 components/classes/
-  ClassesHeader.tsx           - Classes header
-  ClassesTable.tsx            - Classes table
-  ClassForm.tsx               - Create class form
-  EditClassForm.tsx           - Edit class form
+  ClassesHeader.tsx          - Classes header
+  ClassesTable.tsx           - Classes table
+  ClassForm.tsx              - Class form
+  EditClassForm.tsx          - Edit class form
 ```
 
-#### Curriculum & Assessment
+#### `/components/curriculum`
 ```
 components/curriculum/
-  AssessmentForm.tsx          - Assessment form
-  AssessmentsList.tsx         - Assessments list
-  CertificateForm.tsx         - Certificate form
-  CertificatePreview.tsx      - Certificate preview
-  CertificatesList.tsx        - Certificates list
-  CertificateViewClient.tsx   - Certificate viewer
-  CurriculumTopics.tsx        - Curriculum topics
-  EditSubjectForm.tsx         - Edit subject form
-  MemorizationItemForm.tsx    - Memorization item form
-  MemorizationLibrary.tsx     - Memorization library
-  StudentMemorizationTracker.tsx - Track student memorization
-  SubjectForm.tsx             - Create subject form
-  SubjectsTable.tsx           - Subjects table
+  AssessmentForm.tsx         - Assessment form
+  AssessmentsList.tsx        - Assessments list
+  CertificateForm.tsx        - Certificate form
+  CertificatePreview.tsx     - Certificate preview
+  CertificatesList.tsx       - Certificates list
+  CertificateViewClient.tsx  - Certificate view client
+  CurriculumTopics.tsx       - Curriculum topics
+  EditSubjectForm.tsx        - Edit subject form
+  MemorizationItemForm.tsx   - Memorization item form
+  MemorizationLibrary.tsx    - Memorization library
+  StudentMemorizationTracker.tsx - Student memorization tracker
+  SubjectForm.tsx            - Subject form
+  SubjectsTable.tsx          - Subjects table
 ```
 
-#### Events
+#### `/components/events`
 ```
 components/events/
-  EventRSVPConfig.tsx         - Event RSVP configuration
-  EventRSVPManagement.tsx     - RSVP management
-  ParentEventRSVP.tsx         - Parent event RSVP
-  WhatsAppEventModal.tsx      - WhatsApp event modal
+  EventRSVPConfig.tsx        - Event RSVP config
+  EventRSVPManagement.tsx    - Event RSVP management
+  ParentEventRSVP.tsx        - Parent event RSVP
+  WhatsAppEventModal.tsx     - WhatsApp event modal
 ```
 
-#### Feedback
+#### `/components/feedback`
 ```
 components/feedback/
-  EndOfClassFeedback.tsx      - End of class feedback form
+  EndOfClassFeedback.tsx     - End of class feedback
 ```
 
-#### Fees
+#### `/components/fees`
 ```
 components/fees/
-  FeeIndicator.tsx            - Fee indicator component
-  FeePaymentModal.tsx         - Fee payment modal
-  FeeStructureForm.tsx        - Fee structure form
-  QuarterSettings.tsx         - Quarter settings
-  StudentFeeAssignment.tsx    - Assign fees to students
+  FeeIndicator.tsx           - Fee indicator
+  FeePaymentModal.tsx        - Fee payment modal
+  FeeStructureForm.tsx       - Fee structure form
+  QuarterSettings.tsx        - Quarter settings
+  StudentFeeAssignment.tsx   - Student fee assignment
 ```
 
-#### Fines
+#### `/components/fines`
 ```
 components/fines/
-  FineCollectionModal.tsx     - Fine collection modal
-  FineIndicator.tsx           - Fine indicator component
+  FineCollectionModal.tsx    - Fine collection modal
+  FineIndicator.tsx          - Fine indicator
 ```
 
-#### Messages
+#### `/components/layout`
+```
+components/layout/
+  CookieConsent.tsx          - Cookie consent
+  Header.tsx                 - Header component
+  PublicMobileMenu.tsx       - Public mobile menu
+  Sidebar.tsx                - Sidebar component
+```
+
+#### `/components/messages`
 ```
 components/messages/
-  ClassMessageForm.tsx        - Send message to class
-  StudentMessageForm.tsx      - Send message to student
+  ClassMessageForm.tsx       - Class message form
+  StudentMessageForm.tsx     - Student message form
 ```
 
-#### Notifications
+#### `/components/notifications`
 ```
 components/notifications/
   ParentNotificationCenter.tsx - Parent notification center
   WhatsAppNotificationModal.tsx - WhatsApp notification modal
 ```
 
-#### Parent Portal
+#### `/components/parent`
 ```
 components/parent/
-  ParentDashboard.tsx         - Parent dashboard
-  ParentDashboard copy.tsx    - Dashboard backup
+  ParentDashboard copy.tsx   - Backup of parent dashboard
+  ParentDashboard.tsx        - Parent dashboard
   tabs/
-    AttendanceTab.tsx         - Attendance tab
-    AttendanceTab copy.tsx    - Attendance tab backup
-    CertificatesTab.tsx       - Certificates tab
-    FeesTab.tsx               - Fees tab
-    FinesTab.tsx              - Fines tab
-    GradesTab.tsx             - Grades tab
-    MemorizationTab.tsx       - Memorization tab
+    AttendanceTab.tsx        - Attendance tab
+    CertificatesTab.tsx      - Certificates tab
+    FeesTab.tsx              - Fees tab
+    FinesTab.tsx             - Fines tab
+    GradesTab.tsx            - Grades tab
+    MemorizationTab.tsx      - Memorization tab
 ```
 
-#### Public Components
+#### `/components/providers`
+```
+components/providers/
+  ThemeProvider.tsx          - Theme provider
+```
+
+#### `/components/public`
 ```
 components/public/
-  ApplicationForm.tsx         - Public application form
-  ContactForm.tsx             - Contact form
+  ApplicationForm.tsx        - Application form
+  ContactForm.tsx            - Contact form
 ```
 
-#### Reports
+#### `/components/reports`
 ```
 components/reports/
-  AcademicReportGenerator.tsx     - Academic report
-  AttendanceReportGenerator.tsx    - Attendance report
-  CertificateReportGenerator.tsx   - Certificate report
-  ClassReportGenerator.tsx         - Class report
-  LowAttendanceReportGenerator.tsx - Low attendance report
-  MemorizationReportGenerator.tsx  - Memorization report
-  ReportsDashboard.tsx            - Reports dashboard
-  StudentReportGenerator.tsx       - Student report
+  AcademicReportGenerator.tsx - Academic report generator
+  AttendanceReportGenerator.tsx - Attendance report generator
+  CertificateReportGenerator.tsx - Certificate report generator
+  ClassReportGenerator.tsx   - Class report generator
+  LowAttendanceReportGenerator.tsx - Low attendance report generator
+  MemorizationReportGenerator.tsx - Memorization report generator
+  ReportsDashboard.tsx       - Reports dashboard
+  StudentReportGenerator.tsx - Student report generator
 ```
 
-#### Settings
+#### `/components/settings`
 ```
 components/settings/
-  AcademicSettings.tsx        - Academic settings
-  ApplicationSettings.tsx      - Application settings
-  CentreSettings.tsx          - Centre settings
-  FeeSettings.tsx             - Fee settings
-  FeeSettings copy.tsx        - Fee settings backup
-  FineSettings.tsx            - Fine settings
-  GeneralSettings.tsx         - General settings
-  NotificationSettings.tsx    - Notification settings
-  SettingsTabs.tsx            - Settings tabs container
-  UserManagement.tsx          - User management
+  AcademicSettings.tsx       - Academic settings
+  ApplicationSettings.tsx    - Application settings
+  CentreSettings.tsx         - Centre settings
+  FeeSettings copy.tsx       - Backup of fee settings
+  FeeSettings.tsx            - Fee settings
+  FineSettings.tsx           - Fine settings
+  GeneralSettings.tsx        - General settings
+  NotificationSettings.tsx   - Notification settings
+  SettingsTabs.tsx           - Settings tabs
+  UserManagement.tsx         - User management
 ```
 
-#### Students
+#### `/components/students`
 ```
 components/students/
-  EditStudentForm.tsx         - Edit student form
-  FinancialImpactWarning.tsx  - Financial warning component
-  StudentActionButtons.tsx    - Student action buttons
-  StudentDeletionModal.tsx    - Student deletion modal
-  StudentFeeHistory.tsx       - Student fee history
-  StudentForm.tsx             - Create/edit student form
-  StudentProfileClient.tsx    - Student profile view
-  StudentsHeader.tsx          - Students header
-  StudentsTable.tsx           - Students table
-  StudentStatusBadge.tsx      - Status badge component
-  StudentStatusChangeModal.tsx - Status change modal
+  EditStudentForm.tsx        - Edit student form
+  FinancialImpactWarning.tsx - Financial impact warning
+  StudentActionButtons.tsx   - Student action buttons
+  StudentDeletionModal.tsx   - Student deletion modal
+  StudentFeeHistory.tsx      - Student fee history
+  StudentForm.tsx            - Student form
+  StudentProfileClient.tsx   - Student profile client
+  StudentsHeader.tsx         - Students header
+  StudentsTable.tsx          - Students table
+  StudentStatusBadge.tsx     - Student status badge
+  StudentStatusChangeModal.tsx - Student status change modal
 ```
 
----
+#### `/components/ui`
+```
+components/ui/
+  ThemeToggle.tsx            - Theme toggle
+  ThemeToggle.tsx.backup     - Backup of theme toggle
+```
 
-### `/hooks` - React Hooks
-
+### `/hooks` - Custom React Hooks
 ```
 hooks/
-  useCustomQuarters.ts        - Custom quarters hook
-  useFees.ts                  - Fees management hook
-  useFines.ts                 - Fines management hook
-  useParentNotifications.ts   - Parent notifications hook
-  useParentNotifications copy.ts - Notifications backup
-  useStudentManagement.ts     - Student management hook
-  useUnifiedNotifications.ts  - Unified notifications hook
+  useCustomQuarters.ts       - Custom quarters hook
+  useFees.ts                 - Fees hook
+  useFines.ts                - Fines hook
+  useParentNotifications copy.ts - Backup of parent notifications hook
+  useParentNotifications.ts  - Parent notifications hook
+  useStudentManagement.ts    - Student management hook
+  useUnifiedNotifications.ts - Unified notifications hook
 ```
 
----
+### `/lib` - Utility Libraries
 
-### `/lib` - Utilities & Libraries
-
-#### Supabase
-```
-lib/supabase/
-  client.ts                   - Supabase client-side setup
-  server.ts                   - Supabase server-side setup
-```
-
-#### Email
+#### `/lib/email`
 ```
 lib/email/
-  resend.ts                   - Resend email service
-  send-application-email.ts   - Send application emails
+  resend.ts                  - Resend email utility
+  send-application-email.ts  - Send application email
   templates/
-    application-accepted.tsx  - Application accepted template
-    application-received.tsx  - Application received template
-    application-rejected.tsx  - Application rejected template
+    application-accepted.tsx - Application accepted template
+    application-received.tsx - Application received template
+    application-rejected.tsx - Application rejected template
 ```
 
-#### PDF
+#### `/lib/pdf`
 ```
 lib/pdf/
-  invoice-generator.ts        - PDF invoice generator
+  invoice-generator.ts       - Invoice generator
 ```
 
-#### Types
+#### `/lib/supabase`
+```
+lib/supabase/
+  client.ts                  - Supabase client
+  server.ts                  - Supabase server
+```
+
+#### `/lib/types`
 ```
 lib/types/
-  database.ts                 - Database types
+  database.ts                - Database types
 ```
 
-#### Utils
+#### `/lib/utils`
 ```
 lib/utils/
-  gradeCalculator.ts          - Grade calculation utilities
-  helpers.ts                  - General helper functions
-  pdfExport.ts                - PDF export utilities
-  quarterInvoiceGenerator.ts  - Quarter invoice generation
-  whatsappMessages.ts         - WhatsApp messaging utilities
-  whatsappNotifications.ts    - WhatsApp notification utilities
+  gradeCalculator.ts         - Grade calculator
+  helpers.ts                 - Helper functions
+  pdfExport.ts               - PDF export utility
+  quarterInvoiceGenerator.ts - Quarter invoice generator
+  whatsappMessages.ts        - WhatsApp messages
+  whatsappNotifications.ts   - WhatsApp notifications
 ```
 
----
+### `/public` - Static Assets
 
-### `/supabase` - Database Migrations
-
+#### `/public/gallery`
 ```
-supabase/migrations/
-  001_initial_schema.sql              - Initial database schema
-  002_rls_policies.sql                - Row-level security policies
-  003_seed.sql                        - Seed data
-  004_memorization_certificates.sql   - Memorization & certificates
-  005_fine-setup.sql                  - Fine system setup
-  006_fee_management.sql              - Fee management system
-  007_applications_and_parent_portal.sql - Applications & parent portal
-  008_messages system.sql             - Messaging system
-  009_notification_system.sql         - Notification system
-  010_automated_alerts.sql            - Automated alerts
-  011_event_rsvp_system.sql           - Event RSVP system
-```
-
----
-
-### `/types` - TypeScript Type Definitions
-
-```
-types/
-  fees.ts                     - Fee types
-  fees copy.ts                - Fee types backup
-  fines.ts                    - Fine types
-  fines copy.ts               - Fine types backup
+public/gallery/
+  classroom-1.jpg            - Classroom image 1
+  classroom-2.jpg            - Classroom image 2
+  classroom-3.jpg            - Classroom image 3
+  classroom-4.jpg            - Classroom image 4
+  classroom-5.jpg            - Classroom image 5
+  classroom-6.jpg            - Classroom image 6
+  event-1.jpg                - Event image 1
+  event-2.jpg                - Event image 2
+  event-3.jpg                - Event image 3
+  event-4.jpg                - Event image 4
+  event-5.jpg                - Event image 5
+  event-6.jpg                - Event image 6
 ```
 
----
+#### `/public/logo`
+```
+public/logo/
+  ahlogo_web.png             - Web logo
+  ahlogo_web_nobg.png        - Web logo without background
+  ahseal.png                 - Seal logo
+  logo.png                   - Main logo
+  og-image.png               - Open graph image
+```
+
+#### `/public/staff`
+```
+public/staff/
+  headteacher.jpg            - Headteacher image
+  teacher-1.jpg              - Teacher 1 image
+  teacher-2.jpg              - Teacher 2 image
+```
 
 ### `/styles` - Stylesheets
-
 ```
 styles/
-  globals.css                 - Global styles
+  globals.css                - Global CSS styles
 ```
 
----
+### `/supabase` - Supabase Configuration
 
-### `/logo` - Assets
-
+#### `/supabase/migrations`
 ```
-logo/
-  ahlogo.jpg                  - School logo (JPG)
-  ahseal.png                  - School seal (PNG)
-```
-
----
-
-## Summary
-
-- **Framework:** Next.js (App Router)
-- **Language:** TypeScript/TSX
-- **Backend:** Supabase (PostgreSQL)
-- **Styling:** Tailwind CSS + PostCSS
-- **Integrations:** Resend (email), WhatsApp messaging
-- **Total Files:** 227 (including backups and copies)
-- **Key Features:** 
-  - Admin dashboard for staff
-  - Parent portal for viewing child progress
-  - Student & class management
-  - Attendance tracking
-  - Fee & fine management
-  - Event management with RSVP
-  - Notifications (email, WhatsApp)
-  - Curriculum & assessment
-  - Reporting system
-
----
-
-**Last Updated:** December 9, 2025
-
-## Styles
-
-```
-styles/
-  globals.css
+supabase/migrations/
+  001_initial_schema.sql    - Initial schema migration
+  002_rls_policies.sql      - RLS policies migration
+  003_seed.sql              - Seed data migration
+  004_memorization_certificates.sql - Memorization certificates migration
+  005_fine-setup.sql        - Fine setup migration
+  006_fee_management.sql    - Fee management migration
+  007_applications_and_parent_portal.sql - Applications and parent portal migration
+  008_messages system.sql   - Messages system migration
+  009_notification_system.sql - Notification system migration
+  010_automated_alerts.sql  - Automated alerts migration
+  011_event_rsvp_system.sql - Event RSVP system migration
 ```
 
-## Types
-
+### `/types` - TypeScript Type Definitions
 ```
 types/
-  fees.ts
-  fees copy.ts
-  fines.ts
-  fines copy.ts
+  fees copy.ts               - Backup of fees types
+  fees.ts                    - Fees types
+  fines copy.ts              - Backup of fines types
+  fines.ts                   - Fines types
 ```
-
-## Logos / Assets
-
-```
-logo/
-  ahlogo.jpg
-  ahseal.png
-```
-
-## Supabase Migrations
-
-```
-supabase/
-  migrations/
-    001_initial_schema.sql
-    002_rls_policies.sql
-    003_seed.sql
-    004_memorization_certificates.sql
-    005_fine-setup.sql
-    006_fee_management.sql
-    007_applications_and_parent_portal.sql
-    008_messages system.sql
-    009_notification_system.sql
-    010_automated_alerts.sql
-# Project Structure for ACManagement (SchoolRegister)
-
-This file documents the current project structure and all files/folders. Regenerated from the workspace on December 8, 2025.
-
-## Root Configuration Files
-
-```
-vercel.json
-tsconfig.json
-tailwind.config.ts
-PROJECT_STRUCTURE.md
-postcss.config.js
-package.json
-package-lock.json
-next.config.js
-middleware.ts
-middleware copy.ts
-.gitignore
-.env.example
-GITHUB_RAW_LINKS.md
-GITHUB_RAW_LINKS copy.md
-Excellent.docx
-```
-
-## Styles
-
-```
-styles/
-  globals.css
-```
-
-## Types
-
-```
-types/
-  fees.ts
-  fees copy.ts
-  fines.ts
-  fines copy.ts
-```
-
-## Logos / Assets
-
-```
-logo/
-  ahlogo.jpg
-  ahseal.png
-```
-
-## Supabase Migrations
-
-```
-supabase/
-  migrations/
-    001_initial_schema.sql
-    002_rls_policies.sql
-    003_seed.sql
-    004_memorization_certificates.sql
-    005_fine-setup.sql
-    006_fee_management.sql
-    007_applications_and_parent_portal.sql
-    008_messages system.sql
-    009_notification_system.sql
-    010_automated_alerts.sql
-    011_event_rsvp_system.sql
-```
-
-## App Directory (Next.js App Router)
-
-### Root Pages
-```
-app/
-  layout.tsx
-  page.tsx
-  hooks/
-    useFines.ts
-```
-
-### Public Routes
-```
-app/(public)/
-  layout.tsx
-  home/page.tsx
-  about/page.tsx
-  contact/page.tsx
-  programs/page.tsx
-  apply/
-    page.tsx
-    success/page.tsx
-```
-
-### Auth Routes
-```
-app/(auth)/
-  layout.tsx
-  login/page.tsx
-```
-
-### Parent Routes
-```
-app/(parent)/
-  layout.tsx
-  parent/
-    profile/page.tsx
-    dashboard/page.tsx
-    children/page.tsx
-    finances/page.tsx
-    applications/page.tsx
-    student/[id]/page.tsx
-    messages/page.tsx
-    notifications/page.tsx
-    events/page.tsx
-    inbox/page.tsx
-```
-
-### Legacy Parent Routes
-```
-app/parent/
-  login/page.tsx
-  set-password/page.tsx
-```
-
-### Dashboard Routes
-```
-app/(dashboard)/
-  layout.tsx
-  dashboard/page.tsx
-  attendance/
-    page.tsx
-    history/page.tsx
-  classes/
-    page.tsx
-    new/page.tsx
-    [id]/
-      page.tsx
-      edit/page.tsx
-      feedback/page.tsx
-  students/
-    page.tsx
-    new/page.tsx
-    link-parents/page.tsx
-    [id]/
-      page.tsx
-      edit/page.tsx
-  fees/page.tsx
-  fines/page.tsx
-  messages/page.tsx
-  messages/history/page.tsx
-  events/page.tsx
-  reports/page.tsx
-  settings/page.tsx
-  alerts/page.tsx
-  applications/
-    page.tsx
-    [id]/page.tsx
-```
-
-### Curriculum Assessment Routes
-```
-app/(dashboard)/curriculum-assessment/
-  page.tsx
-  assessments/
-    page.tsx
-    new/page.tsx
-  certificates/
-    page.tsx
-    generate/page.tsx
-    view/page.tsx
-  subjects/
-    page.tsx
-    new/page.tsx
-    [id]/
-      page.tsx
-      edit/page.tsx
-  memorization/
-    page.tsx
-    new/page.tsx
-    track/page.tsx
-```
-
-### API Routes
-```
-app/api/
-  admin/
-    create-parent-account/route.ts
-  alerts/
-    check/route.ts
-  applications/
-    submit/route.ts
-    [id]/
-      accept/route.ts
-      reject/route.ts
-      status/route.ts
-  contact/
-    submit/route.ts
-  cron/
-    daily-alerts/route.ts
-  debug/
-    cookies/route.ts
-  feedback/
-    send/route.ts
-  fees/
-    generate-invoices/
-      route.ts
-      route copy.ts
-  messages/
-    send/route.ts
-    templates/route.ts
-  notifications/
-    route.ts
-    read/route.ts
-  parent/
-    send-login-details/route.ts
-    invoice/[invoiceId]/download/route.ts
-    fine/[fineId]/download/route.ts
-  settings/
-    route.ts
-    centre/route.ts
-```
-
-## Components
-
-### Layout Components
-```
-components/
-  layout/
-    Header.tsx
-    Sidebar.tsx
-  providers/
-    ThemeProvider.tsx
-  ui/
-    ThemeToggle.tsx
-```
-
-### Alerts & Notifications
-```
-components/
-  alerts/
-    AlertManagement.tsx
-  notifications/
-    ParentNotificationCenter.tsx
-    WhatsAppNotificationModal.tsx
-```
-
-### Attendance Components
-```
-components/
-  attendance/
-    AttendanceFilters.tsx
-    AttendanceHistoryTable.tsx
-    AttendanceMarkingInterface.tsx
-```
-
-### Applications Components
-```
-components/
-  applications/
-    ApplicationsHeader.tsx
-    ApplicationsTable.tsx
-    ApplicationActions.tsx
-    AcademicYearSelector.tsx
-```
-
-### Classes Components
-```
-components/
-  classes/
-    ClassesHeader.tsx
-    ClassesTable.tsx
-    ClassForm.tsx
-    EditClassForm.tsx
-```
-
-### Curriculum Components
-```
-components/
-  curriculum/
-    AssessmentForm.tsx
-    AssessmentsList.tsx
-    CertificateForm.tsx
-    CertificatePreview.tsx
-    CertificatesList.tsx
-    CertificateViewClient.tsx
-    CurriculumTopics.tsx
-    EditSubjectForm.tsx
-    MemorizationItemForm.tsx
-    MemorizationLibrary.tsx
-    StudentMemorizationTracker.tsx
-    SubjectForm.tsx
-    SubjectsTable.tsx
-```
-
-### Fees & Fines Components
-```
-components/
-  fees/
-    FeeIndicator.tsx
-    FeePaymentModal.tsx
-    FeeStructureForm.tsx
-    QuarterSettings.tsx
-    StudentFeeAssignment.tsx
-  fines/
-    FineCollectionModal.tsx
-    FineIndicator.tsx
-```
-
-### Events & Messaging
-```
-components/
-  events/
-    EventRSVPConfig.tsx
-    WhatsAppEventModal.tsx
-  messages/
-    ClassMessageForm.tsx
-    StudentMessageForm.tsx
-```
-
-### Feedback Components
-```
-components/
-  feedback/
-    EndOfClassFeedback.tsx
-```
-
-### Public Components
-```
-components/
-  public/
-    ApplicationForm.tsx
-    ContactForm.tsx
-```
-
-### Reports Components
-```
-components/
-  reports/
-    AcademicReportGenerator.tsx
-    AttendanceReportGenerator.tsx
-    CertificateReportGenerator.tsx
-    ClassReportGenerator.tsx
-    LowAttendanceReportGenerator.tsx
-    MemorizationReportGenerator.tsx
-    ReportsDashboard.tsx
-    StudentReportGenerator.tsx
-```
-
-### Settings Components
-```
-components/
-  settings/
-    AcademicSettings.tsx
-    ApplicationSettings.tsx
-    CentreSettings.tsx
-    FeeSettings.tsx
-    FeeSettings copy.tsx
-    FineSettings.tsx
-    GeneralSettings.tsx
-    NotificationSettings.tsx
-    SettingsTabs.tsx
-    UserManagement.tsx
-```
-
-### Students Components
-```
-components/
-  students/
-    EditStudentForm.tsx
-    FinancialImpactWarning.tsx
-    StudentActionButtons.tsx
-    StudentDeletionModal.tsx
-    StudentFeeHistory.tsx
-    StudentForm.tsx
-    StudentProfileClient.tsx
-    StudentsHeader.tsx
-    StudentsTable.tsx
-    StudentStatusBadge.tsx
-    StudentStatusChangeModal.tsx
-```
-
-### Parent Components
-```
-components/
-  parent/
-    ParentDashboard.tsx
-    ParentDashboard copy.tsx
-    tabs/
-      AttendanceTab.tsx
-      AttendanceTab copy.tsx
-      CertificatesTab.tsx
-      FeesTab.tsx
-      FinesTab.tsx
-      GradesTab.tsx
-      MemorizationTab.tsx
-```
-
-## Hooks
-
-```
-hooks/
-  useUnifiedNotifications.ts
-  useCustomQuarters.ts
-  useFees.ts
-  useFines.ts
-  useParentNotifications.ts
-  useParentNotifications copy.ts
-  useStudentManagement.ts
-```
-
-## Lib / Utilities
-
-### Email
-```
-lib/
-  email/
-    resend.ts
-    send-application-email.ts
-    templates/
-      application-accepted.tsx
-      application-received.tsx
-      application-rejected.tsx
-```
-
-### PDF
-```
-lib/
-  pdf/
-    invoice-generator.ts
-```
-
-### Supabase
-```
-lib/
-  supabase/
-    client.ts
-    server.ts
-```
-
-### Types
-```
-lib/
-  types/
-    database.ts
-```
-
-### Utils
-```
-lib/
-  utils/
-    whatsappNotifications.ts
-    whatsappMessages.ts
-    quarterInvoiceGenerator.ts
-    helpers.ts
-    gradeCalculator.ts
-    pdfExport.ts
-```
-
-## Summary
-
-- **Total files:** 222 (including copies and duplicate/backup files)
-- **Production files:** ~205 (excluding `* copy.*` files)
-- **Key technologies:** Next.js (app router), TypeScript/TSX, Supabase, Tailwind CSS, React
-- **Main sections:** App routes, Components, Hooks, Lib utilities, Supabase migrations, Types, Styles
-
-## Notes
-
-- Copy files (e.g., `* copy.ts`, `* copy.tsx`) are included in the count but are typically backups.
-- New migrations: `011_event_rsvp_system.sql` added for event RSVP features.
-- New hooks: `useUnifiedNotifications.ts` and `useParentNotifications.ts`.
-- New components: WhatsApp notifications, events RSVP components, message/inbox screens.
-
-Generated on: December 8, 2025

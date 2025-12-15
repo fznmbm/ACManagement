@@ -3,8 +3,10 @@
 
 "use client";
 import Image from "next/image";
+import { useState } from "react";
 
 export function StaffSection() {
+  const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
   const staffMembers = [
     {
       id: 1,
@@ -117,7 +119,7 @@ export function StaffSection() {
               </div> */}
 
               {/* Staff Photo */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted rounded-t-lg">
+              {/* <div className="relative aspect-[4/3] overflow-hidden bg-muted rounded-t-lg">
                 <Image
                   src={staff.image}
                   alt={staff.name}
@@ -126,6 +128,45 @@ export function StaffSection() {
                   className="object-contain group-hover:scale-105 transition-transform duration-300"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
+              </div> */}
+
+              {/* Staff Photo with Fallback */}
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted rounded-t-lg">
+                {!imageError[staff.id] ? (
+                  <Image
+                    src={staff.image}
+                    alt={staff.name}
+                    fill
+                    className="object-contain group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onError={() =>
+                      setImageError((prev) => ({ ...prev, [staff.id]: true }))
+                    }
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <div className="w-24 h-24 mx-auto mb-3 bg-primary/10 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-12 h-12 text-primary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Photo placeholder
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Info */}
