@@ -12,7 +12,7 @@ interface StudentFeeHistoryProps {
 export default function StudentFeeHistory({
   studentId,
 }: StudentFeeHistoryProps) {
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const supabase = createClient();

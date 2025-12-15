@@ -91,7 +91,7 @@ export default function AttendanceMarkingInterface({
   const { getStudentFines, fetchStudentFineDetails, refreshFines } = useFines();
 
   const [selectedStudentForFees, setSelectedStudentForFees] =
-    useState<StudentData | null>(null);
+    useState<StudentFineData | null>(null);
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [studentFeeInvoices, setStudentFeeInvoices] = useState<FeeInvoice[]>(
     []

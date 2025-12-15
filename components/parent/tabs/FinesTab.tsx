@@ -43,7 +43,7 @@ interface FinesStats {
 export default function FinesTab({ studentId }: FinesTabProps) {
   const supabase = createClient();
 
-  const [fines, setFines] = useState<ParentFine[]>([]);
+  const [fines, setFines] = useState<any[]>([]);
   const [stats, setStats] = useState<FinesStats>({
     totalFines: 0,
     totalAmount: 0,

@@ -46,8 +46,8 @@ export default function StudentsTable({
     useState<any>(null);
   const [selectedStudentForFines, setSelectedStudentForFines] =
     useState<any>(null);
-  const [studentFeeInvoices, setStudentFeeInvoices] = useState([]);
-  const [studentFineDetails, setStudentFineDetails] = useState([]);
+  const [studentFeeInvoices, setStudentFeeInvoices] = useState<any[]>([]);
+  const [studentFineDetails, setStudentFineDetails] = useState<any[]>([]);
 
   const supabase = createClient();
 

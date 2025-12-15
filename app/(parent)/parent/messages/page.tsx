@@ -139,7 +139,7 @@ export default function ParentMessagesPage() {
 
       // Transform feedback notifications to message format
       const feedbackMessages: Message[] =
-        feedbackNotifications?.map((notif) => ({
+        feedbackNotifications?.map((notif: any) => ({
           id: notif.id,
           type: "teacher_feedback" as const,
           subject: notif.title,
@@ -147,31 +147,33 @@ export default function ParentMessagesPage() {
           created_at: notif.created_at,
           is_read: notif.is_read,
           sender: null,
-          student: notif.students,
+          student: Array.isArray(notif.students)
+            ? notif.students[0]
+            : notif.students,
           class_name: undefined,
         })) || [];
 
       // Transform admin messages
       const adminMessages: Message[] = [
-        ...(individualMessages?.map((msg) => ({
+        ...(individualMessages?.map((msg: any) => ({
           id: msg.id,
           type: "admin_message" as const,
           subject: msg.subject,
           message: msg.message,
           delivery_method: msg.delivery_method,
           created_at: msg.created_at,
-          sender: msg.sender,
-          student: msg.students,
+          sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
+          student: Array.isArray(msg.students) ? msg.students[0] : msg.students,
           class_name: undefined,
         })) || []),
-        ...(classMessages?.map((msg) => ({
+        ...(classMessages?.map((msg: any) => ({
           id: msg.id,
           type: "admin_message" as const,
           subject: msg.subject,
           message: msg.message,
           delivery_method: msg.delivery_method,
           created_at: msg.created_at,
-          sender: msg.sender,
+          sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
           student: null,
           class_name: msg.classes?.name,
         })) || []),

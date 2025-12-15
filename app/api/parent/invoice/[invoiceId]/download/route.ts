@@ -93,7 +93,7 @@ export async function GET(
     };
 
     // Generate PDF
-    const pdf = generateFeeInvoicePDF(invoiceData, schoolInfo);
+    const pdf = generateFeeInvoicePDF(invoiceData as any, schoolInfo as any);
     const pdfBuffer = Buffer.from(pdf.output("arraybuffer"));
 
     return new NextResponse(pdfBuffer, {
@@ -102,7 +102,7 @@ export async function GET(
         "Content-Disposition": `attachment; filename="invoice-${invoice.invoice_number}.pdf"`,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating invoice PDF:", error);
     return NextResponse.json(
       { error: "Failed to generate PDF" },

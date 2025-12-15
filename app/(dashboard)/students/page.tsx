@@ -21,9 +21,14 @@ interface Student {
   } | null;
 }
 
+interface Class {
+  id: string;
+  name: string;
+}
+
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const supabase = createClient();

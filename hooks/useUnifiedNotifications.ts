@@ -28,10 +28,7 @@ interface UnifiedNotification {
   created_at: string;
   is_read: boolean;
   archived?: boolean;
-  students: {
-    first_name: string;
-    last_name: string;
-  } | null;
+  students: any;
 }
 
 export function useUnifiedNotifications() {
@@ -168,7 +165,7 @@ export function useUnifiedNotifications() {
           console.error("Error loading notifications:", error);
           setNotifications([]);
         } else {
-          setNotifications(data || []);
+          setNotifications((data || []) as any);
         }
       } catch (error) {
         console.error("Error in loadNotifications:", error);

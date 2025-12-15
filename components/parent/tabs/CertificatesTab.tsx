@@ -19,7 +19,7 @@ interface Certificate {
   subject_id?: string;
   subjects?: {
     name: string;
-  };
+  } | null;
 }
 
 interface CertificatesTabProps {
@@ -64,7 +64,7 @@ export default function CertificatesTab({ studentId }: CertificatesTabProps) {
 
       if (error) throw error;
 
-      setCertificates(data || []);
+      setCertificates((data || []) as unknown as Certificate[]);
     } catch (err) {
       console.error("Error fetching certificates:", err);
     } finally {

@@ -37,7 +37,7 @@ interface StudentLink {
     classes?: {
       name: string;
       level: string;
-    };
+    } | null;
   };
 }
 
@@ -115,7 +115,7 @@ export default function MyChildrenPage() {
 
       if (error) throw error;
 
-      setChildren(data || []);
+      setChildren((data || []) as unknown as StudentLink[]);
 
       // Fetch stats for each student
       if (data && data.length > 0) {

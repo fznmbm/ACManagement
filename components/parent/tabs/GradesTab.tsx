@@ -13,10 +13,7 @@ interface Assessment {
   assessment_date: string;
   assessment_type: "quiz" | "test" | "exam" | "assignment" | "project";
   remarks?: string;
-  curriculum_topics: {
-    topic_name: string;
-    subject: string;
-  };
+  curriculum_topics?: any;
 }
 
 interface SubjectStats {
@@ -76,14 +73,15 @@ export default function GradesTab({ studentId }: GradesTabProps) {
 
       if (error) throw error;
 
-      setAssessments(data || []);
+      setAssessments((data || []) as any);
 
       // Calculate subject statistics
       if (data && data.length > 0) {
         const subjectMap = new Map<string, number[]>();
 
         data.forEach((assessment) => {
-          const subject = assessment.curriculum_topics?.subject || "Unknown";
+          const subject =
+            assessment.curriculum_topics?.[0]?.subjects?.[0]?.name || "Unknown";
           if (!subjectMap.has(subject)) {
             subjectMap.set(subject, []);
           }
@@ -324,7 +322,8 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                      {assessment.curriculum_topics?.subject || "N/A"}
+                      {assessment.curriculum_topics?.[0]?.subjects?.[0]?.name ||
+                        "N/A"}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-900 dark:text-white">
                       <div>
@@ -333,7 +332,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                         </p>
                         {assessment.curriculum_topics?.topic_name && (
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            {assessment.curriculum_topics.topic_name}
+                            {assessment.curriculum_topics[0].topic_name}
                           </p>
                         )}
                       </div>

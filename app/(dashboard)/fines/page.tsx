@@ -36,6 +36,18 @@ interface FineSettings {
   description: string;
 }
 
+interface Student {
+  id: string;
+  first_name: string;
+  last_name: string;
+  student_number: string;
+}
+
+interface Class {
+  id: string;
+  name: string;
+}
+
 export default function FinesPage() {
   const [fines, setFines] = useState<Fine[]>([]);
   // const [fineSettings, setFineSettings] = useState<FineSettings[]>([]);
@@ -50,8 +62,8 @@ export default function FinesPage() {
   const [studentFilter, setStudentFilter] = useState("");
   const [dateFromFilter, setDateFromFilter] = useState("");
   const [dateToFilter, setDateToFilter] = useState("");
-  const [students, setStudents] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
 
   const supabase = createClient();
 

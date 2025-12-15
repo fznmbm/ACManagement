@@ -27,7 +27,7 @@ export default function StudentFeeAssignment({
   onUpdate,
 }: StudentFeeAssignmentProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [availableStructures, setAvailableStructures] = useState([]);
+  const [availableStructures, setAvailableStructures] = useState<any[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedStructure, setSelectedStructure] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -178,7 +178,7 @@ export default function StudentFeeAssignment({
       alert(
         "Fee assignment added successfully! Generate invoices to create billing records."
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Unexpected error:", error);
       alert(`An unexpected error occurred: ${error.message}`);
     }

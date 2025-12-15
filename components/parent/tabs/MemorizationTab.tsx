@@ -25,7 +25,8 @@ interface StudentMemorization {
   last_tested_date?: string; // ✅ Changed from last_reviewed
   test_score?: number; // ✅ Added
   teacher_notes?: string; // ✅ Changed from notes
-  memorization_items: MemorizationItem;
+  //memorization_items: MemorizationItem;
+  memorization_items: any;
 }
 
 interface MemorizationStats {
@@ -97,7 +98,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
 
       if (error) throw error;
 
-      setMemorization(data || []);
+      setMemorization((data || []) as any);
 
       // Calculate statistics
       const total = data?.length || 0;

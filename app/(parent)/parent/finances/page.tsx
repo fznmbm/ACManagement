@@ -203,12 +203,15 @@ export default function ParentFinancesPage() {
             issued_date: fine.issued_date,
             paid_date: fine.paid_date || null,
             payment_method: fine.payment_method || null,
-            attendance: fine.attendance
-              ? {
-                  date: fine.attendance.date,
-                  status: fine.attendance.status,
-                }
-              : null,
+            attendance:
+              fine.attendance &&
+              Array.isArray(fine.attendance) &&
+              fine.attendance.length > 0
+                ? {
+                    date: fine.attendance[0].date,
+                    status: fine.attendance[0].status,
+                  }
+                : null,
             student: student || {
               id: "",
               first_name: "",
@@ -706,7 +709,8 @@ export default function ParentFinancesPage() {
                               <div>
                                 <h3 className="font-semibold text-slate-900 dark:text-white">
                                   {isInvoice
-                                    ? (payment as Invoice).invoice_number
+                                    ? //? (payment as Invoice).invoice_number
+                                      (payment as InvoiceDisplay).invoice_number
                                     : "Attendance Fine"}
                                 </h3>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -732,7 +736,8 @@ export default function ParentFinancesPage() {
                                   isInvoice
                                     ? downloadInvoice(
                                         payment.id,
-                                        (payment as Invoice).invoice_number
+                                        (payment as InvoiceDisplay)
+                                          .invoice_number
                                       )
                                     : downloadFineReceipt(payment.id)
                                 }

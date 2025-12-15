@@ -51,7 +51,7 @@ export const useStudentManagement = () => {
 
       if (error) throw error;
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating student status:", error);
       return { success: false, error: error.message };
     } finally {
@@ -72,7 +72,7 @@ export const useStudentManagement = () => {
 
       if (error) throw error;
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cleaning up student records:", error);
       return { success: false, error: error.message };
     } finally {
@@ -90,7 +90,7 @@ export const useStudentManagement = () => {
 
       if (error) throw error;
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting student:", error);
       return { success: false, error: error.message };
     } finally {

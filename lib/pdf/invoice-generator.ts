@@ -81,7 +81,7 @@ export function generateFeeInvoicePDF(data: InvoiceData, schoolInfo: any) {
     overdue: [239, 68, 68],
   };
   const statusColor = statusColors[data.status] || [100, 100, 100];
-  doc.setFillColor(...statusColor);
+  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(rightX, 68, 35, 7, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
@@ -143,7 +143,7 @@ export function generateFeeInvoicePDF(data: InvoiceData, schoolInfo: any) {
   });
 
   doc.setFontSize(12);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text("TOTAL:", totalsX, totalsStartY + 8);
   doc.text(`£${data.total.toFixed(2)}`, 190, totalsStartY + 8, {
@@ -152,7 +152,7 @@ export function generateFeeInvoicePDF(data: InvoiceData, schoolInfo: any) {
 
   // Payment Information (if paid)
   if (data.status === "paid" && data.paid_date) {
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(34, 197, 94);
     const paidY = totalsStartY + 20;
@@ -230,7 +230,7 @@ export function generateFineReceiptPDF(data: FineReceiptData, schoolInfo: any) {
     waived: [59, 130, 246],
   };
   const statusColor = statusColors[data.status] || [100, 100, 100];
-  doc.setFillColor(...statusColor);
+  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(rightX, 63, 35, 7, 2, 2, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
@@ -262,13 +262,13 @@ export function generateFineReceiptPDF(data: FineReceiptData, schoolInfo: any) {
   doc.text(`Reason: ${data.fine_reason}`, 20, 117);
 
   doc.setFontSize(14);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(239, 68, 68); // Red for fine amount
   doc.text(`Amount: £${data.amount.toFixed(2)}`, 20, 125);
 
   // Payment Information
   if (data.status === "paid" && data.paid_date) {
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(34, 197, 94);
     doc.text("PAYMENT INFORMATION:", 15, 145);
@@ -287,7 +287,7 @@ export function generateFineReceiptPDF(data: FineReceiptData, schoolInfo: any) {
     // Paid Stamp
     doc.setFontSize(24);
     doc.setTextColor(34, 197, 94);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("PAID", 105, 180, {
       align: "center",
       angle: 15,
