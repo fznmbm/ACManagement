@@ -4,7 +4,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 // Note: Metadata export doesn't work in client components
@@ -132,13 +132,13 @@ export default function GalleryPage() {
   };
 
   // Close on Escape key
-  useState(() => {
+  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeLightbox();
     };
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  });
+  }, []);
 
   return (
     <div className="flex flex-col">
