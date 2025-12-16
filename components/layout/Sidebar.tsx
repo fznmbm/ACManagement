@@ -154,6 +154,12 @@ export default function Sidebar({ profile }: SidebarProps) {
       roles: ["admin", "super_admin"],
     },
     {
+      name: "User Management",
+      href: "/users",
+      icon: Users,
+      roles: ["super_admin"],
+    },
+    {
       name: "Settings",
       href: "/settings",
       icon: Settings,

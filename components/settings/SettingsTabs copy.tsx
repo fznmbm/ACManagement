@@ -55,7 +55,7 @@ export default function SettingsTabs({
     { id: "general" as TabId, name: "General", icon: Settings },
     { id: "academic" as TabId, name: "Academic", icon: Calendar },
     { id: "notifications" as TabId, name: "Notifications", icon: Bell },
-    //{ id: "users" as TabId, name: "Users", icon: Users },
+    { id: "users" as TabId, name: "Users", icon: Users },
     { id: "centre" as TabId, name: "Centre Info", icon: Building2 },
     { id: "fines" as TabId, name: "Fine Settings", icon: Coins }, // Add this
     { id: "fees" as TabId, name: "Fee Settings", icon: Receipt }, // Add this
@@ -108,9 +108,9 @@ export default function SettingsTabs({
         {activeTab === "notifications" && (
           <NotificationSettings settings={initialSettings} />
         )}
-        {/* {activeTab === "users" && (
+        {activeTab === "users" && (
           <UserManagement users={users} currentUserId={currentUserId} />
-        )} */}
+        )}
         {activeTab === "centre" && (
           <CentreSettings settings={initialSettings} />
         )}
