@@ -12,6 +12,7 @@ import {
   Coins,
   Receipt,
   FileText,
+  Lock,
 } from "lucide-react";
 import GeneralSettings from "./GeneralSettings";
 import AcademicSettings from "./AcademicSettings";
@@ -21,6 +22,7 @@ import CentreSettings from "./CentreSettings";
 import FineSettings from "./FineSettings";
 import FeeSettings from "./FeeSettings";
 import ApplicationSettings from "@/components/settings/ApplicationSettings";
+import PasswordSettings from "@/components/settings/PasswordSettings";
 // Add this import with the other imports
 import OrphanedAuthCleanup from "@/components/admin/OrphanedAuthCleanup";
 
@@ -39,6 +41,7 @@ type TabId =
   | "fines"
   | "fees"
   | "applications"
+  | "password"
   | "maintenance"; // ← ADD THIS
 
 export default function SettingsTabs({
@@ -62,6 +65,7 @@ export default function SettingsTabs({
       name: "Applications Settings",
       icon: FileText,
     }, // Add this
+    { id: "password" as TabId, name: "Password & Security", icon: Lock },
     { id: "maintenance" as TabId, name: "Maintenance", icon: Shield }, // ← ADD THIS
   ];
 
@@ -113,6 +117,7 @@ export default function SettingsTabs({
         {activeTab === "fines" && <FineSettings />}
         {activeTab === "fees" && <FeeSettings />}
         {activeTab === "applications" && <ApplicationSettings />}
+        {activeTab === "password" && <PasswordSettings />}
         {activeTab === "maintenance" && <OrphanedAuthCleanup />}{" "}
         {/* ← ADD THIS */}
       </div>
