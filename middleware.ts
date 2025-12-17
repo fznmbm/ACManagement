@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
       "/notifications",
       "/events",
       "/alerts",
-      "/communications",
+      "/users",
     ];
 
     // Define all parent routes (COMPLETE LIST)
@@ -239,7 +239,7 @@ export async function middleware(request: NextRequest) {
     "/notifications",
     "/events",
     "/alerts",
-    "/communications",
+    "/users",
   ];
 
   const parentRoutes = [
