@@ -1,228 +1,52 @@
-// middleware.ts
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  const hostname = request.headers.get("host") || "";
   const { pathname } = request.nextUrl;
-
-  console.log("🌐 Middleware:", { hostname, pathname });
+  const hostname = request.headers.get("host") ?? "";
 
   // ==========================================
-  // DEVELOPMENT MODE CHECK
+  // ENVIRONMENT DETECTION
   // ==========================================
-  const isDevelopment =
+  const isLocalhost =
     hostname.includes("localhost") || hostname.includes("127.0.0.1");
 
-  if (!isDevelopment) {
-    // ==========================================
-    // PRODUCTION: DOMAIN-BASED ROUTING
-    // ==========================================
+  const isPublicDomain =
+    hostname === "ahic.vercel.app" || hostname === "www.al-hikmah.org";
 
-    // Define all admin routes (COMPLETE LIST)
-    const adminRoutes = [
-      "/dashboard",
-      "/students",
-      "/classes",
-      "/attendance",
-      "/reports",
-      "/settings",
-      "/fees",
-      "/fines",
-      "/applications",
-      "/curriculum-assessment",
-      "/messages",
-      "/notifications",
-      "/events",
-      "/alerts",
-      "/users",
-    ];
+  const isAdminDomain =
+    hostname === "ahic-admin.vercel.app" || hostname === "admin.al-hikmah.org";
 
-    // Define all parent routes (COMPLETE LIST)
-    const parentRoutes = [
-      "/parent/dashboard",
-      "/parent/children",
-      "/parent/finances",
-      "/parent/messages",
-      "/parent/notifications",
-      "/parent/profile",
-      "/parent/applications",
-      "/parent/events",
-      "/parent/inbox",
-      "/parent/student",
-    ];
+  const isParentDomain =
+    hostname === "ahic-parent.vercel.app" ||
+    hostname === "parent.al-hikmah.org";
 
-    // Define public routes
-    const publicRoutes = [
-      "/home",
-      "/about",
-      "/contact",
-      "/apply",
-      "/gallery",
-      "/faq",
-      "/news",
-      "/programs",
-      "/privacy",
-      "/terms",
-      "/cookies",
-      "/",
-    ];
+  const isApi = pathname.startsWith("/api");
+  const isAsset =
+    pathname.startsWith("/_next") ||
+    pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp|css|js)$/);
 
-    const isAdminDomain =
-      hostname.includes("ahic-admin") || hostname.startsWith("admin.");
-    const isParentDomain =
-      hostname.includes("ahic-parent") || hostname.startsWith("parent.");
-    const isMainDomain = !isAdminDomain && !isParentDomain;
-
-    // ADMIN SUBDOMAIN
-    if (isAdminDomain) {
-      const isAdminRoute = adminRoutes.some((route) =>
-        pathname.startsWith(route)
-      );
-      const isLogin = pathname === "/login";
-      const isApi = pathname.startsWith("/api");
-      const isAsset =
-        pathname.startsWith("/_next") ||
-        pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp|css|js)$/);
-
-      if (isAdminRoute || isLogin || isApi || isAsset) {
-        // Continue
-      } else {
-        if (pathname === "/" || pathname === "/home") {
-          return NextResponse.redirect(new URL("/login", request.url));
-        }
-        if (parentRoutes.some((route) => pathname.startsWith(route))) {
-          return NextResponse.redirect(new URL("/login", request.url));
-        }
-        if (
-          publicRoutes.some((route) => pathname === route) &&
-          pathname !== "/"
-        ) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (!isApi && !isAsset) {
-          return NextResponse.redirect(new URL("/login", request.url));
-        }
-      }
-    }
-
-    // PARENT SUBDOMAIN
-    if (isParentDomain) {
-      const isParentRoute = parentRoutes.some((route) =>
-        pathname.startsWith(route)
-      );
-      const isParentLogin = pathname === "/parent/login";
-      const isSetPassword = pathname === "/parent/set-password";
-      const isApi = pathname.startsWith("/api");
-      const isAsset =
-        pathname.startsWith("/_next") ||
-        pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp|css|js)$/);
-
-      if (isParentRoute || isParentLogin || isSetPassword || isApi || isAsset) {
-        // Continue
-      } else {
-        if (pathname === "/" || pathname === "/home") {
-          return NextResponse.redirect(new URL("/parent/login", request.url));
-        }
-        if (pathname === "/login") {
-          return NextResponse.redirect(new URL("/parent/login", request.url));
-        }
-        if (adminRoutes.some((route) => pathname.startsWith(route))) {
-          return NextResponse.redirect(new URL("/parent/login", request.url));
-        }
-        if (
-          publicRoutes.some((route) => pathname === route) &&
-          pathname !== "/"
-        ) {
-          return NextResponse.redirect(new URL("/parent/login", request.url));
-        }
-        if (!isApi && !isAsset) {
-          return NextResponse.redirect(new URL("/parent/login", request.url));
-        }
-      }
-    }
-
-    // MAIN DOMAIN - PUBLIC ONLY
-    if (isMainDomain) {
-      if (adminRoutes.some((route) => pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-      if (parentRoutes.some((route) => pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-    }
+  if (isApi || isAsset) {
+    return NextResponse.next();
   }
 
   // ==========================================
-  // AUTHENTICATION & AUTHORIZATION
-  // (Works in both development and production)
+  // ROUTE DEFINITIONS
   // ==========================================
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let userRole: string | null = null;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    userRole = profile?.role || null;
-  }
+  const publicRoutes = [
+    "/",
+    "/home",
+    "/about",
+    "/contact",
+    "/apply",
+    "/gallery",
+    "/faq",
+    "/news",
+    "/programs",
+    "/privacy",
+    "/terms",
+    "/cookies",
+  ];
 
   const adminRoutes = [
     "/dashboard",
@@ -255,66 +79,121 @@ export async function middleware(request: NextRequest) {
     "/parent/student",
   ];
 
-  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
-  const isParentRoute = parentRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isPublicRoute = publicRoutes.includes(pathname);
+  const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
+  const isParentRoute = parentRoutes.some((r) => pathname.startsWith(r));
+
+  // Login routes
   const isAdminLogin = pathname === "/login";
   const isParentLogin = pathname === "/parent/login";
   const isSetPassword = pathname === "/parent/set-password";
 
-  if (isSetPassword) {
-    return response;
+  // ==========================================
+  // LOCALHOST → ALLOW EVERYTHING
+  // ==========================================
+  if (isLocalhost) {
+    return NextResponse.next();
   }
 
-  if (user && userRole) {
-    if (isAdminLogin) {
-      if (["admin", "super_admin", "teacher"].includes(userRole)) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-      if (userRole === "parent") {
-        return NextResponse.redirect(new URL("/parent/dashboard", request.url));
-      }
+  // ==========================================
+  // PUBLIC DOMAIN (NO AUTH, NO SUPABASE)
+  // ==========================================
+  if (isPublicDomain) {
+    if (!isPublicRoute) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
-
-    if (isParentLogin) {
-      if (userRole === "parent") {
-        return NextResponse.redirect(new URL("/parent/dashboard", request.url));
-      }
-      if (["admin", "super_admin", "teacher"].includes(userRole)) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-    }
+    return NextResponse.next();
   }
 
-  if (isAdminRoute) {
-    if (!user) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    if (
-      userRole !== "admin" &&
-      userRole !== "super_admin" &&
-      userRole !== "teacher"
-    ) {
-      if (userRole === "parent") {
-        return NextResponse.redirect(new URL("/parent/dashboard", request.url));
-      }
+  // ==========================================
+  // ADMIN DOMAIN – ROUTE GUARD ONLY (NO ROLE YET)
+  // ==========================================
+  if (isAdminDomain) {
+    if (!(isAdminRoute || isAdminLogin)) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
-  if (isParentRoute) {
-    if (!user) {
+  // ==========================================
+  // PARENT DOMAIN – ROUTE GUARD ONLY (NO ROLE YET)
+  // ==========================================
+  if (isParentDomain) {
+    if (!(isParentRoute || isParentLogin || isSetPassword)) {
       return NextResponse.redirect(new URL("/parent/login", request.url));
     }
+  }
 
+  // ==========================================
+  // AUTHENTICATION (ADMIN + PARENT ONLY)
+  // ==========================================
+  let response = NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name) => request.cookies.get(name)?.value,
+        set: (name, value, options: CookieOptions) => {
+          response.cookies.set({ name, value, ...options });
+        },
+        remove: (name, options: CookieOptions) => {
+          response.cookies.set({ name, value: "", ...options });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    if (isAdminDomain) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    if (isParentDomain) {
+      return NextResponse.redirect(new URL("/parent/login", request.url));
+    }
+  }
+
+  let userRole: string | null = null;
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    userRole = profile?.role ?? null;
+  }
+
+  // ==========================================
+  // ROLE ENFORCEMENT
+  // ==========================================
+  if (isAdminDomain && isAdminRoute) {
+    if (!["admin", "super_admin", "teacher"].includes(userRole || "")) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
+  if (isParentDomain && isParentRoute) {
     if (userRole !== "parent") {
-      if (["admin", "super_admin", "teacher"].includes(userRole || "")) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
       return NextResponse.redirect(new URL("/parent/login", request.url));
     }
+  }
+
+  // Redirect logged-in users away from login pages
+  if (
+    isAdminLogin &&
+    ["admin", "super_admin", "teacher"].includes(userRole || "")
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  if (isParentLogin && userRole === "parent") {
+    return NextResponse.redirect(new URL("/parent/dashboard", request.url));
   }
 
   return response;
