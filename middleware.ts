@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
       "/notifications",
       "/events",
       "/alerts",
-      //"/users",
+      "/users",
     ];
 
     // Define all parent routes (COMPLETE LIST)
@@ -150,9 +150,29 @@ export async function middleware(request: NextRequest) {
 
     // MAIN DOMAIN - PUBLIC ONLY
     if (isMainDomain) {
+      // Redirect /login and /parent/login to appropriate domains
+      if (pathname === "/login") {
+        const adminDomain =
+          process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+            ? "https://admin.al-hikmah.org"
+            : "https://ahic-admin.vercel.app";
+        return NextResponse.redirect(new URL("/login", adminDomain));
+      }
+
+      if (pathname === "/parent/login") {
+        const parentDomain =
+          process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+            ? "https://parent.al-hikmah.org"
+            : "https://ahic-parent.vercel.app";
+        return NextResponse.redirect(new URL("/parent/login", parentDomain));
+      }
+
+      // Block all admin routes
       if (adminRoutes.some((route) => pathname.startsWith(route))) {
         return NextResponse.redirect(new URL("/", request.url));
       }
+
+      // Block all parent routes
       if (parentRoutes.some((route) => pathname.startsWith(route))) {
         return NextResponse.redirect(new URL("/", request.url));
       }
@@ -239,7 +259,7 @@ export async function middleware(request: NextRequest) {
     "/notifications",
     "/events",
     "/alerts",
-    //"/users",
+    "/users",
   ];
 
   const parentRoutes = [
