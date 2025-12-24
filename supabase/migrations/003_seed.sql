@@ -64,7 +64,7 @@ INSERT INTO public.classes (name, description, level, capacity, academic_year, s
 -- INSERT STUDENTS
 -- =====================================================
 
--- Class 1: Quran Beginners (5 students)
+-- Class 1: Class - 05 (5 students)
 INSERT INTO public.students (
   first_name, last_name, arabic_name, date_of_birth, gender,
   parent_name, parent_email, parent_phone, parent_phone_secondary,
@@ -75,39 +75,39 @@ INSERT INTO public.students (
   'Ali', 'Ahmed', 'علي أحمد', '2014-03-15', 'male',
   'Mohammed Ahmed', 'mohammed.ahmed@email.com', '+44 7700 900001', NULL,
   '10 Park Road', 'London', 'E1 4NS',
-  (SELECT id FROM public.classes WHERE name = 'Quran Beginners - Morning' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 05' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Aisha', 'Hassan', 'عائشة حسان', '2013-07-22', 'female',
   'Fatima Hassan', 'fatima.hassan@email.com', '+44 7700 900002', NULL,
   '25 Oak Avenue', 'London', 'E2 8HQ',
-  (SELECT id FROM public.classes WHERE name = 'Quran Beginners - Morning' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 05' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Omar', 'Ibrahim', 'عمر إبراهيم', '2014-11-08', 'male',
   'Khalid Ibrahim', 'khalid.ibrahim@email.com', '+44 7700 900003', '+44 7700 900033',
   '42 High Street', 'London', 'E3 2ND',
-  (SELECT id FROM public.classes WHERE name = 'Quran Beginners - Morning' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 05' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Mariam', 'Abdullah', 'مريم عبدالله', '2013-12-30', 'female',
   'Amina Abdullah', 'amina.abdullah@email.com', '+44 7700 900004', NULL,
   '18 Green Lane', 'London', 'E4 7JH',
-  (SELECT id FROM public.classes WHERE name = 'Quran Beginners - Morning' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 05' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Yusuf', 'Khan', 'يوسف خان', '2014-05-19', 'male',
   'Imran Khan', 'imran.khan@email.com', '+44 7700 900005', NULL,
   '7 Station Road', 'London', 'E5 0PL',
-  (SELECT id FROM public.classes WHERE name = 'Quran Beginners - Morning' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 05' LIMIT 1),
   '2024-09-01', 'active'
 );
 
--- Class 2: Quran Intermediate (5 students)
+-- Class 2: Class - 04 (5 students)
 INSERT INTO public.students (
   first_name, last_name, arabic_name, date_of_birth, gender,
   parent_name, parent_email, parent_phone,
@@ -118,39 +118,39 @@ INSERT INTO public.students (
   'Bilal', 'Mahmood', 'بلال محمود', '2012-02-14', 'male',
   'Tariq Mahmood', 'tariq.mahmood@email.com', '+44 7700 900006',
   '33 Church Street', 'London', 'E6 1AB',
-  (SELECT id FROM public.classes WHERE name = 'Quran Intermediate - Afternoon' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 04' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Zainab', 'Ali', 'زينب علي', '2011-09-25', 'female',
   'Sara Ali', 'sara.ali@email.com', '+44 7700 900007',
   '56 Mill Lane', 'London', 'E7 9RP',
-  (SELECT id FROM public.classes WHERE name = 'Quran Intermediate - Afternoon' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 04' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Hassan', 'Malik', 'حسن مالك', '2012-06-10', 'male',
   'Usman Malik', 'usman.malik@email.com', '+44 7700 900008',
   '91 Bridge Road', 'London', 'E8 4QJ',
-  (SELECT id FROM public.classes WHERE name = 'Quran Intermediate - Afternoon' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 04' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Hafsa', 'Rahman', 'حفصة رحمان', '2011-11-03', 'female',
   'Nadia Rahman', 'nadia.rahman@email.com', '+44 7700 900009',
   '14 Market Street', 'London', 'E9 5SJ',
-  (SELECT id FROM public.classes WHERE name = 'Quran Intermediate - Afternoon' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 04' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Ibrahim', 'Siddique', 'إبراهيم صديق', '2012-08-17', 'male',
   'Ahmed Siddique', 'ahmed.siddique@email.com', '+44 7700 900010',
   '28 Victoria Road', 'London', 'E10 7NW',
-  (SELECT id FROM public.classes WHERE name = 'Quran Intermediate - Afternoon' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 04' LIMIT 1),
   '2024-09-01', 'active'
 );
 
--- Class 3: Islamic Studies (5 students)
+-- Class 3: Class - 06 (5 students)
 INSERT INTO public.students (
   first_name, last_name, arabic_name, date_of_birth, gender,
   parent_name, parent_email, parent_phone,
@@ -161,35 +161,35 @@ INSERT INTO public.students (
   'Zakariya', 'Hussain', 'زكريا حسين', '2010-04-20', 'male',
   'Rashid Hussain', 'rashid.hussain@email.com', '+44 7700 900011',
   '73 Forest Road', 'London', 'E11 1LN',
-  (SELECT id FROM public.classes WHERE name = 'Islamic Studies - Weekend' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 06' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Khadija', 'Farooq', 'خديجة فاروق', '2010-01-12', 'female',
   'Yasmin Farooq', 'yasmin.farooq@email.com', '+44 7700 900012',
   '45 Garden Walk', 'London', 'E12 6TL',
-  (SELECT id FROM public.classes WHERE name = 'Islamic Studies - Weekend' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 06' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Sulaiman', 'Iqbal', 'سليمان إقبال', '2011-07-05', 'male',
   'Farhan Iqbal', 'farhan.iqbal@email.com', '+44 7700 900013',
   '62 Hill Crescent', 'London', 'E13 8FD',
-  (SELECT id FROM public.classes WHERE name = 'Islamic Studies - Weekend' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 06' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Ruqayyah', 'Yusuf', 'رقية يوسف', '2010-10-28', 'female',
   'Haleema Yusuf', 'haleema.yusuf@email.com', '+44 7700 900014',
   '19 River Street', 'London', 'E14 3PQ',
-  (SELECT id FROM public.classes WHERE name = 'Islamic Studies - Weekend' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 06' LIMIT 1),
   '2024-09-01', 'active'
 ),
 (
   'Hamza', 'Sheikh', 'حمزة شيخ', '2011-03-16', 'male',
   'Bilal Sheikh', 'bilal.sheikh@email.com', '+44 7700 900015',
   '88 Tower Lane', 'London', 'E15 2BH',
-  (SELECT id FROM public.classes WHERE name = 'Islamic Studies - Weekend' LIMIT 1),
+  (SELECT id FROM public.classes WHERE name = 'Class - 06' LIMIT 1),
   '2024-09-01', 'active'
 );
 

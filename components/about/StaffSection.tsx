@@ -34,7 +34,7 @@ export function StaffSection() {
     },
     {
       id: 4,
-      name: "Imran Mohamed",
+      name: "Imran Habeebullah",
       role: "Teaching Assistant",
       //qualifications: "MA Arabic Language & Literature",
       bio: "Serves as the dedicated Teaching Assistant to the Head Teacher, providing essential support across key academic and operational areas. Focussing on student engagement and classroom management, ensuring the Head Teacher's academic vision is effectively implemented at the ground level.",

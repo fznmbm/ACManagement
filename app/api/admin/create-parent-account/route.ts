@@ -276,12 +276,27 @@ export async function POST(request: Request) {
     if (isNewUser) {
       try {
         console.log("📧 Generating magic link...");
+        // const { data: magicLinkData, error: magicLinkError } =
+        //   await supabaseAdmin.auth.admin.generateLink({
+        //     type: "magiclink",
+        //     email: normalizedEmail,
+        //     options: {
+        //       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/parent/set-password`,
+        //     },
+        //   });
+
+        // Get the base URL from the request
+        const requestUrl = new URL(request.url);
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL ||
+          `${requestUrl.protocol}//${requestUrl.host}`;
+
         const { data: magicLinkData, error: magicLinkError } =
           await supabaseAdmin.auth.admin.generateLink({
             type: "magiclink",
             email: normalizedEmail,
             options: {
-              redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/parent/set-password`,
+              redirectTo: `${baseUrl}/parent/set-password`,
             },
           });
 
