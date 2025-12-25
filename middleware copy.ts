@@ -80,24 +80,102 @@ export async function middleware(request: NextRequest) {
       hostname.includes("ahic-parent") || hostname.startsWith("parent.");
     const isMainDomain = !isAdminDomain && !isParentDomain;
 
-    // ADMIN SUBDOMAIN → Redirect to main domain /login
+    // ADMIN SUBDOMAIN
     if (isAdminDomain) {
-      const mainDomain =
-        process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
-          ? "https://al-hikmah.org"
-          : "https://ahic.vercel.app";
+      const isAdminRoute = adminRoutes.some((route) =>
+        pathname.startsWith(route)
+      );
+      const isLogin = pathname === "/login";
+      const isApi = pathname.startsWith("/api");
+      const isAsset =
+        pathname.startsWith("/_next") ||
+        pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp|css|js)$/);
 
-      return NextResponse.redirect(new URL("/login", mainDomain));
+      if (isAdminRoute || isLogin || isApi || isAsset) {
+        // Continue
+      } else {
+        if (pathname === "/" || pathname === "/home") {
+          return NextResponse.redirect(new URL("/login", request.url));
+        }
+        if (parentRoutes.some((route) => pathname.startsWith(route))) {
+          return NextResponse.redirect(new URL("/login", request.url));
+        }
+        if (
+          publicRoutes.some((route) => pathname === route) &&
+          pathname !== "/"
+        ) {
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+        if (!isApi && !isAsset) {
+          return NextResponse.redirect(new URL("/login", request.url));
+        }
+      }
     }
 
-    // PARENT SUBDOMAIN → Redirect to main domain /parent/login
+    // PARENT SUBDOMAIN
     if (isParentDomain) {
-      const mainDomain =
-        process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
-          ? "https://al-hikmah.org"
-          : "https://ahic.vercel.app";
+      const isParentRoute = parentRoutes.some((route) =>
+        pathname.startsWith(route)
+      );
+      const isParentLogin = pathname === "/parent/login";
+      const isSetPassword = pathname === "/parent/set-password";
+      const isApi = pathname.startsWith("/api");
+      const isAsset =
+        pathname.startsWith("/_next") ||
+        pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|webp|css|js)$/);
 
-      return NextResponse.redirect(new URL("/parent/login", mainDomain));
+      if (isParentRoute || isParentLogin || isSetPassword || isApi || isAsset) {
+        // Continue
+      } else {
+        if (pathname === "/" || pathname === "/home") {
+          return NextResponse.redirect(new URL("/parent/login", request.url));
+        }
+        if (pathname === "/login") {
+          return NextResponse.redirect(new URL("/parent/login", request.url));
+        }
+        if (adminRoutes.some((route) => pathname.startsWith(route))) {
+          return NextResponse.redirect(new URL("/parent/login", request.url));
+        }
+        if (
+          publicRoutes.some((route) => pathname === route) &&
+          pathname !== "/"
+        ) {
+          return NextResponse.redirect(new URL("/parent/login", request.url));
+        }
+        if (!isApi && !isAsset) {
+          return NextResponse.redirect(new URL("/parent/login", request.url));
+        }
+      }
+    }
+
+    // MAIN DOMAIN - PUBLIC ONLY
+    if (isMainDomain) {
+      // Redirect /login and /parent/login to appropriate domains
+      if (pathname === "/login") {
+        const adminDomain =
+          process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+            ? "https://admin.al-hikmah.org"
+            : "https://ahic-admin.vercel.app";
+        return NextResponse.redirect(new URL("/login", adminDomain));
+      }
+
+      if (pathname === "/parent/login") {
+        const parentDomain =
+          process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+            ? "https://parent.al-hikmah.org"
+            : "https://ahic-parent.vercel.app";
+        return NextResponse.redirect(new URL("/parent/login", parentDomain));
+      }
+
+      // Block all admin routes
+      if (adminRoutes.some((route) => pathname.startsWith(route))) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+
+      // Block all parent routes
+      if (parentRoutes.some((route) => pathname.startsWith(route))) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
     }
   }
 
