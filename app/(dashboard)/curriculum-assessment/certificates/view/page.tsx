@@ -30,7 +30,6 @@ export default async function CertificateViewPage({
         first_name,
         last_name,
         student_number,
-        arabic_name
       ),
       subjects (
         id,

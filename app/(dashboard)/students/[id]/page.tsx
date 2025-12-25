@@ -139,12 +139,12 @@ export default async function StudentDetailPage({
                   {student.first_name} {student.last_name}
                 </p>
               </div>
-              {student.arabic_name && (
+              {/* {student.arabic_name && (
                 <div>
                   <p className="text-sm text-muted-foreground">Arabic Name</p>
                   <p className="font-medium rtl">{student.arabic_name}</p>
                 </div>
-              )}
+              )} */}
               <div>
                 <p className="text-sm text-muted-foreground">Date of Birth</p>
                 <p className="font-medium">

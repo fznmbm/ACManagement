@@ -29,7 +29,7 @@ interface StudentLink {
     student_number: string;
     first_name: string;
     last_name: string;
-    arabic_name?: string;
+
     date_of_birth: string;
     gender: string;
     status: "active" | "inactive" | "graduated" | "withdrawn";
@@ -98,7 +98,6 @@ export default function MyChildrenPage() {
             student_number,
             first_name,
             last_name,
-            arabic_name,
             date_of_birth,
             gender,
             status,
@@ -345,14 +344,6 @@ export default function MyChildrenPage() {
                           <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                             {student.first_name} {student.last_name}
                           </h3>
-                          {student.arabic_name && (
-                            <p
-                              className="text-sm text-slate-600 dark:text-slate-400"
-                              dir="rtl"
-                            >
-                              {student.arabic_name}
-                            </p>
-                          )}
                         </div>
                       </div>
 

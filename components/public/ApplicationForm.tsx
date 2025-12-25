@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading";
 
 interface ApplicationSettings {
   academic_year: string;
@@ -25,7 +26,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
     // Student Information
     child_first_name: "",
     child_last_name: "",
-    child_arabic_name: "",
+    // child_arabic_name: "",
     date_of_birth: "",
     gender: "",
 
@@ -295,7 +296,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
               </div>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium mb-2">
                 Arabic Name (Optional)
               </label>
@@ -308,7 +309,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                 placeholder="e.g., أحمد"
               />
-            </div>
+            </div> */}
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -858,14 +859,14 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                   {formData.child_first_name} {formData.child_last_name}
                 </dd>
 
-                {formData.child_arabic_name && (
+                {/* {formData.child_arabic_name && (
                   <>
                     <dt className="text-muted-foreground">Arabic Name:</dt>
                     <dd className="font-medium">
                       {formData.child_arabic_name}
                     </dd>
                   </>
-                )}
+                )} */}
 
                 <dt className="text-muted-foreground">Date of Birth:</dt>
                 <dd className="font-medium">
@@ -983,23 +984,34 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </button>
             ) : (
-              <button
+              // <button
+              //   onClick={handleSubmit}
+              //   disabled={isSubmitting}
+              //   className="inline-flex items-center px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              // >
+              //   {isSubmitting ? (
+              //     <>
+              //       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              //       Submitting...
+              //     </>
+              //   ) : (
+              //     <>
+              //       Submit Application
+              //       <CheckCircle2 className="ml-2 h-5 w-5" />
+              //     </>
+              //   )}
+              // </button>
+              <LoadingButton
                 onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="inline-flex items-center px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                isLoading={isSubmitting}
+                loadingText="Submitting application..."
+                variant="primary"
+                size="lg"
+                className="inline-flex items-center"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    Submit Application
-                    <CheckCircle2 className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </button>
+                Submit Application
+                <CheckCircle2 className="ml-2 h-5 w-5" />
+              </LoadingButton>
             )}
           </div>
         </div>

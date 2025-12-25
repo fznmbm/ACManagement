@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Trash2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading";
 
 interface EditStudentFormProps {
   classes: Array<{ id: string; name: string }>;
@@ -26,7 +27,7 @@ export default function EditStudentForm({
   const [formData, setFormData] = useState({
     first_name: student.first_name || "",
     last_name: student.last_name || "",
-    arabic_name: student.arabic_name || "",
+    //arabic_name: student.arabic_name || "",
     date_of_birth: student.date_of_birth || "",
     gender: student.gender || "male",
     parent_name: student.parent_name || "",
@@ -59,9 +60,25 @@ export default function EditStudentForm({
     setError(null);
 
     try {
+      // Process the form data - convert empty strings to null for optional fields
+      const processedData = {
+        ...formData,
+        class_id:
+          formData.class_id && formData.class_id.trim() !== ""
+            ? formData.class_id
+            : null,
+        parent_email: formData.parent_email?.trim() || null,
+        parent_phone_secondary: formData.parent_phone_secondary?.trim() || null,
+        address: formData.address?.trim() || null,
+        city: formData.city?.trim() || null,
+        postal_code: formData.postal_code?.trim() || null,
+        medical_notes: formData.medical_notes?.trim() || null,
+        notes: formData.notes?.trim() || null,
+      };
+
       const { error: updateError } = await supabase
         .from("students")
-        .update(formData)
+        .update(processedData)
         .eq("id", student.id);
 
       if (updateError) throw updateError;
@@ -140,7 +157,7 @@ export default function EditStudentForm({
               />
             </div>
 
-            <div>
+            {/* <div>
               <label htmlFor="arabic_name" className="form-label">
                 Arabic Name
               </label>
@@ -153,7 +170,7 @@ export default function EditStudentForm({
                 className="form-input rtl"
                 placeholder="الاسم بالعربي"
               />
-            </div>
+            </div> */}
 
             <div>
               <label htmlFor="date_of_birth" className="form-label">
@@ -398,9 +415,17 @@ export default function EditStudentForm({
             >
               Cancel
             </button>
-            <button type="submit" className="btn-primary" disabled={loading}>
+            {/* <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? "Saving..." : "Save Changes"}
-            </button>
+            </button> */}
+            <LoadingButton
+              type="submit"
+              isLoading={loading}
+              loadingText="Saving changes..."
+              variant="primary"
+            >
+              Save Changes
+            </LoadingButton>
           </div>
         </div>
       </form>
@@ -433,13 +458,21 @@ export default function EditStudentForm({
               >
                 Cancel
               </button>
-              <button
+              {/* <button
                 onClick={handleDelete}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
                 disabled={deleting}
               >
                 {deleting ? "Deleting..." : "Delete Permanently"}
-              </button>
+              </button> */}
+              <LoadingButton
+                onClick={handleDelete}
+                isLoading={deleting}
+                loadingText="Deleting..."
+                variant="danger"
+              >
+                Delete Permanently
+              </LoadingButton>
             </div>
           </div>
         </div>

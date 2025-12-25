@@ -20,7 +20,7 @@ export default async function RootPage() {
 
     // Redirect based on role
     if (profile?.role === "parent") {
-      redirect("/portal"); // Parent portal (we'll create this later)
+      redirect("/parent/dashboard"); // Parent portal (we'll create this later)
     } else {
       redirect("/dashboard"); // Admin/Teacher dashboard
     }

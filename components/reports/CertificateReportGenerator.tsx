@@ -36,7 +36,7 @@ export default function CertificateReportGenerator({
         .select(
           `
           *,
-          students (first_name, last_name, student_number, arabic_name)
+          students (first_name, last_name, student_number)
         `
         )
         .order("issue_date", { ascending: false });

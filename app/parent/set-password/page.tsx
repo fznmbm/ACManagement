@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading";
 
 export default function SetPasswordPage() {
   const router = useRouter();
@@ -343,7 +344,7 @@ export default function SetPasswordPage() {
               </div>
             </div>
 
-            <button
+            {/* <button
               type="submit"
               disabled={
                 loading || !isPasswordValid || !password || !confirmPassword
@@ -351,7 +352,18 @@ export default function SetPasswordPage() {
               className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Setting password..." : "Set Password & Continue"}
-            </button>
+            </button> */}
+            <LoadingButton
+              type="submit"
+              isLoading={loading}
+              loadingText="Setting password..."
+              variant="primary"
+              size="lg"
+              className="w-full"
+              disabled={!isPasswordValid || !password || !confirmPassword}
+            >
+              Set Password & Continue
+            </LoadingButton>
           </form>
         </div>
       </div>

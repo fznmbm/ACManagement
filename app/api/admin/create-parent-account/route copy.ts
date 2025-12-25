@@ -350,30 +350,21 @@ export async function POST(request: Request) {
         </ul>
       </div>
 
-<div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
-  <h3 style="margin-top: 0; color: #2563eb;">Access Your Account</h3>
-  
-  <p style="margin: 5px 0; background-color: #dbeafe; padding: 10px; border-radius: 5px;">
-    <strong>📌 Already have an account?</strong><br>
-    If you've previously set up your password, simply <a href="${baseUrl}/parent/login" style="color: #2563eb; font-weight: bold;">log in with your existing credentials</a>.
-  </p>
-  
-  <p style="margin: 15px 0 5px;">
-    <strong>🆕 First time?</strong><br>
-    Click the button below to set up your password and access the parent portal:
-  </p>
-  
-  <div style="text-align: center; margin: 25px 0;">
-    <a href="${magicLinkData.properties.action_link}" 
-       style="background-color: #22c55e; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-      Set Up Password
-    </a>
-  </div>
-  
-  <p style="margin: 5px 0; font-size: 12px; color: #666;">
-    <em>Note: This setup link will expire in 24 hours. If you already have an account, you can ignore this link and use your existing password.</em>
-  </p>
-</div>
+      <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #2563eb;">Set Up Your Account</h3>
+        <p style="margin: 5px 0;">Click the button below to set your password and access the parent portal:</p>
+        
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${magicLinkData.properties.action_link}" 
+             style="background-color: #22c55e; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Set Password & Login
+          </a>
+        </div>
+        
+        <p style="margin: 5px 0; font-size: 12px; color: #666;">
+          This link will expire in 24 hours. If you don't set up your account within this time, please contact the school.
+        </p>
+      </div>
 
       <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #d97706;">What You Can Do</h3>

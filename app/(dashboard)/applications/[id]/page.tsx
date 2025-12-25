@@ -140,15 +140,6 @@ export default async function ApplicationDetailPage({
                 <p className="font-medium">{application.child_last_name}</p>
               </div>
 
-              {application.child_arabic_name && (
-                <div>
-                  <label className="text-sm text-muted-foreground">
-                    Arabic Name
-                  </label>
-                  <p className="font-medium">{application.child_arabic_name}</p>
-                </div>
-              )}
-
               <div>
                 <label className="text-sm text-muted-foreground">
                   Date of Birth

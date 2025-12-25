@@ -210,22 +210,54 @@ export default function FinesPage() {
     }
   };
 
-  const handleCancelFine = async (fineId: string) => {
-    if (!confirm("Cancel this fine? This action cannot be undone.")) return;
+  // const handleCancelFine = async (fineId: string) => {
+  //   if (!confirm("Cancel this fine? This action cannot be undone.")) return;
+
+  //   try {
+  //     const { error } = await supabase
+  //       .from("fines")
+  //       .update({ status: "cancelled", notes: "Cancelled by admin" })
+  //       .eq("id", fineId);
+
+  //     if (error) throw error;
+
+  //     fetchFines(); // Refresh the list
+  //     alert("Fine cancelled successfully");
+  //   } catch (error) {
+  //     console.error("Error cancelling fine:", error);
+  //     alert("Failed to cancel fine");
+  //   }
+  // };
+
+  const handleWaiveFine = async (fineId: string, amount: number) => {
+    if (
+      !confirm(
+        `Waive this £${amount.toFixed(2)} fine? This action cannot be undone.`
+      )
+    )
+      return;
 
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const { error } = await supabase
         .from("fines")
-        .update({ status: "cancelled", notes: "Cancelled by admin" })
+        .update({
+          status: "waived",
+          collected_by: user?.id,
+          notes: "Waived by admin",
+        })
         .eq("id", fineId);
 
       if (error) throw error;
 
       fetchFines(); // Refresh the list
-      alert("Fine cancelled successfully");
+      alert("Fine waived successfully");
     } catch (error) {
-      console.error("Error cancelling fine:", error);
-      alert("Failed to cancel fine");
+      console.error("Error waiving fine:", error);
+      alert("Failed to waive fine");
     }
   };
 
@@ -539,10 +571,16 @@ export default function FinesPage() {
                             Collect
                           </button>
                           <button
-                            onClick={() => handleCancelFine(fine.id)}
-                            className="text-red-600 hover:underline text-xs"
+                            //   onClick={() => handleCancelFine(fine.id)}
+                            //   className="text-red-600 hover:underline text-xs"
+                            // >
+                            //   Cancel
+                            onClick={() =>
+                              handleWaiveFine(fine.id, fine.amount)
+                            }
+                            className="text-orange-600 dark:text-orange-400 hover:underline text-xs font-medium"
                           >
-                            Cancel
+                            Waive
                           </button>
                         </>
                       )}

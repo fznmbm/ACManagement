@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { LoadingButton } from "@/components/ui/loading";
 
 interface StudentFormProps {
   classes: Array<{ id: string; name: string }>;
@@ -25,7 +26,7 @@ export default function StudentForm({ classes, student }: StudentFormProps) {
   const [formData, setFormData] = useState({
     first_name: student?.first_name || "",
     last_name: student?.last_name || "",
-    arabic_name: student?.arabic_name || "",
+    //arabic_name: student?.arabic_name || "",
     date_of_birth: student?.date_of_birth || "",
     gender: student?.gender || "male",
     parent_name: student?.parent_name || "",
@@ -85,7 +86,7 @@ export default function StudentForm({ classes, student }: StudentFormProps) {
           formData.class_id && formData.class_id.trim() !== ""
             ? formData.class_id
             : null,
-        arabic_name: formData.arabic_name?.trim() || null,
+        //arabic_name: formData.arabic_name?.trim() || null,
         parent_email: formData.parent_email?.trim() || null,
         parent_phone_secondary: formData.parent_phone_secondary?.trim() || null,
         medical_notes: formData.medical_notes?.trim() || null,
@@ -245,7 +246,7 @@ export default function StudentForm({ classes, student }: StudentFormProps) {
             )}
           </div>
 
-          <div>
+          {/* <div>
             <label htmlFor="arabic_name" className="form-label">
               Arabic Name
             </label>
@@ -258,7 +259,7 @@ export default function StudentForm({ classes, student }: StudentFormProps) {
               className="form-input rtl"
               placeholder="الاسم بالعربي"
             />
-          </div>
+          </div> */}
 
           <div>
             <label htmlFor="date_of_birth" className="form-label">
@@ -545,7 +546,7 @@ export default function StudentForm({ classes, student }: StudentFormProps) {
         >
           Cancel
         </button>
-        <button
+        {/* <button
           type="submit"
           disabled={isSubmitting}
           //className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
@@ -559,7 +560,15 @@ export default function StudentForm({ classes, student }: StudentFormProps) {
           ) : (
             <span>Add Student</span>
           )}
-        </button>
+        </button> */}
+        <LoadingButton
+          type="submit"
+          isLoading={isSubmitting}
+          loadingText="Adding student..."
+          variant="primary"
+        >
+          Add Student
+        </LoadingButton>
       </div>
     </form>
   );

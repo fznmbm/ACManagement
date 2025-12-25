@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { LoadingButton } from "@/components/ui/loading";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -115,7 +116,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+        {/* <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? (
             <span className="flex items-center justify-center">
               <svg
@@ -143,7 +144,17 @@ export default function LoginPage() {
           ) : (
             "Sign In"
           )}
-        </button>
+        </button> */}
+
+        <LoadingButton
+          type="submit"
+          isLoading={loading}
+          loadingText="Signing in..."
+          variant="primary"
+          className="w-full"
+        >
+          Sign In
+        </LoadingButton>
 
         <div className="mt-4 p-4 bg-muted/50 rounded-lg">
           <p className="text-sm text-center text-muted-foreground">

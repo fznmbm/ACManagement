@@ -93,7 +93,7 @@ export interface Database {
           student_number: string | null;
           first_name: string;
           last_name: string;
-          arabic_name: string | null;
+          //arabic_name: string | null;
           date_of_birth: string | null;
           gender: "male" | "female";
           parent_name: string;
@@ -118,7 +118,7 @@ export interface Database {
           student_number?: string | null;
           first_name: string;
           last_name: string;
-          arabic_name?: string | null;
+          //arabic_name?: string | null;
           date_of_birth?: string | null;
           gender: "male" | "female";
           parent_name: string;
@@ -143,7 +143,7 @@ export interface Database {
           student_number?: string | null;
           first_name?: string;
           last_name?: string;
-          arabic_name?: string | null;
+          // arabic_name?: string | null;
           date_of_birth?: string | null;
           gender?: "male" | "female";
           parent_name?: string;

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading";
 
 export default function ParentLoginPage() {
   const router = useRouter();
@@ -153,7 +154,7 @@ export default function ParentLoginPage() {
             </div>
 
             {/* Login Button */}
-            <button
+            {/* <button
               type="submit"
               disabled={loading}
               className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -184,7 +185,17 @@ export default function ParentLoginPage() {
               ) : (
                 "Sign In"
               )}
-            </button>
+            </button> */}
+            <LoadingButton
+              type="submit"
+              isLoading={loading}
+              loadingText="Signing in..."
+              variant="primary"
+              size="lg"
+              className="w-full"
+            >
+              Sign In
+            </LoadingButton>
           </form>
 
           {/* Help Section */}

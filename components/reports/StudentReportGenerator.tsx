@@ -314,11 +314,7 @@ export default function StudentReportGenerator({
                 <h2 className="text-2xl font-bold">
                   {reportData.student.first_name} {reportData.student.last_name}
                 </h2>
-                {reportData.student.arabic_name && (
-                  <p className="text-lg text-muted-foreground rtl">
-                    {reportData.student.arabic_name}
-                  </p>
-                )}
+
                 <p className="text-sm text-muted-foreground mt-1">
                   Student #: {reportData.student.student_number}
                 </p>

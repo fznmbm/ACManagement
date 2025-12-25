@@ -22,7 +22,7 @@ interface Student {
   parent_phone: string;
   classes?: {
     class_name: string;
-  };
+  } | null;
   parent_links: any[];
 }
 
@@ -55,7 +55,19 @@ export default function LinkParentsPage() {
       const { data, error } = await supabase
         .from("students")
         .select(
-          "id, student_number, first_name, last_name, parent_email, parent_name, parent_phone"
+          `
+    id, 
+    student_number, 
+    first_name, 
+    last_name, 
+    parent_email, 
+    parent_name, 
+    parent_phone,
+    classes:class_id (
+      id,
+      name
+    )
+  `
         )
         .order("student_number", { ascending: true });
 
@@ -74,7 +86,15 @@ export default function LinkParentsPage() {
 
           return {
             ...student,
-            classes: undefined,
+            //classes: undefined,
+            classes:
+              student.classes &&
+              Array.isArray(student.classes) &&
+              student.classes.length > 0
+                ? { class_name: student.classes[0].name }
+                : student.classes && !Array.isArray(student.classes)
+                ? { class_name: (student.classes as any).name }
+                : null,
             parent_links: links || [],
           };
         })
@@ -410,6 +430,9 @@ function LinkParentModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const [unlinking, setUnlinking] = useState(false);
+  const [showUnlinkConfirm, setShowUnlinkConfirm] = useState(false);
+
   // New parent form
   const [newParentEmail, setNewParentEmail] = useState(
     student.parent_email || ""
@@ -542,6 +565,45 @@ function LinkParentModal({
     }
   };
 
+  const handleUnlink = async () => {
+    if (!student.parent_links || student.parent_links.length === 0) return;
+
+    try {
+      setUnlinking(true);
+      setError("");
+
+      const parentUserId = student.parent_links[0].parent_user_id;
+
+      const response = await fetch("/api/admin/unlink-parent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          parent_user_id: parentUserId,
+          student_id: student.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to unlink parent");
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (err: any) {
+      console.error("Unlink error:", err);
+      setError(err.message || "Failed to unlink parent");
+    } finally {
+      setUnlinking(false);
+      setShowUnlinkConfirm(false);
+    }
+  };
+
   if (success) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -601,6 +663,60 @@ function LinkParentModal({
           {error && (
             <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Show Unlink Option for Already Linked Students */}
+          {student.parent_links &&
+            student.parent_links.length > 0 &&
+            step === "search" && (
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      Already Linked
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      This student is currently linked to a parent account.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowUnlinkConfirm(true)}
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  >
+                    Unlink
+                  </button>
+                </div>
+              </div>
+            )}
+
+          {/* Unlink Confirmation */}
+          {showUnlinkConfirm && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg">
+              <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2">
+                ⚠️ Confirm Unlink
+              </h4>
+              <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                Are you sure you want to unlink this student? If the parent has
+                no other students linked, their account will be permanently
+                deleted.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowUnlinkConfirm(false)}
+                  disabled={unlinking}
+                  className="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUnlink}
+                  disabled={unlinking}
+                  className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  {unlinking ? "Unlinking..." : "Yes, Unlink"}
+                </button>
+              </div>
             </div>
           )}
 

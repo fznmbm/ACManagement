@@ -25,7 +25,7 @@ interface Student {
   student_number: string;
   first_name: string;
   last_name: string;
-  arabic_name?: string;
+  //arabic_name?: string;
   date_of_birth: string;
   gender: string;
   status: string;
@@ -110,7 +110,6 @@ export default function StudentDetailPage() {
     student_number,
     first_name,
     last_name,
-    arabic_name,
     date_of_birth,
     gender,
     status,
@@ -277,14 +276,14 @@ export default function StudentDetailPage() {
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                 {student.first_name} {student.last_name}
               </h1>
-              {student.arabic_name && (
+              {/* {student.arabic_name && (
                 <p
                   className="text-lg text-slate-600 dark:text-slate-400 mt-1"
                   dir="rtl"
                 >
                   {student.arabic_name}
                 </p>
-              )}
+              )} */}
               <div className="flex items-center gap-4 mt-3">
                 <span className="text-sm text-slate-600 dark:text-slate-400">
                   Student #:{" "}

@@ -106,7 +106,6 @@ export async function POST(
         student_number: studentNumber,
         first_name: application.child_first_name,
         last_name: application.child_last_name,
-        arabic_name: application.child_arabic_name || null,
         date_of_birth: application.date_of_birth,
         gender: application.gender,
         parent_name: application.parent_name,

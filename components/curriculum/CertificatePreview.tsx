@@ -17,8 +17,6 @@ export default function CertificatePreview({
     ? `${certificate.students.first_name} ${certificate.students.last_name}`
     : "Unknown Student";
 
-  const arabicName = certificate.students?.arabic_name;
-
   const getCertificateTitle = () => {
     switch (certificate.certificate_type) {
       case "subject_completion":
@@ -123,11 +121,6 @@ export default function CertificatePreview({
               <h3 className="text-5xl font-serif font-bold text-gray-800 tracking-wide">
                 {studentName}
               </h3>
-              {arabicName && (
-                <p className="text-3xl font-arabic text-gray-700 rtl">
-                  {arabicName}
-                </p>
-              )}
             </div>
 
             <p className="text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto">

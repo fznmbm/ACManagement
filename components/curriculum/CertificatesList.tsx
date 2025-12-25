@@ -20,7 +20,6 @@ interface Certificate {
     first_name: string;
     last_name: string;
     student_number: string;
-    arabic_name?: string;
   } | null;
   subjects: {
     id: string;

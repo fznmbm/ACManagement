@@ -169,7 +169,20 @@ export default function ApplicationActions({
               </>
             )}
           </button>
-        ) : // ) : application.status === "accepted" ? (
+        ) : // <LoadingButton
+        //   onClick={handleAccept}
+        //   isLoading={isProcessing}
+        //   loadingText="Processing..."
+        //   variant="primary"
+        //   className="w-full bg-green-600 hover:bg-green-700"
+        //   size="lg"
+        // >
+        //   <CheckCircle className="h-5 w-5 mr-2" />
+        //   {application.status === "waitlist"
+        //     ? "Accept from Waitlist"
+        //     : "Accept & Create Student"}
+        // </LoadingButton>
+        // ) : application.status === "accepted" ? (
         //   <div className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg text-center">
         //     <CheckCircle className="h-5 w-5 text-green-600 mx-auto mb-1" />
         //     <p className="text-sm font-medium text-green-800 dark:text-green-400">

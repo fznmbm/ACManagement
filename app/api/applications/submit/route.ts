@@ -117,7 +117,6 @@ export async function POST(request: NextRequest) {
       .insert({
         child_first_name: formData.child_first_name,
         child_last_name: formData.child_last_name,
-        child_arabic_name: formData.child_arabic_name || null,
         date_of_birth: formData.date_of_birth,
         gender: formData.gender,
         parent_name: formData.parent_name,
