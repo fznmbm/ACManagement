@@ -171,11 +171,8 @@ export default function SetPasswordPage() {
 
       setSuccess(true);
 
-      // Sign out to clear session
-      await supabase.auth.signOut();
-
       setTimeout(() => {
-        window.location.href = "/parent/login";
+        router.push("/parent/dashboard");
       }, 2000);
     } catch (err) {
       console.error("Set password error:", err);
@@ -196,7 +193,7 @@ export default function SetPasswordPage() {
               Password Set Successfully!
             </h2>
             <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Redirecting to login page...
+              Redirecting to your dashboard...
             </p>
           </div>
         </div>

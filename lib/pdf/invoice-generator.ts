@@ -50,7 +50,7 @@ export function generateFeeInvoicePDF(data: InvoiceData, schoolInfo: any) {
     15,
     33
   );
-  doc.text(`Phone: ${schoolInfo.phone || "+44 7700 900000"}`, 15, 38);
+  doc.text(`Phone: ${schoolInfo.phone || "+44 7411 061242"}`, 15, 38);
 
   // Invoice Title
   doc.setFontSize(16);
