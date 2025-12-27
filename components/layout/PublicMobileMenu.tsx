@@ -18,7 +18,13 @@ import {
 
 import { getDomainUrls } from "@/lib/utils/domains";
 
-export function PublicMobileMenu() {
+export function PublicMobileMenu({
+  dashboardUrl,
+  dashboardLabel,
+}: {
+  dashboardUrl?: string | null;
+  dashboardLabel?: string | null;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -210,6 +216,7 @@ export function PublicMobileMenu() {
           </Link>
 
           {/* Divider */}
+          {/* Divider */}
           <div
             style={{
               borderTop: `1px solid ${colors.border}`,
@@ -217,56 +224,102 @@ export function PublicMobileMenu() {
             }}
           />
 
-          {/* Parent Portal */}
-          <div style={{ marginBottom: "24px" }}>
-            <p
-              style={{
-                fontSize: "14px",
-                fontWeight: "600",
-                color: colors.text,
-                marginBottom: "12px",
-                paddingLeft: "16px",
-              }}
-            >
-              For Parents
-            </p>
-            <Link
-              href={`${domains.parent}/parent/login`}
-              onClick={handleLinkClick}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 16px",
-                color: "#22c55e",
-                fontWeight: "500",
-                borderRadius: "8px",
-                border: "1px solid rgba(34, 197, 94, 0.3)",
-                textDecoration: "none",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(34, 197, 94, 0.1)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "transparent")
-              }
-            >
-              <LogIn style={{ width: "20px", height: "20px" }} />
-              <span>Parent Portal Login</span>
-            </Link>
-            <p
-              style={{
-                fontSize: "12px",
-                color: colors.textMuted,
-                marginTop: "8px",
-                paddingLeft: "16px",
-              }}
-            >
-              Access fees, attendance, and reports
-            </p>
-          </div>
+          {/* Conditional: Dashboard Button OR Login Section */}
+          {dashboardUrl ? (
+            // User is logged in - show dashboard button
+            <div style={{ marginBottom: "24px" }}>
+              <Link
+                href={dashboardUrl}
+                onClick={handleLinkClick}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  width: "100%",
+                  padding: "16px 24px",
+                  backgroundColor: "#22c55e",
+                  color: "#ffffff",
+                  fontWeight: "600",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#16a34a")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#22c55e")
+                }
+              >
+                <svg
+                  style={{ width: "20px", height: "20px" }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <span>{dashboardLabel}</span>
+              </Link>
+            </div>
+          ) : (
+            // User is NOT logged in - show login section
+            <div style={{ marginBottom: "24px" }}>
+              <p
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: colors.text,
+                  marginBottom: "12px",
+                  paddingLeft: "16px",
+                }}
+              >
+                For Parents
+              </p>
+              <Link
+                href="/parent/login"
+                onClick={handleLinkClick}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "12px 16px",
+                  color: "#22c55e",
+                  fontWeight: "500",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(34, 197, 94, 0.3)",
+                  textDecoration: "none",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor =
+                    "rgba(34, 197, 94, 0.1)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "transparent")
+                }
+              >
+                <LogIn style={{ width: "20px", height: "20px" }} />
+                <span>Parent Portal Login</span>
+              </Link>
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: colors.textMuted,
+                  marginTop: "8px",
+                  paddingLeft: "16px",
+                }}
+              >
+                Access fees, attendance, and reports
+              </p>
+            </div>
+          )}
 
           {/* Contact Info */}
           <div

@@ -1,14 +1,21 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-
+import Image from "next/image"; // <-- ADD THIS LINE
 //import { PublicMobileMenu } from "@/components/layout/PublicMobileMenu";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import Script from "next/script";
 //import { getDomainUrls } from "@/lib/utils/domains";
 
-import { createClient } from "@/lib/supabase/server";
-import { User } from "@supabase/supabase-js";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import dynamic from "next/dynamic";
+
+// Lazy load mobile menu (only loads when needed)
+const PublicMobileMenu = dynamic(
+  () =>
+    import("@/components/layout/PublicMobileMenu").then((mod) => ({
+      default: mod.PublicMobileMenu,
+    })),
+  { ssr: false }
+);
 
 export const metadata = {
   // Title configuration
@@ -104,7 +111,119 @@ export default function PublicLayout({
 
       <div className="flex min-h-screen flex-col">
         {/* Navigation Header */}
-        <PublicHeader />
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4">
+            <div className="flex h-20 items-center justify-between">
+              {/* Logo & Name */}
+              <Link href="/home" className="flex items-center space-x-3">
+                {/* Gemini  */}
+                {/* <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <span className="text-xl font-bold">AH</span>
+              </div> */}
+
+                <Image
+                  src="https://raw.githubusercontent.com/fznmbm/ACManagement/refs/heads/main/public/logo/ahlogo_web_nobg.png"
+                  alt="Al Hikmah Institute Crawley Logo"
+                  width={72} // The width of the original container was 40
+                  height={72} // The height of the original container was 40
+                  className="h-20 w-20 rounded-lg" // Reusing the sizing and styling classes
+                  priority // ← Add this for header logo
+                  loading="eager" // ← Add this
+                />
+
+                {/* Gemini */}
+
+                <div className="hidden md:block">
+                  <div className="text-lg font-bold text-foreground">
+                    Al Hikmah Institute Crawley
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Islamic Education Centre
+                  </div>
+                </div>
+              </Link>
+
+              {/* Navigation Menu */}
+              <nav className="hidden md:flex items-center space-x-6">
+                <Link
+                  href="/home"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/about"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/programs"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Programs
+                </Link>
+
+                <Link
+                  href="/gallery"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Gallery
+                </Link>
+
+                <Link
+                  href="/news"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  News
+                </Link>
+
+                <Link
+                  href="/faq"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  FAQ
+                </Link>
+
+                <Link
+                  href="/contact"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Contact
+                </Link>
+                <Link
+                  href="/apply"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Apply Now
+                </Link>
+              </nav>
+
+              {/* Mobile Menu Button & Theme Toggle */}
+              <div className="flex items-center space-x-2">
+                <ThemeToggle />
+
+                {/* Mobile Menu Button - we'll add functionality later */}
+                {/* <button className="md:hidden p-2">
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button> */}
+                <PublicMobileMenu />
+              </div>
+            </div>
+          </div>
+        </header>
 
         {/* Main Content */}
         <main className="flex-1">{children}</main>
