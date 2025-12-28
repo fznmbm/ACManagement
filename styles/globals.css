@@ -776,3 +776,49 @@ select {
 .btn-outline {
   @apply inline-flex items-center px-4 py-2 border border-input text-foreground rounded-lg font-medium hover:bg-muted transition-colors;
 }
+
+/* Add this to the END of your globals.css file */
+
+/* ============================================ */
+/* NPROGRESS LOADING BAR CUSTOMIZATION */
+/* ============================================ */
+
+/* Progress bar container */
+#nprogress {
+  pointer-events: none;
+}
+
+/* Progress bar itself */
+#nprogress .bar {
+  background: hsl(var(--primary)) !important;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  box-shadow: 0 0 10px hsl(var(--primary)), 0 0 5px hsl(var(--primary));
+}
+
+/* Progress bar glow effect */
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px hsl(var(--primary)), 0 0 5px hsl(var(--primary));
+  opacity: 1;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+/* Dark mode adjustments */
+.dark #nprogress .bar {
+  background: hsl(var(--primary)) !important;
+  box-shadow: 0 0 15px hsl(var(--primary)), 0 0 8px hsl(var(--primary));
+}
+
+/* Smooth transitions */
+#nprogress .bar {
+  transition: width 0.2s ease-out;
+}

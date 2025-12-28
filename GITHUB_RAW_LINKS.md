@@ -2,11 +2,11 @@
 
 Base raw URL: `https://raw.githubusercontent.com/fznmbm/ACManagement/main/`
 
-Generated: December 15, 2025
+Generated: December 27, 2025
 
-Total files: 257
+Total files: 287
 
-## All files (257)
+## All files (287)
 
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/.env.example
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/.env.local
@@ -36,6 +36,7 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fcurriculum-assessment%2Fsubjects%2F%5Bid%5D%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fcurriculum-assessment%2Fsubjects%2Fnew%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fcurriculum-assessment%2Fsubjects%2Fpage.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fdashboard%2Floading.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fdashboard%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fevents%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fevents%2Fpage.tsx.backup
@@ -53,6 +54,7 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fstudents%2Flink-parents%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fstudents%2Fnew%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fstudents%2Fpage.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(dashboard)%2Fusers%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(parent)%2Flayout.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(parent)%2Fparent%2Fapplications%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(parent)%2Fparent%2Fchildren%2Fpage.tsx
@@ -73,13 +75,16 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Ffaq%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Fgallery%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Fhome%2Fpage.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Flayout%20copy.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Flayout.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Fnews%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Fprivacy%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Fprograms%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2F(public)%2Fterms%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fadmin%2Fcleanup-orphaned-auth%2Froute.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fadmin%2Fcreate-parent-account%2Froute%20copy.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fadmin%2Fcreate-parent-account%2Froute.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fadmin%2Funlink-parent%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Falerts%2Fcheck%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fapplications%2F%5Bid%5D%2Faccept%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fapplications%2F%5Bid%5D%2Freject%2Froute.ts
@@ -97,16 +102,23 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fnotifications%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fparent%2Ffine%2F%5BfineId%5D%2Fdownload%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fparent%2Finvoice%2F%5BinvoiceId%5D%2Fdownload%2Froute.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fparent%2Fsend-login-details%2Froute%20copy.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fparent%2Fsend-login-details%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fsettings%2Fcentre%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fsettings%2Froute.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fusers%2Fcreate%2Froute.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fusers%2Fdelete%2Froute.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fapi%2Fusers%2Fupdate%2Froute.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fhooks%2FuseFines.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Flayout.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fpage%20copy.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fparent%2Flogin%2Fpage.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fparent%2Fset-password%2Fpage%20copy.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fparent%2Fset-password%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Frobots.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Fsitemap.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/app%2Ftest-loading%2Fpage.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fabout%2FStaffSection.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fadmin%2FOrphanedAuthCleanup.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Falerts%2FAlertManagement.tsx
@@ -148,6 +160,7 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Ffines%2FFineIndicator.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Flayout%2FCookieConsent.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Flayout%2FHeader.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Flayout%2FPublicHeader.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Flayout%2FPublicMobileMenu.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Flayout%2FSidebar.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fmessages%2FClassMessageForm.tsx
@@ -181,6 +194,8 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FFineSettings.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FGeneralSettings.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FNotificationSettings.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FPasswordSettings.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FSettingsTabs%20copy.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FSettingsTabs.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fsettings%2FUserManagement.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fstudents%2FEditStudentForm.tsx
@@ -194,8 +209,19 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fstudents%2FStudentsTable.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fstudents%2FStudentStatusBadge.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fstudents%2FStudentStatusChangeModal.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2Findex.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FInlineLoader.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FLoadingButton.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FLoadingDots.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FLoadingOverlay.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FPageLoader.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FProgressBar.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FSkeletonLoader.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2Floading%2FSpinner.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2FThemeToggle.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fui%2FThemeToggle.tsx.backup
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fusers%2FAddUserModal.tsx
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/components%2Fusers%2FEditUserModal.tsx
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/GITHUB_RAW_LINKS%20copy.md
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/GITHUB_RAW_LINKS.md
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/hooks%2FuseCustomQuarters.ts
@@ -214,13 +240,16 @@ Total files: 257
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Fsupabase%2Fclient.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Fsupabase%2Fserver.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Ftypes%2Fdatabase.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2Fdomains.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2FgradeCalculator.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2Fhelpers.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2FpdfExport.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2FquarterInvoiceGenerator.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2FwhatsappMessages.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/lib%2Futils%2FwhatsappNotifications.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/middleware%20copy.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/middleware.ts
+- https://raw.githubusercontent.com/fznmbm/ACManagement/main/middleware-working.ts.backup
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/next.config.js
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/next-env.d.ts
 - https://raw.githubusercontent.com/fznmbm/ACManagement/main/package.json

@@ -1,7 +1,7 @@
 # Project Structure for ACManagement (SchoolRegister)
 
-**Generated:** December 15, 2025  
-**Total Files:** 257  
+**Generated:** December 27, 2025  
+**Total Files:** 287  
 **Workspace Root:** `f:\SchoolRegister`
 
 ---
@@ -11,9 +11,12 @@
 ```
 .env.example                 - Environment variables template
 .env.local                   - Local environment variables
-GITHUB_RAW_LINKS.md          - Raw GitHub links for all files
+.gitignore                   - Git ignore file
 GITHUB_RAW_LINKS copy.md     - Backup of raw links
+GITHUB_RAW_LINKS.md          - Raw GitHub links for all files
+middleware copy.ts           - Backup of middleware
 middleware.ts                - Next.js middleware
+middleware-working.ts.backup - Backup of working middleware
 next-env.d.ts                - Next.js auto-generated types
 next.config.js               - Next.js configuration
 package.json                 - NPM dependencies & scripts
@@ -35,9 +38,12 @@ vercel.json                  - Vercel deployment configuration
 ```
 app/
   layout.tsx                 - Root layout
+  page copy.tsx              - Backup of root page
   page.tsx                   - Root page
   robots.ts                  - Robots.txt configuration
   sitemap.ts                 - Sitemap configuration
+  test-loading/
+    page.tsx                 - Test loading page
 ```
 
 #### `/app/hooks`
@@ -105,6 +111,7 @@ app/(dashboard)/
         edit/
           page.tsx           - Edit subject
   dashboard/
+    loading.tsx              - Dashboard loading
     page.tsx                 - Dashboard home
   events/
     page.tsx                 - Events management
@@ -134,6 +141,8 @@ app/(dashboard)/
       page.tsx               - Student detail
       edit/
         page.tsx             - Edit student
+  users/
+    page.tsx                 - Users management
 ```
 
 #### `/app/(parent)` - Parent Portal Routes
@@ -168,6 +177,7 @@ app/(parent)/
 #### `/app/(public)` - Public Routes
 ```
 app/(public)/
+  layout copy.tsx            - Backup of public layout
   layout.tsx                 - Public layout wrapper
   about/
     page.tsx                 - About page
@@ -202,7 +212,10 @@ app/api/
     cleanup-orphaned-auth/
       route.ts               - Cleanup orphaned auth
     create-parent-account/
+      route copy.ts           - Backup of create parent account
       route.ts               - Create parent account
+    unlink-parent/
+      route.ts               - Unlink parent
   alerts/
     check/
       route.ts               - Check alerts
@@ -251,11 +264,19 @@ app/api/
         download/
           route.ts           - Download invoice
     send-login-details/
+      route copy.ts           - Backup of send login details
       route.ts               - Send login details
   settings/
     route.ts                 - Settings
     centre/
       route.ts               - Centre settings
+  users/
+    create/
+      route.ts               - Create user
+    delete/
+      route.ts               - Delete user
+    update/
+      route.ts               - Update user
 ```
 
 #### `/app/parent` - Parent Routes
@@ -264,6 +285,7 @@ app/parent/
   login/
     page.tsx                 - Parent login
   set-password/
+    page copy.tsx            - Backup of set password
     page.tsx                 - Set password
 ```
 
@@ -368,6 +390,7 @@ components/fines/
 components/layout/
   CookieConsent.tsx          - Cookie consent
   Header.tsx                 - Header component
+  PublicHeader.tsx           - Public header component
   PublicMobileMenu.tsx       - Public mobile menu
   Sidebar.tsx                - Sidebar component
 ```
@@ -437,6 +460,8 @@ components/settings/
   FineSettings.tsx           - Fine settings
   GeneralSettings.tsx        - General settings
   NotificationSettings.tsx   - Notification settings
+  PasswordSettings.tsx       - Password settings
+  SettingsTabs copy.tsx      - Backup of settings tabs
   SettingsTabs.tsx           - Settings tabs
   UserManagement.tsx         - User management
 ```
@@ -460,8 +485,25 @@ components/students/
 #### `/components/ui`
 ```
 components/ui/
+  loading/
+    index.ts                 - Loading components index
+    InlineLoader.tsx         - Inline loader
+    LoadingButton.tsx        - Loading button
+    LoadingDots.tsx          - Loading dots
+    LoadingOverlay.tsx       - Loading overlay
+    PageLoader.tsx           - Page loader
+    ProgressBar.tsx          - Progress bar
+    SkeletonLoader.tsx       - Skeleton loader
+    Spinner.tsx              - Spinner
   ThemeToggle.tsx            - Theme toggle
   ThemeToggle.tsx.backup     - Backup of theme toggle
+```
+
+#### `/components/users`
+```
+components/users/
+  AddUserModal.tsx           - Add user modal
+  EditUserModal.tsx          - Edit user modal
 ```
 
 ### `/hooks` - Custom React Hooks
@@ -511,6 +553,7 @@ lib/types/
 #### `/lib/utils`
 ```
 lib/utils/
+  domains.ts                 - Domains utility
   gradeCalculator.ts         - Grade calculator
   helpers.ts                 - Helper functions
   pdfExport.ts               - PDF export utility
