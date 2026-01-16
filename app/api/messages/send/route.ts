@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       const { data: student, error: studentError } = await supabase
         .from("students")
         .select(
-          "first_name, last_name, parent_name, parent_email, parent_phone, parent_phone_secondary"
+          "first_name, last_name, parent_name, parent_email, parent_phone, parent_phone_secondary, class_id"
         )
         .eq("id", studentId)
         .single();
@@ -100,16 +100,34 @@ export async function POST(request: Request) {
         );
       }
 
-      // Determine parent contact based on type
+      // Fetch class information if student has a class
+      let className = "your class";
+      if (student.class_id) {
+        const { data: classData } = await supabase
+          .from("classes")
+          .select("name")
+          .eq("id", student.class_id)
+          .single();
+
+        if (classData) {
+          className = classData.name;
+        }
+      }
+
+      // Determine parent contact and phone numbers
       let parentName = student.parent_name;
       let parentEmail = student.parent_email;
-      let parentPhone = student.parent_phone;
+      let phoneNumbers: string[] = [];
 
-      if (parentContactType === "mother") {
-        parentPhone = student.parent_phone_secondary || student.parent_phone;
+      if (parentContactType === "father") {
+        if (student.parent_phone) phoneNumbers.push(student.parent_phone);
+      } else if (parentContactType === "mother") {
+        if (student.parent_phone_secondary)
+          phoneNumbers.push(student.parent_phone_secondary);
       } else if (parentContactType === "both") {
-        // For both, we'll send to primary first (can enhance later to send to both)
-        parentPhone = student.parent_phone;
+        if (student.parent_phone) phoneNumbers.push(student.parent_phone);
+        if (student.parent_phone_secondary)
+          phoneNumbers.push(student.parent_phone_secondary);
       }
 
       // EMAIL DELIVERY
@@ -122,11 +140,26 @@ export async function POST(request: Request) {
         }
 
         try {
+          // Replace variables
+          const variables = {
+            student_name: `${student.first_name} ${student.last_name}`,
+            parent_name: parentName,
+            teacher_name: profile?.full_name || "Teacher",
+            class_name: className,
+            ...(body.customVariables || {}), // ✅ ADD THIS LINE - Merge custom variables
+          };
+
+          const processedMessage = replaceVariables(message, variables);
+          const processedSubject = replaceVariables(
+            subject || "Message from Teacher",
+            variables
+          );
+
           // Send email via Resend
           await resend.emails.send({
             from: "Al Hikmah Institute <noreply@alhikmainstitute.org>",
             to: parentEmail,
-            subject: subject || "Message from Teacher",
+            subject: processedSubject,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
@@ -134,7 +167,7 @@ export async function POST(request: Request) {
                 </div>
                 <div style="padding: 30px; background-color: #f9fafb;">
                   <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${message}</pre>
+                    <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${processedMessage}</pre>
                   </div>
                   <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;">
                     <p>This is an automated message from Al Hikmah Institute</p>
@@ -153,10 +186,10 @@ export async function POST(request: Request) {
               student_id: studentId,
               parent_contact_type: parentContactType,
               parent_name: parentName,
-              parent_phone: parentPhone,
+              parent_phone: phoneNumbers.join(", "),
               parent_email: parentEmail,
-              subject: subject,
-              message: message,
+              subject: processedSubject,
+              message: processedMessage,
               template_used: templateUsed,
               delivery_method: deliveryMethod,
               email_sent: true,
@@ -181,7 +214,7 @@ export async function POST(request: Request) {
             student_id: studentId,
             parent_contact_type: parentContactType,
             parent_name: parentName,
-            parent_phone: parentPhone,
+            parent_phone: phoneNumbers.join(", "),
             parent_email: parentEmail,
             subject: subject,
             message: message,
@@ -200,17 +233,30 @@ export async function POST(request: Request) {
 
       // WHATSAPP DELIVERY
       if (deliveryMethod === "whatsapp_individual") {
-        if (!parentPhone) {
+        if (phoneNumbers.length === 0) {
           return NextResponse.json(
-            { error: "Parent phone number not available" },
+            { error: "No parent phone numbers available" },
             { status: 400 }
           );
         }
 
-        // Format phone and generate WhatsApp URL
-        const formattedPhone = formatPhoneForWhatsApp(parentPhone);
-        const whatsappMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/${formattedPhone}?text=${whatsappMessage}`;
+        // Replace variables in message
+        const variables = {
+          student_name: `${student.first_name} ${student.last_name}`,
+          parent_name: parentName,
+          teacher_name: profile?.full_name || "Teacher",
+          class_name: className,
+          ...(body.customVariables || {}), // ✅ ADD THIS LINE - Merge custom variables
+        };
+
+        const processedMessage = replaceVariables(message, variables);
+        const whatsappMessage = encodeURIComponent(processedMessage);
+
+        // Generate WhatsApp URLs for all phone numbers
+        const whatsappUrls = phoneNumbers.map((phone) => {
+          const formattedPhone = formatPhoneForWhatsApp(phone);
+          return `https://wa.me/${formattedPhone}?text=${whatsappMessage}`;
+        });
 
         // Save message record
         const { data: messageRecord, error: messageError } = await supabase
@@ -221,10 +267,10 @@ export async function POST(request: Request) {
             student_id: studentId,
             parent_contact_type: parentContactType,
             parent_name: parentName,
-            parent_phone: parentPhone,
+            parent_phone: phoneNumbers.join(", "),
             parent_email: parentEmail,
             subject: subject,
-            message: message,
+            message: processedMessage,
             template_used: templateUsed,
             delivery_method: deliveryMethod,
             whatsapp_link_generated: true,
@@ -237,9 +283,8 @@ export async function POST(request: Request) {
         return NextResponse.json({
           success: true,
           method: "whatsapp",
-          whatsappUrl: whatsappUrl,
+          whatsappUrls: whatsappUrls,
           parentName: parentName,
-          parentPhone: parentPhone,
           messageId: messageRecord.id,
         });
       }
@@ -330,10 +375,24 @@ export async function POST(request: Request) {
         // Send email to each parent
         for (const student of studentsWithEmail) {
           try {
+            // Replace variables for each student
+            const variables = {
+              student_name: `${student.first_name} ${student.last_name}`,
+              parent_name: student.parent_name,
+              teacher_name: profile?.full_name || "Teacher",
+              class_name: classData.name,
+            };
+
+            const processedMessage = replaceVariables(message, variables);
+            const processedSubject = replaceVariables(
+              subject || `Class Message - ${classData.name}`,
+              variables
+            );
+
             await resend.emails.send({
               from: "Al Hikmah Institute <noreply@alhikmainstitute.org>",
               to: student.parent_email,
-              subject: subject || `Class Message - ${classData.name}`,
+              subject: processedSubject,
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
@@ -342,7 +401,7 @@ export async function POST(request: Request) {
                   </div>
                   <div style="padding: 30px; background-color: #f9fafb;">
                     <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                      <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${message}</pre>
+                      <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${processedMessage}</pre>
                     </div>
                     <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;">
                       <p>This is an automated message from Al Hikmah Institute</p>

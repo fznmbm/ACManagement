@@ -9,6 +9,7 @@ interface Class {
   day_of_week: string;
   start_time: string;
   end_time: string;
+  students?: Array<{ count: number }>;
 }
 
 interface MessageTemplate {
@@ -54,9 +55,17 @@ export default function ClassMessageForm({ onSuccess, onCancel }: Props) {
     try {
       const supabase = createClient();
       const { data, error } = await supabase
+        // .from("classes")
+        // .select("*")
+        // .order("name");
         .from("classes")
-        .select("*")
-        .order("name");
+        .select(
+          `
+    *,
+    students:students(count)
+  `
+        )
+        .eq("is_active", true);
 
       if (error) throw error;
       setClasses(data || []);
@@ -167,6 +176,9 @@ export default function ClassMessageForm({ onSuccess, onCancel }: Props) {
   const selectedClassName =
     classes.find((c) => c.id === selectedClass)?.name || "";
 
+  const selectedClassInfo = classes.find((c) => c.id === selectedClass);
+  const studentCount = selectedClassInfo?.students?.[0]?.count || 0;
+
   return (
     <div className="space-y-6">
       {/* Class Selection */}
@@ -180,7 +192,8 @@ export default function ClassMessageForm({ onSuccess, onCancel }: Props) {
           <option value="">-- Select Class --</option>
           {classes.map((cls) => (
             <option key={cls.id} value={cls.id}>
-              {cls.name} ({cls.day_of_week} {cls.start_time})
+              {/* FIX: Use cls instead of class, add optional chaining */}
+              {cls.name} ({cls.students?.[0]?.count || 0} students)
             </option>
           ))}
         </select>
@@ -236,35 +249,80 @@ export default function ClassMessageForm({ onSuccess, onCancel }: Props) {
               className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground resize-none"
               placeholder="Write your message here..."
             />
+
+            {/* NEW: Character Counter */}
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              <span>
+                Will send to {studentCount} parent
+                {studentCount !== 1 ? "s" : ""}
+              </span>
+              <span
+                className={
+                  message.length > 4000 ? "text-red-600 font-medium" : ""
+                }
+              >
+                {message.length} / 4096 characters
+                {message.length > 4000 && " ⚠️ Too long!"}
+              </span>
+            </div>
           </div>
 
           {/* Delivery Method */}
           <div>
             <label className="block text-sm font-medium mb-2">Send via:</label>
             <div className="space-y-2">
-              <label className="flex items-center p-3 border-2 border-primary rounded-lg cursor-pointer bg-primary/5">
-                <input
-                  type="radio"
-                  name="delivery"
-                  value="whatsapp_group"
-                  checked={deliveryMethod === "whatsapp_group"}
-                  onChange={(e) =>
-                    setDeliveryMethod(e.target.value as "whatsapp_group")
-                  }
-                  className="mr-3"
-                />
-                <div className="flex-1">
-                  <div className="font-medium">
-                    💬 WhatsApp Group (Recommended)
+              {/* WhatsApp Group Option with Copy Button */}
+              <div
+                className={`p-3 border-2 rounded-lg ${
+                  deliveryMethod === "whatsapp_group"
+                    ? "border-primary bg-primary/5"
+                    : "border-input hover:bg-accent"
+                }`}
+              >
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="delivery"
+                    value="whatsapp_group"
+                    checked={deliveryMethod === "whatsapp_group"}
+                    onChange={(e) =>
+                      setDeliveryMethod(e.target.value as "whatsapp_group")
+                    }
+                    className="mr-3"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center justify-between">
+                      <span>💬 WhatsApp Group (Recommended)</span>
+                      {/* NEW: Copy button always visible for WhatsApp */}
+                      {deliveryMethod === "whatsapp_group" && message && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard();
+                          }}
+                          className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                        >
+                          {showCopySuccess ? "✓ Copied!" : "📋 Copy Message"}
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Copy message and paste into "{selectedClassName}" WhatsApp
+                      group
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Copy message and paste into "{selectedClassName}" WhatsApp
-                    group
-                  </div>
-                </div>
-              </label>
+                </label>
+              </div>
 
-              <label className="flex items-center p-3 border border-input rounded-lg cursor-pointer hover:bg-accent">
+              {/* Email Option */}
+              <label
+                className={`flex items-center p-3 border rounded-lg cursor-pointer ${
+                  deliveryMethod === "email"
+                    ? "border-primary bg-primary/5"
+                    : "border-input hover:bg-accent"
+                }`}
+              >
                 <input
                   type="radio"
                   name="delivery"
@@ -289,13 +347,13 @@ export default function ClassMessageForm({ onSuccess, onCancel }: Props) {
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleSend}
-              disabled={sending || !message}
+              disabled={sending || !message || message.length > 4096}
               className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {sending
                 ? "Processing..."
                 : deliveryMethod === "whatsapp_group"
-                ? "📋 Prepare Message"
+                ? "✓ Mark as Sent"
                 : "📧 Send Emails"}
             </button>
 
@@ -310,34 +368,11 @@ export default function ClassMessageForm({ onSuccess, onCancel }: Props) {
             )}
           </div>
 
-          {/* WhatsApp Copy Section */}
-          {messageText && deliveryMethod === "whatsapp_group" && (
-            <div className="mt-6 p-4 border-2 border-primary rounded-lg bg-primary/5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-medium">
-                  ✅ Message Ready for WhatsApp Group
-                </div>
-                <button
-                  onClick={copyToClipboard}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm"
-                >
-                  📋 {showCopySuccess ? "Copied!" : "Copy Message"}
-                </button>
-              </div>
-
-              <div className="p-3 bg-background border border-input rounded-lg">
-                <pre className="whitespace-pre-wrap text-sm font-mono">
-                  {messageText}
-                </pre>
-              </div>
-
-              <div className="mt-3 text-sm text-muted-foreground">
-                <strong>Next steps:</strong>
-                <ol className="list-decimal ml-5 mt-1 space-y-1">
-                  <li>Click "Copy Message" above</li>
-                  <li>Open your "{selectedClassName}" WhatsApp group</li>
-                  <li>Paste and send the message</li>
-                </ol>
+          {/* Success message after sending emails */}
+          {messageText && deliveryMethod === "email" && (
+            <div className="mt-4 p-4 border-2 border-green-500 rounded-lg bg-green-50 dark:bg-green-900/20">
+              <div className="font-medium text-green-800 dark:text-green-200">
+                ✅ Emails sent successfully!
               </div>
             </div>
           )}

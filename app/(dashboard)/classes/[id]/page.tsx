@@ -248,7 +248,7 @@ export default async function ClassDetailPage({
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-sm ring-2 ring-offset-2 ring-offset-background ring-primary/20">
                         <span className="text-primary text-sm font-semibold">
                           {student.first_name.charAt(0)}
                           {student.last_name.charAt(0)}
@@ -268,6 +268,7 @@ export default async function ClassDetailPage({
                     </span>
                   </Link>
                 ))}
+
                 {activeStudents.length > 10 && (
                   <p className="text-sm text-muted-foreground text-center pt-2">
                     +{activeStudents.length - 10} more students
@@ -357,7 +358,7 @@ export default async function ClassDetailPage({
               {/* ADD THIS NEW BUTTON 👇 */}
               <Link
                 href={`/classes/${classData.id}/feedback`}
-                className="block w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
+                className="block w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors text-center"
               >
                 📝 Send End of Class Feedback
               </Link>

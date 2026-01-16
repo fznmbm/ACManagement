@@ -39,15 +39,18 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
   // Form state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [parentContact, setParentContact] = useState<
-    "father" | "mother" | "both"
-  >("father");
+  const [sendToPrimary, setSendToPrimary] = useState(true);
+  const [sendToSecondary, setSendToSecondary] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<
     "email" | "whatsapp_individual"
   >("whatsapp_individual");
+  // Custom variables for templates
+  const [customVariables, setCustomVariables] = useState<
+    Record<string, string>
+  >({});
 
   // Load students and templates
   useEffect(() => {
@@ -124,74 +127,180 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
   function handleStudentSelect(student: Student) {
     setSelectedStudent(student);
     setSearchTerm("");
+
+    setSendToPrimary(!!student.parent_phone);
+    setSendToSecondary(!!student.parent_phone_secondary);
   }
 
-  // Send message
+  // Detect which custom variables are needed
+  function getRequiredVariables(text: string): string[] {
+    const variables: string[] = [];
+    const matches = text.match(/{([^}]+)}/g);
+
+    if (matches) {
+      matches.forEach((match) => {
+        const varName = match.replace(/[{}]/g, "");
+        // Only include variables that aren't auto-filled
+        if (
+          ![
+            "student_name",
+            "parent_name",
+            "teacher_name",
+            "class_name",
+          ].includes(varName)
+        ) {
+          if (!variables.includes(varName)) {
+            variables.push(varName);
+          }
+        }
+      });
+    }
+
+    return variables;
+  }
+
+  const requiredVariables = getRequiredVariables(message);
+
   async function handleSend() {
     if (!selectedStudent || !message) {
       alert("Please select a student and write a message");
       return;
     }
 
-    // Check if parent contact is available
+    // Check character limit
+    if (message.length > 4096) {
+      alert("Message is too long. Maximum 4096 characters allowed.");
+      return;
+    }
+
+    // NEW: Check if all required custom variables are filled
+    const required = getRequiredVariables(message);
+    const missingVars = required.filter((varName) => !customVariables[varName]);
+    if (missingVars.length > 0) {
+      alert(
+        `Please fill in all required fields: ${missingVars
+          .map((v) => v.replace(/_/g, " "))
+          .join(", ")}`
+      );
+      return;
+    }
+
+    // Check if at least one contact is selected
+    if (!sendToPrimary && !sendToSecondary) {
+      alert("Please select at least one contact to send to");
+      return;
+    }
+
+    // Check if selected contacts are available
+    if (sendToPrimary && !selectedStudent.parent_phone) {
+      alert("Primary phone number not available");
+      return;
+    }
+    if (sendToSecondary && !selectedStudent.parent_phone_secondary) {
+      alert("Secondary phone number not available");
+      return;
+    }
+
+    // Check email availability
     if (deliveryMethod === "email" && !selectedStudent.parent_email) {
       alert("Parent email not available for this student");
       return;
     }
 
-    if (deliveryMethod === "whatsapp_individual") {
-      if (parentContact === "father" && !selectedStudent.parent_phone) {
-        alert("Father phone number not available");
-        return;
-      }
-      if (
-        parentContact === "mother" &&
-        !selectedStudent.parent_phone_secondary
-      ) {
-        alert("Mother phone number not available");
-        return;
-      }
-    }
-
     setSending(true);
 
     try {
+      // Convert boolean states to API format
+      const parentContactType =
+        sendToPrimary && sendToSecondary
+          ? "both"
+          : sendToPrimary
+          ? "father"
+          : sendToSecondary
+          ? "mother"
+          : "father";
+
       const response = await fetch("/api/messages/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messageType: "individual",
           studentId: selectedStudent.id,
-          parentContactType: parentContact,
+          parentContactType,
           subject,
           message,
           deliveryMethod,
           templateUsed: selectedTemplate || null,
+          customVariables: customVariables, // ✅ ADD THIS LINE
         }),
       });
 
       const data = await response.json();
 
+      // DEBUG: Log what API returns
+      console.log("=== API RESPONSE ===");
+      console.log("Full response:", data);
+      console.log("Method:", data.method);
+      console.log("WhatsApp URL (singular):", data.whatsappUrl);
+      console.log("WhatsApp URLs (array):", data.whatsappUrls);
+      console.log("==================");
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to send message");
       }
 
-      if (data.method === "whatsapp") {
-        // Open WhatsApp with pre-filled message
-        window.open(data.whatsappUrl, "_blank");
-        alert(
-          `WhatsApp opened! Click send to complete message to ${data.parentName}`
-        );
+      if (data.method === "whatsapp" || data.method === "whatsapp_individual") {
+        // Handle both singular and array formats
+        let urls: string[] = [];
+
+        if (data.whatsappUrls && Array.isArray(data.whatsappUrls)) {
+          urls = data.whatsappUrls;
+        } else if (data.whatsappUrl) {
+          urls = [data.whatsappUrl];
+        }
+
+        if (urls.length > 0) {
+          console.log("Opening WhatsApp URLs:", urls);
+
+          // Open each WhatsApp link
+          urls.forEach((url: string, index: number) => {
+            setTimeout(() => {
+              console.log(`Opening URL ${index + 1}:`, url);
+              const opened = window.open(url, "_blank");
+              if (!opened) {
+                console.error("Failed to open window - popup might be blocked");
+              }
+            }, index * 1000); // 1 second delay between each
+          });
+
+          alert(
+            `Opening WhatsApp for ${urls.length} contact(s).\n\nIf windows don't open, please allow popups for this site.`
+          );
+        } else {
+          console.error("No WhatsApp URL found in response:", data);
+          alert(
+            "Error: API didn't return a WhatsApp URL.\n\nCheck browser console (F12) for details."
+          );
+          return; // Don't reset form if there's an error
+        }
       } else if (data.method === "email") {
         alert("Email sent successfully!");
+      } else {
+        console.error("Unknown delivery method:", data);
+        alert(
+          `Error: Unknown delivery method "${data.method}".\n\nCheck browser console (F12) for details.`
+        );
+        return; // Don't reset form if there's an error
       }
 
-      // Reset form
+      // Reset form only on success
       setSelectedStudent(null);
-      setParentContact("father");
+      setSendToPrimary(true);
+      setSendToSecondary(false);
       setSelectedTemplate("");
       setSubject("");
       setMessage("");
+      setCustomVariables({}); // ✅ ADD THIS LINE
 
       if (onSuccess) onSuccess();
     } catch (error: any) {
@@ -290,19 +399,31 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
           <div>
             <label className="block text-sm font-medium mb-2">Send to:</label>
             <div className="space-y-2">
-              <label className="flex items-center p-3 border border-input rounded-lg hover:bg-accent cursor-pointer">
+              {/* Primary Contact */}
+              <label
+                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                  sendToPrimary
+                    ? "border-primary bg-primary/5"
+                    : "border-input hover:bg-accent"
+                } ${
+                  !selectedStudent.parent_phone
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+              >
                 <input
-                  type="radio"
-                  name="parentContact"
-                  value="father"
-                  checked={parentContact === "father"}
-                  onChange={(e) => setParentContact(e.target.value as "father")}
-                  className="mr-3"
+                  type="checkbox"
+                  checked={sendToPrimary}
+                  onChange={(e) => setSendToPrimary(e.target.checked)}
                   disabled={!selectedStudent.parent_phone}
+                  className="h-4 w-4 rounded border-gray-300"
                 />
                 <div className="flex-1">
-                  <div className="font-medium">
-                    Primary Contact: {selectedStudent.parent_name}
+                  <div className="font-medium flex items-center justify-between">
+                    <span>Primary: {selectedStudent.parent_name}</span>
+                    {sendToPrimary && (
+                      <span className="text-xs text-primary">✓ Will Send</span>
+                    )}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {selectedStudent.parent_phone || "No phone number"}
@@ -310,42 +431,35 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
                 </div>
               </label>
 
-              <label className="flex items-center p-3 border border-input rounded-lg hover:bg-accent cursor-pointer">
+              {/* Secondary Contact */}
+              <label
+                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                  sendToSecondary
+                    ? "border-primary bg-primary/5"
+                    : "border-input hover:bg-accent"
+                } ${
+                  !selectedStudent.parent_phone_secondary
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+              >
                 <input
-                  type="radio"
-                  name="parentContact"
-                  value="mother"
-                  checked={parentContact === "mother"}
-                  onChange={(e) => setParentContact(e.target.value as "mother")}
-                  className="mr-3"
+                  type="checkbox"
+                  checked={sendToSecondary}
+                  onChange={(e) => setSendToSecondary(e.target.checked)}
                   disabled={!selectedStudent.parent_phone_secondary}
+                  className="h-4 w-4 rounded border-gray-300"
                 />
                 <div className="flex-1">
-                  <div className="font-medium">Secondary Contact</div>
+                  <div className="font-medium flex items-center justify-between">
+                    <span>Secondary Contact</span>
+                    {sendToSecondary && (
+                      <span className="text-xs text-primary">✓ Will Send</span>
+                    )}
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     {selectedStudent.parent_phone_secondary ||
                       "No phone number"}
-                  </div>
-                </div>
-              </label>
-
-              <label className="flex items-center p-3 border border-input rounded-lg hover:bg-accent cursor-pointer">
-                <input
-                  type="radio"
-                  name="parentContact"
-                  value="both"
-                  checked={parentContact === "both"}
-                  onChange={(e) => setParentContact(e.target.value as "both")}
-                  className="mr-3"
-                  disabled={
-                    !selectedStudent.parent_phone &&
-                    !selectedStudent.parent_phone_secondary
-                  }
-                />
-                <div className="flex-1">
-                  <div className="font-medium">Both Contacts</div>
-                  <div className="text-sm text-muted-foreground">
-                    Send to both numbers
                   </div>
                 </div>
               </label>
@@ -388,6 +502,32 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
           {/* Message */}
           <div>
             <label className="block text-sm font-medium mb-2">Message</label>
+
+            {/* NEW: Quick-insert variable buttons */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{student_name}")}
+                className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+              >
+                + Student Name
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{parent_name}")}
+                className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+              >
+                + Parent Name
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{teacher_name}")}
+                className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+              >
+                + Teacher Name
+              </button>
+            </div>
+
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -395,11 +535,148 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
               className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground resize-none"
               placeholder="Write your message here..."
             />
-            <div className="text-sm text-muted-foreground mt-1">
-              Variables: {"{student_name}"}, {"{parent_name}"},{" "}
-              {"{teacher_name}"}
+
+            {/* NEW: Character counter */}
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              <span>
+                Sending to:{" "}
+                {sendToPrimary && sendToSecondary
+                  ? "Both contacts"
+                  : sendToPrimary
+                  ? "Primary contact"
+                  : sendToSecondary
+                  ? "Secondary contact"
+                  : "No contact selected"}
+              </span>
+              <span
+                className={
+                  message.length > 4000 ? "text-red-600 font-medium" : ""
+                }
+              >
+                {message.length} / 4096 characters
+                {message.length > 4000 && " ⚠️ Too long!"}
+              </span>
             </div>
           </div>
+
+          {/* Message section */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Message</label>
+
+            {/* Quick-insert variable buttons */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{student_name}")}
+                className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+              >
+                + Student Name
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{parent_name}")}
+                className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+              >
+                + Parent Name
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{teacher_name}")}
+                className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+              >
+                + Teacher Name
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessage(message + "{class_name}")}
+                className="px-2 py-1 text-xs bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-colors"
+              >
+                + Class Name
+              </button>
+            </div>
+
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={8}
+              className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground resize-none"
+              placeholder="Write your message here..."
+            />
+
+            {/* Character counter */}
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              <span>
+                Sending to:{" "}
+                {sendToPrimary && sendToSecondary
+                  ? "Both contacts"
+                  : sendToPrimary
+                  ? "Primary contact"
+                  : sendToSecondary
+                  ? "Secondary contact"
+                  : "No contact selected"}
+              </span>
+              <span
+                className={
+                  message.length > 4000 ? "text-red-600 font-medium" : ""
+                }
+              >
+                {message.length} / 4096 characters
+                {message.length > 4000 && " ⚠️ Too long!"}
+              </span>
+            </div>
+          </div>
+
+          {/* NEW: Custom Variables Section */}
+          {requiredVariables.length > 0 && (
+            <div className="p-4 border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📝</span>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  This message requires additional information:
+                </p>
+              </div>
+
+              {requiredVariables.map((varName) => (
+                <div key={varName}>
+                  <label className="block text-sm font-medium mb-1 capitalize">
+                    {varName.replace(/_/g, " ")}
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  {varName === "exam_date" || varName === "date" ? (
+                    <input
+                      type="date"
+                      value={customVariables[varName] || ""}
+                      onChange={(e) =>
+                        setCustomVariables({
+                          ...customVariables,
+                          [varName]: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={customVariables[varName] || ""}
+                      onChange={(e) =>
+                        setCustomVariables({
+                          ...customVariables,
+                          [varName]: e.target.value,
+                        })
+                      }
+                      placeholder={`Enter ${varName.replace(/_/g, " ")}...`}
+                      className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                    />
+                  )}
+                </div>
+              ))}
+
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                💡 These values will replace the {"{"}variables{"}"} in your
+                message
+              </p>
+            </div>
+          )}
 
           {/* Delivery Method */}
           <div>
@@ -448,7 +725,12 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleSend}
-              disabled={sending || !message}
+              disabled={
+                sending ||
+                !message ||
+                message.length > 4096 ||
+                (!sendToPrimary && !sendToSecondary)
+              }
               className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {sending

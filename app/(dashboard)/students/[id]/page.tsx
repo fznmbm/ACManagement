@@ -10,12 +10,17 @@ import {
   Calendar,
   MapPin,
   Users,
+  TrendingUp,
+  Brain,
+  Award,
+  AlertCircle,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { formatDate, calculateAge } from "@/lib/utils/helpers";
 
 import StudentFeeAssignment from "@/components/fees/StudentFeeAssignment";
 import FeeIndicator from "@/components/fees/FeeIndicator";
-import { useFees } from "@/hooks/useFees";
 import StudentProfileClient from "@/components/students/StudentProfileClient";
 import StudentFeeHistory from "@/components/students/StudentFeeHistory";
 
@@ -42,7 +47,7 @@ export default async function StudentDetailPage({
         name,
         level
       ),
-       status_changed_by:profiles!students_status_changed_by_fkey (full_name)
+      status_changed_by:profiles!students_status_changed_by_fkey (full_name)
     `
     )
     .eq("id", params.id)
@@ -78,23 +83,183 @@ export default async function StudentDetailPage({
     .order("date", { ascending: false })
     .limit(10);
 
-  // Get Quran progress
-  const { data: quranProgress } = await supabase
-    .from("quran_progress")
-    .select("*")
+  // Get Academic Progress (FIXED - proper relationship)
+  const { data: academicProgress } = await supabase
+    .from("academic_progress")
+    .select(
+      `
+      id,
+      percentage,
+      score,
+      total_marks,
+      assessment_name,
+      assessment_date,
+      curriculum_topic:curriculum_topics!inner (
+        topic_name,
+        subject_name
+      )
+    `
+    )
     .eq("student_id", params.id)
-    .order("started_date", { ascending: false })
+    .order("assessment_date", { ascending: false })
     .limit(5);
+
+  // Type definition
+  type AcademicRecord = {
+    id: string;
+    percentage: number;
+    score: number;
+    total_marks: number;
+    assessment_name: string;
+    assessment_date: string;
+    curriculum_topic: {
+      topic_name: string;
+      subject_name: string;
+    };
+  };
+
+  // Calculate overall academic average with proper typing
+  const typedAcademic = academicProgress as AcademicRecord[] | null;
+
+  const overallAverage =
+    typedAcademic && typedAcademic.length > 0
+      ? Math.round(
+          typedAcademic.reduce((sum, a) => sum + a.percentage, 0) /
+            typedAcademic.length
+        )
+      : 0;
+
+  // Get Memorization Progress (FIXED - was querying non-existent quran_progress table)
+  // Get Memorization Progress (ALTERNATIVE - with type assertion)
+  const { data: memorizationData } = await supabase
+    .from("student_memorization")
+    .select(
+      `
+      id,
+      progress_stage,
+      proficiency_rating,
+      memorization_items!inner (
+        id,
+        title,
+        category,
+        arabic_text
+      )
+    `
+    )
+    .eq("student_id", params.id);
+
+  // Type definition
+  type MemorizationRecord = {
+    id: string;
+    progress_stage: string;
+    proficiency_rating: number | null;
+    memorization_items: {
+      id: string;
+      title: string;
+      category: string;
+      arabic_text: string;
+    };
+  };
+
+  // Calculate memorization stats with proper typing
+  const typedData = memorizationData as MemorizationRecord[] | null;
+
+  const memorizationStats = typedData
+    ? {
+        duas: {
+          total: typedData.filter(
+            (m) => m.memorization_items.category === "dua"
+          ).length,
+          memorized: typedData.filter(
+            (m) =>
+              m.memorization_items.category === "dua" &&
+              (m.progress_stage === "memorized" ||
+                m.progress_stage === "mastered")
+          ).length,
+          mastered: typedData.filter(
+            (m) =>
+              m.memorization_items.category === "dua" &&
+              m.progress_stage === "mastered"
+          ).length,
+        },
+        surahs: {
+          total: typedData.filter(
+            (m) => m.memorization_items.category === "surah"
+          ).length,
+          memorized: typedData.filter(
+            (m) =>
+              m.memorization_items.category === "surah" &&
+              (m.progress_stage === "memorized" ||
+                m.progress_stage === "mastered")
+          ).length,
+          mastered: typedData.filter(
+            (m) =>
+              m.memorization_items.category === "surah" &&
+              m.progress_stage === "mastered"
+          ).length,
+        },
+        hadiths: {
+          total: typedData.filter(
+            (m) => m.memorization_items.category === "hadith"
+          ).length,
+          memorized: typedData.filter(
+            (m) =>
+              m.memorization_items.category === "hadith" &&
+              (m.progress_stage === "memorized" ||
+                m.progress_stage === "mastered")
+          ).length,
+          mastered: typedData.filter(
+            (m) =>
+              m.memorization_items.category === "hadith" &&
+              m.progress_stage === "mastered"
+          ).length,
+        },
+      }
+    : null;
+
+  // Calculate overall memorization percentage
+  const overallMemorization = memorizationStats
+    ? Math.round(
+        ((memorizationStats.duas.memorized +
+          memorizationStats.surahs.memorized +
+          memorizationStats.hadiths.memorized) /
+          45) *
+          100
+      )
+    : 0;
+
+  // Get Certificates (NEW)
+  const { data: certificates } = await supabase
+    .from("certificates")
+    .select("id, certificate_type, certificate_number, issued_date")
+    .eq("student_id", params.id)
+    .order("issued_date", { ascending: false })
+    .limit(5);
+
+  // Get Active Fines (NEW)
+  const { data: activeFines } = await supabase
+    .from("fines")
+    .select("id, fine_type, amount, issued_date, notes")
+    .eq("student_id", params.id)
+    .eq("status", "pending")
+    .order("issued_date", { ascending: false });
+
+  const totalFines = activeFines?.reduce((sum, f) => sum + f.amount, 0) || 0;
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      present: "bg-green-100 text-green-800",
-      absent: "bg-red-100 text-red-800",
-      late: "bg-orange-100 text-orange-800",
-      excused: "bg-blue-100 text-blue-800",
-      sick: "bg-purple-100 text-purple-800",
+      present:
+        "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+      absent: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+      late: "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300",
+      excused:
+        "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+      sick: "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return (
+      colors[status] ||
+      "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300"
+    );
   };
 
   return (
@@ -139,12 +304,6 @@ export default async function StudentDetailPage({
                   {student.first_name} {student.last_name}
                 </p>
               </div>
-              {/* {student.arabic_name && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Arabic Name</p>
-                  <p className="font-medium rtl">{student.arabic_name}</p>
-                </div>
-              )} */}
               <div>
                 <p className="text-sm text-muted-foreground">Date of Birth</p>
                 <p className="font-medium">
@@ -162,44 +321,24 @@ export default async function StudentDetailPage({
                 <p className="text-sm text-muted-foreground">Gender</p>
                 <p className="font-medium capitalize">{student.gender}</p>
               </div>
-              {/* <div>
+              <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  className={`px-3 py-1 text-sm font-medium rounded-full ${
                     student.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                      : student.status === "withdrawn"
+                      ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                      : student.status === "graduated"
+                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                      : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
                   }`}
                 >
-                  {student.status}
+                  {student.status.charAt(0).toUpperCase() +
+                    student.status.slice(1)}
+                  {student.withdrawal_date &&
+                    ` since ${formatDate(student.withdrawal_date)}`}
                 </span>
-              </div> */}
-              {/* Status Information Section */}
-              <div className="mb-4">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Status
-                </label>
-                <div className="mt-1">
-                  <span
-                    className={`
-      px-3 py-1 text-sm font-medium rounded-full
-      ${
-        student.status === "active"
-          ? "bg-green-100 text-green-800"
-          : student.status === "withdrawn"
-          ? "bg-red-100 text-red-800"
-          : student.status === "graduated"
-          ? "bg-blue-100 text-blue-800"
-          : "bg-yellow-100 text-yellow-800"
-      }
-    `}
-                  >
-                    {student.status.charAt(0).toUpperCase() +
-                      student.status.slice(1)}
-                    {student.withdrawal_date &&
-                      ` since ${formatDate(student.withdrawal_date)}`}
-                  </span>
-                </div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Enrollment Date</p>
@@ -277,6 +416,189 @@ export default async function StudentDetailPage({
             </div>
           )}
 
+          {/* Academic Progress (NEW) */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">Academic Progress</h3>
+              </div>
+              <Link
+                href={`/curriculum-assessment/assessments?student=${student.id}`}
+                className="text-sm text-primary hover:underline"
+              >
+                View All →
+              </Link>
+            </div>
+
+            {typedAcademic && typedAcademic.length > 0 ? (
+              <div className="space-y-4">
+                {/* Overall Average */}
+                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Overall Average
+                  </p>
+                  <p className="text-3xl font-bold text-primary">
+                    {overallAverage}%
+                  </p>
+                </div>
+
+                {/* Recent Assessments */}
+                <div className="space-y-2">
+                  {typedAcademic.map((assessment) => (
+                    <div
+                      key={assessment.id}
+                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {assessment.curriculum_topic?.subject_name ||
+                            "General"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {assessment.assessment_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(assessment.assessment_date, "short")}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span
+                          className={`text-lg font-bold ${
+                            assessment.percentage >= 80
+                              ? "text-green-600 dark:text-green-400"
+                              : assessment.percentage >= 60
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-orange-600 dark:text-orange-400"
+                          }`}
+                        >
+                          {assessment.percentage}%
+                        </span>
+                        <p className="text-xs text-muted-foreground">
+                          {assessment.score}/{assessment.total_marks}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">
+                No academic assessments recorded yet.
+              </p>
+            )}
+          </div>
+
+          {/* Memorization Progress (FIXED - renamed from "Quran Progress") */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">Memorization Progress</h3>
+              </div>
+              <Link
+                href={`/curriculum-assessment/memorization?student=${student.id}`}
+                className="text-sm text-primary hover:underline"
+              >
+                View Details →
+              </Link>
+            </div>
+
+            {memorizationStats ? (
+              <div className="space-y-4">
+                {/* Progress Summary */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1">
+                      Duas
+                    </p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {memorizationStats.duas.memorized}/15
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-700 dark:text-green-300 mb-1">
+                      Surahs
+                    </p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {memorizationStats.surahs.memorized}/15
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                    <p className="text-sm text-purple-700 dark:text-purple-300 mb-1">
+                      Hadiths
+                    </p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {memorizationStats.hadiths.memorized}/15
+                    </p>
+                  </div>
+                </div>
+
+                {/* Overall Progress */}
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Overall Completion</span>
+                    <span className="font-semibold">
+                      {overallMemorization}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${overallMemorization}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">
+                No memorization progress recorded yet.
+              </p>
+            )}
+          </div>
+
+          {/* Notes & Medical Information (IMPROVED) */}
+          {(student.medical_notes || student.notes) && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4">
+                Notes & Medical Information
+              </h3>
+              <div className="space-y-4">
+                {student.medical_notes && (
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-red-900 dark:text-red-100 mb-1">
+                          Medical Notes
+                        </p>
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                          {student.medical_notes}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {student.notes && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                          General Notes
+                        </p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          {student.notes}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Recent Attendance */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Recent Attendance</h3>
@@ -349,21 +671,107 @@ export default async function StudentDetailPage({
             )}
           </div>
 
-          {/* ADD THE FEE INFORMATION SECTION RIGHT HERE */}
+          {/* Fee Information */}
           <StudentProfileClient studentId={student.id} />
 
-          {/* Fee History & Status - ADD THIS */}
+          {/* Fee History */}
           <StudentFeeHistory studentId={student.id} />
-          {/* Fee Information - ADD THIS NEW SECTION
+
+          {/* Active Fines (NEW) */}
+          {activeFines && activeFines.length > 0 && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                <h3 className="text-lg font-semibold">Active Fines</h3>
+              </div>
+
+              <div className="space-y-3">
+                {activeFines.map((fine) => (
+                  <div
+                    key={fine.id}
+                    className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium capitalize">
+                        {fine.fine_type.replace("_", " ")}
+                      </span>
+                      <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        £{fine.amount.toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Issued: {formatDate(fine.issued_date, "short")}
+                    </p>
+                    {fine.notes && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {fine.notes}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                <div className="pt-3 border-t border-border">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">
+                      Total Outstanding
+                    </span>
+                    <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                      £{totalFines.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <Link
+                  href={`/fines?student=${student.id}`}
+                  className="text-sm text-primary hover:underline block text-center mt-2"
+                >
+                  View all fines →
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Certificates (NEW) */}
           <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Fee Information</h3>
-            <StudentFeeAssignment
-              studentId={student.id}
-              onUpdate={() => {
-                // Could add refresh logic here if needed
-              }}
-            />
-          </div> */}
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Certificates</h3>
+            </div>
+
+            {certificates && certificates.length > 0 ? (
+              <div className="space-y-3">
+                {certificates.map((cert) => (
+                  <div
+                    key={cert.id}
+                    className="p-3 border border-border rounded-lg hover:border-primary transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm capitalize">
+                          {cert.certificate_type.replace(/_/g, " ")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {cert.certificate_number}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Issued: {formatDate(cert.issued_date, "short")}
+                        </p>
+                      </div>
+                      <Award className="h-5 w-5 text-yellow-500 flex-shrink-0" />
+                    </div>
+                  </div>
+                ))}
+                <Link
+                  href={`/curriculum-assessment/certificates?student=${student.id}`}
+                  className="text-sm text-primary hover:underline block text-center"
+                >
+                  View All Certificates →
+                </Link>
+              </div>
+            ) : (
+              <p className="text-center py-6 text-sm text-muted-foreground">
+                No certificates issued yet.
+              </p>
+            )}
+          </div>
 
           {/* Attendance Statistics */}
           <div className="bg-card border border-border rounded-lg p-6">
@@ -378,7 +786,7 @@ export default async function StudentDetailPage({
                     {attendanceRate}%
                   </span>
                 </div>
-                <div className="w-full bg-secondary rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full transition-all"
                     style={{ width: `${attendanceRate}%` }}
@@ -387,93 +795,37 @@ export default async function StudentDetailPage({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <p className="text-2xl font-bold text-green-700">
+                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                     {presentCount}
                   </p>
-                  <p className="text-xs text-green-600">Present</p>
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    Present
+                  </p>
                 </div>
-                <div className="text-center p-3 bg-red-50 rounded-lg">
-                  <p className="text-2xl font-bold text-red-700">
+                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                     {absentCount}
                   </p>
-                  <p className="text-xs text-red-600">Absent</p>
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    Absent
+                  </p>
                 </div>
-                <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <p className="text-2xl font-bold text-orange-700">
+                <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                     {lateCount}
                   </p>
-                  <p className="text-xs text-orange-600">Late</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                    Late
+                  </p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <div className="text-center p-3 bg-muted/50 border border-border rounded-lg">
                   <p className="text-2xl font-bold">{totalAttendance}</p>
                   <p className="text-xs text-muted-foreground">Total</p>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Quran Progress */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Quran Progress</h3>
-            {quranProgress && quranProgress.length > 0 ? (
-              <div className="space-y-3">
-                {quranProgress.map((progress) => (
-                  <div
-                    key={progress.id}
-                    className="border-l-4 border-primary pl-3 py-2"
-                  >
-                    <p className="font-medium text-sm">{progress.surah_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {progress.verses_memorized}/{progress.verses_total} verses
-                    </p>
-                    {progress.proficiency_level && (
-                      <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full inline-block mt-1">
-                        {progress.proficiency_level}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                No Quran progress recorded yet.
-              </p>
-            )}
-            <div className="mt-4">
-              <Link
-                href={`/progress?student=${student.id}`}
-                className="text-sm text-primary hover:underline"
-              >
-                View detailed progress →
-              </Link>
-            </div>
-          </div>
-
-          {/* Notes */}
-          {(student.medical_notes || student.notes) && (
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Notes</h3>
-              {student.medical_notes && (
-                <div className="mb-3">
-                  <p className="text-sm font-medium text-destructive">
-                    Medical Notes:
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {student.medical_notes}
-                  </p>
-                </div>
-              )}
-              {student.notes && (
-                <div>
-                  <p className="text-sm font-medium">General Notes:</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {student.notes}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
