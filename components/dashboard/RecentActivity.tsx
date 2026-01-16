@@ -77,8 +77,8 @@ export default async function RecentActivity() {
     activities.push({
       id: `payment-${payment.id}`,
       type: "fee_paid",
-      description: `${payment.students?.first_name} ${
-        payment.students?.last_name
+      description: `${payment.students?.[0]?.first_name || "Student"} ${
+        payment.students?.[0]?.last_name || ""
       } paid £${payment.amount_paid.toFixed(2)}`,
       timestamp: new Date(payment.paid_date),
       icon: CreditCard,
@@ -106,7 +106,9 @@ export default async function RecentActivity() {
     activities.push({
       id: `cert-${cert.id}`,
       type: "certificate_issued",
-      description: `Certificate ${cert.certificate_number} issued to ${cert.students?.first_name} ${cert.students?.last_name}`,
+      description: `Certificate ${cert.certificate_number} issued to ${
+        cert.students?.[0]?.first_name || "Student"
+      } ${cert.students?.[0]?.last_name || ""}`,
       timestamp: new Date(cert.issued_date),
       icon: Award,
       color: "text-yellow-600 dark:text-yellow-400",
@@ -138,8 +140,8 @@ export default async function RecentActivity() {
       type: fine.status === "waived" ? "fine_waived" : "fine_collected",
       description: `Fine ${
         fine.status === "waived" ? "waived" : "collected"
-      } from ${fine.students?.first_name} ${
-        fine.students?.last_name
+      } from ${fine.students?.[0]?.first_name || "Student"} ${
+        fine.students?.[0]?.last_name || ""
       } (£${fine.amount.toFixed(2)})`,
       timestamp: new Date(fine.paid_date),
       icon: fine.status === "waived" ? CheckCircle : AlertCircle,
