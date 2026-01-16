@@ -124,11 +124,13 @@ export default async function UpcomingEvents() {
                           School-wide
                         </span>
                       )}
-                      {event.classes && (
-                        <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
-                          {event.classes.name}
-                        </span>
-                      )}
+                      {Array.isArray(event.classes) &&
+                        event.classes.length > 0 &&
+                        event.classes[0].name && (
+                          <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                            {event.classes[0].name}
+                          </span>
+                        )}
                     </div>
                     <h4 className="font-semibold">{event.title}</h4>
                   </div>
