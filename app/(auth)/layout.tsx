@@ -10,11 +10,26 @@ export default async function AuthLayout({
   const supabase = await createClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
 
-  // If already logged in, redirect to dashboard
-  if (user) {
-    redirect("/dashboard");
+  // If there's an auth error, the user is not logged in
+  // This prevents false redirects
+  if (!authError && user) {
+    // User is genuinely logged in, determine correct dashboard
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role === "parent") {
+      redirect("/parent/dashboard");
+    } else if (
+      ["admin", "super_admin", "teacher"].includes(profile?.role || "")
+    ) {
+      redirect("/dashboard");
+    }
   }
 
   // Get centre name from settings
@@ -60,7 +75,7 @@ export default async function AuthLayout({
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © 2025 Attendance & Curriculum System System. All rights reserved.
+          © 2026 Attendance & Curriculum System System. All rights reserved.
         </p>
       </div>
     </div>

@@ -12,6 +12,39 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const { pathname } = request.nextUrl;
 
+  // Define all admin routes (COMPLETE LIST)
+  const adminRoutes = [
+    "/dashboard",
+    "/students",
+    "/classes",
+    "/attendance",
+    "/reports",
+    "/settings",
+    "/fees",
+    "/fines",
+    "/applications",
+    "/curriculum-assessment",
+    "/messages",
+    "/notifications",
+    "/events",
+    "/alerts",
+    "/users",
+  ];
+
+  // Define all parent routes (COMPLETE LIST)
+  const parentRoutes = [
+    "/parent/dashboard",
+    "/parent/children",
+    "/parent/finances",
+    "/parent/messages",
+    "/parent/notifications",
+    "/parent/profile",
+    "/parent/applications",
+    "/parent/events",
+    "/parent/inbox",
+    "/parent/student",
+  ];
+
   console.log("🌐 Middleware:", { hostname, pathname });
 
   // ==========================================
@@ -24,39 +57,6 @@ export async function middleware(request: NextRequest) {
     // ==========================================
     // PRODUCTION: DOMAIN-BASED ROUTING
     // ==========================================
-
-    // Define all admin routes (COMPLETE LIST)
-    const adminRoutes = [
-      "/dashboard",
-      "/students",
-      "/classes",
-      "/attendance",
-      "/reports",
-      "/settings",
-      "/fees",
-      "/fines",
-      "/applications",
-      "/curriculum-assessment",
-      "/messages",
-      "/notifications",
-      "/events",
-      "/alerts",
-      "/users",
-    ];
-
-    // Define all parent routes (COMPLETE LIST)
-    const parentRoutes = [
-      "/parent/dashboard",
-      "/parent/children",
-      "/parent/finances",
-      "/parent/messages",
-      "/parent/notifications",
-      "/parent/profile",
-      "/parent/applications",
-      "/parent/events",
-      "/parent/inbox",
-      "/parent/student",
-    ];
 
     // Define public routes
     const publicRoutes = [
@@ -148,7 +148,7 @@ export async function middleware(request: NextRequest) {
           });
         },
       },
-    }
+    },
   );
 
   const {
@@ -166,40 +166,40 @@ export async function middleware(request: NextRequest) {
     userRole = profile?.role || null;
   }
 
-  const adminRoutes = [
-    "/dashboard",
-    "/students",
-    "/classes",
-    "/attendance",
-    "/reports",
-    "/settings",
-    "/fees",
-    "/fines",
-    "/applications",
-    "/curriculum-assessment",
-    "/messages",
-    "/notifications",
-    "/events",
-    "/alerts",
-    "/users",
-  ];
+  // const adminRoutes = [
+  //   "/dashboard",
+  //   "/students",
+  //   "/classes",
+  //   "/attendance",
+  //   "/reports",
+  //   "/settings",
+  //   "/fees",
+  //   "/fines",
+  //   "/applications",
+  //   "/curriculum-assessment",
+  //   "/messages",
+  //   "/notifications",
+  //   "/events",
+  //   "/alerts",
+  //   "/users",
+  // ];
 
-  const parentRoutes = [
-    "/parent/dashboard",
-    "/parent/children",
-    "/parent/finances",
-    "/parent/messages",
-    "/parent/notifications",
-    "/parent/profile",
-    "/parent/applications",
-    "/parent/events",
-    "/parent/inbox",
-    "/parent/student",
-  ];
+  // const parentRoutes = [
+  //   "/parent/dashboard",
+  //   "/parent/children",
+  //   "/parent/finances",
+  //   "/parent/messages",
+  //   "/parent/notifications",
+  //   "/parent/profile",
+  //   "/parent/applications",
+  //   "/parent/events",
+  //   "/parent/inbox",
+  //   "/parent/student",
+  // ];
 
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
   const isParentRoute = parentRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
   const isAdminLogin = pathname === "/login";
   const isParentLogin = pathname === "/parent/login";

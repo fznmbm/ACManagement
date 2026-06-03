@@ -34,8 +34,25 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Success! Middleware will handle redirect
-        router.push("/dashboard");
+        // Get user profile to verify role and determine redirect
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
+
+        // Redirect based on role
+        if (profile?.role === "parent") {
+          // Shouldn't happen - parents use /parent/login
+          router.push("/parent/dashboard");
+        } else if (
+          ["admin", "super_admin", "teacher"].includes(profile?.role || "")
+        ) {
+          router.push("/dashboard");
+        } else {
+          // Unknown role, default to dashboard
+          router.push("/dashboard");
+        }
         router.refresh();
       }
     } catch (err) {

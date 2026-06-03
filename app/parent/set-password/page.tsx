@@ -36,11 +36,11 @@ export default function SetPasswordPage() {
 
         if (errorCode === "otp_expired") {
           setError(
-            "This link has expired or been used already. Please request a new link from the admin."
+            "This link has expired or been used already. Please request a new link from the admin.",
           );
         } else {
           setError(
-            errorDesc || "An error occurred. Please request a new link."
+            errorDesc || "An error occurred. Please request a new link.",
           );
         }
         return;
@@ -59,23 +59,23 @@ export default function SetPasswordPage() {
         console.log(
           "Session after wait:",
           session ? "Found!" : "Missing",
-          sessionError
+          sessionError,
         );
 
         if (!session) {
           const { error: authError } = await supabase.auth.setSession({
             access_token: new URLSearchParams(hash.substring(1)).get(
-              "access_token"
+              "access_token",
             )!,
             refresh_token: new URLSearchParams(hash.substring(1)).get(
-              "refresh_token"
+              "refresh_token",
             )!,
           });
 
           if (authError) {
             console.error("Error setting session:", authError);
             setError(
-              "Failed to establish session. Please try the magic link again."
+              "Failed to establish session. Please try the magic link again.",
             );
           } else {
             setError("");
@@ -103,7 +103,7 @@ export default function SetPasswordPage() {
         "Auth state changed:",
         event,
         "Session:",
-        session ? "Present" : "Missing"
+        session ? "Present" : "Missing",
       );
       if (session) {
         setError("");
@@ -175,7 +175,9 @@ export default function SetPasswordPage() {
       await supabase.auth.signOut();
 
       setTimeout(() => {
-        window.location.href = "/parent/login";
+        // Redirect to login page
+        // Middleware will handle role-based routing
+        window.location.href = "/login";
       }, 2000);
     } catch (err) {
       console.error("Set password error:", err);
