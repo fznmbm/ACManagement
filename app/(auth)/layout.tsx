@@ -21,7 +21,7 @@ export default async function AuthLayout({
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role === "parent") {
       redirect("/parent/dashboard");
@@ -29,6 +29,9 @@ export default async function AuthLayout({
       ["admin", "super_admin", "teacher"].includes(profile?.role || "")
     ) {
       redirect("/dashboard");
+    } else {
+      // User logged in but role is invalid/unknown - redirect to login
+      redirect("/login");
     }
   }
 
