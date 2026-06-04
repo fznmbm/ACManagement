@@ -297,7 +297,7 @@ export async function POST(request: Request) {
             type: "magiclink",
             email: normalizedEmail,
             options: {
-              redirectTo: `${baseUrl}/set-password`,
+              redirectTo: `${baseUrl}/auth/callback?next=/set-password`,
             },
           });
 
