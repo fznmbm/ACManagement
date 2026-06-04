@@ -25,9 +25,7 @@ export async function middleware(request: NextRequest) {
     "/applications",
     "/curriculum-assessment",
     "/messages",
-    "/notifications",
     "/events",
-    "/alerts",
     "/users",
   ];
 
@@ -36,12 +34,7 @@ export async function middleware(request: NextRequest) {
     "/parent/dashboard",
     "/parent/children",
     "/parent/finances",
-    "/parent/messages",
-    "/parent/notifications",
     "/parent/profile",
-    "/parent/applications",
-    "/parent/events",
-    "/parent/inbox",
     "/parent/student",
   ];
 

@@ -19,7 +19,6 @@ import {
   Bell,
 } from "lucide-react";
 // CHANGE 1: Replace old hook with new unified hook
-import { useUnifiedNotifications } from "@/hooks/useUnifiedNotifications";
 
 interface ParentLayoutProps {
   children: React.ReactNode;
@@ -34,9 +33,6 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  // CHANGE 2: Use new unified notifications hook
-  const { counts } = useUnifiedNotifications();
 
   useEffect(() => {
     const checkUser = async () => {

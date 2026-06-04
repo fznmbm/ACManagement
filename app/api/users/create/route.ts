@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { logAudit } from "@/lib/utils/auditLogger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (!requesterProfile || requesterProfile.role !== "super_admin") {
       return NextResponse.json(
         { error: "Only super admins can create users" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -38,14 +39,14 @@ export async function POST(request: NextRequest) {
     if (!email || !password || !fullName || !role) {
       return NextResponse.json(
         { error: "Email, password, full name, and role are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
           autoRefreshToken: false,
           persistSession: false,
         },
-      }
+      },
     );
 
     // // Create auth user
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
       console.error("Error details:", JSON.stringify(authError, null, 2));
       return NextResponse.json(
         { error: authError.message || "Failed to create user" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
       console.error("🚨 No user data returned!");
       return NextResponse.json(
         { error: "Failed to create user - no data returned" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json(
         { error: "Failed to create user profile" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -191,9 +192,17 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json(
         { error: "Failed to create user profile" },
-        { status: 400 }
+        { status: 400 },
       );
     }
+
+    await logAudit({
+      user_id: user.id,
+      action: "create",
+      table_name: "profiles",
+      record_id: authData.user.id,
+      new_values: { email, full_name: fullName, role },
+    });
 
     return NextResponse.json({
       success: true,
@@ -208,7 +217,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating user:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

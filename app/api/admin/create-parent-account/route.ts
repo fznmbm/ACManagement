@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 //import { Resend } from "resend";
 //const resend = new Resend(process.env.RESEND_API_KEY);
 import { resend, emailConfig } from "@/lib/email/resend";
+import { logAudit } from "@/lib/utils/auditLogger";
 
 export async function POST(request: Request) {
   try {
@@ -381,7 +382,7 @@ export async function POST(request: Request) {
           <li>Parent Dashboard</li>
           <li>View real-time attendance records</li>
           <li>Check exam results and report cards</li>
-          <li>End of class teacher feedback</li>
+          
           <li>View fee information and payment history</li>
           <li>Receive important announcements and updates</li>
           <li>Check academic progress</li>
@@ -411,6 +412,19 @@ export async function POST(request: Request) {
     }
 
     console.log("🎉 Complete!");
+
+    await logAudit({
+      user_id: adminUser.id,
+      action: "parent_account_created",
+      table_name: "profiles",
+      record_id: parentUserId,
+      new_values: {
+        email: normalizedEmail,
+        full_name,
+        student_id,
+        is_new_user: isNewUser,
+      },
+    });
 
     return NextResponse.json({
       success: true,

@@ -27,12 +27,26 @@ export default function SetPasswordPage() {
   });
 
   useEffect(() => {
+    // Listen for auth state change FIRST before checking session
+    // This handles the case where the token arrives via hash/code
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(
+        "Auth state:",
+        event,
+        session ? "session present" : "no session",
+      );
+      if (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") {
+        setError("");
+      }
+    });
+
     const initializeAuth = async () => {
-      // Check both hash and query params
       const hash = window.location.hash;
       const search = window.location.search;
 
-      // Check for errors in either format
+      // Check for errors first
       if (hash.includes("error=") || search.includes("error=")) {
         const params = new URLSearchParams(
           hash.substring(1) || search.substring(1),
@@ -42,7 +56,7 @@ export default function SetPasswordPage() {
 
         if (errorCode === "otp_expired") {
           setError(
-            "This link has expired or been used already. Please request a new link from the admin.",
+            "This link has expired. Please request a new password reset.",
           );
         } else {
           setError(
@@ -52,68 +66,49 @@ export default function SetPasswordPage() {
         return;
       }
 
-      // Check for tokens in hash (old format) or code in query (new format)
-      if (hash.includes("access_token") || search.includes("code")) {
-        console.log("Auth token found in URL, setting up session...");
-
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-
-        console.log(
-          "Session after wait:",
-          session ? "Found!" : "Missing",
-          sessionError,
-        );
-
-        if (!session) {
-          // Handle both hash tokens (old) and code param (new)
-          if (hash.includes("access_token")) {
-            const { error: authError } = await supabase.auth.setSession({
-              access_token: new URLSearchParams(hash.substring(1)).get(
-                "access_token",
-              )!,
-              refresh_token: new URLSearchParams(hash.substring(1)).get(
-                "refresh_token",
-              )!,
-            });
-
-            if (authError) {
-              console.error("Error setting session:", authError);
-              setError(
-                "Failed to establish session. Please try the magic link again.",
-              );
-            } else {
-              setError("");
-              console.log("Session manually set successfully");
-            }
-          } else if (search.includes("code")) {
-            // With new API, Supabase handles session automatically
-            // Just wait a bit for it to be ready
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            const {
-              data: { session: newSession },
-            } = await supabase.auth.getSession();
-
-            if (!newSession) {
-              setError(
-                "Failed to establish session. Please try the magic link again.",
-              );
-            } else {
-              setError("");
-            }
+      // If there's a code in the URL, exchange it for a session
+      if (search.includes("code=")) {
+        const code = new URLSearchParams(search).get("code");
+        if (code) {
+          const { error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            setError(
+              "Link has expired or already been used. Please request a new one.",
+            );
           }
-        } else {
-          setError("");
+          // Session will be set via onAuthStateChange above
+          return;
         }
-      } else {
+      }
+
+      // Handle old hash-based tokens
+      if (hash.includes("access_token")) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: new URLSearchParams(hash.substring(1)).get(
+            "access_token",
+          )!,
+          refresh_token: new URLSearchParams(hash.substring(1)).get(
+            "refresh_token",
+          )!,
+        });
+        if (sessionError) {
+          setError("Failed to establish session. Please try the link again.");
+        }
+        return;
+      }
+
+      // No token in URL — check if session already exists
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        // Don't show error immediately — wait 2 seconds for auth state change
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         const {
-          data: { session },
+          data: { session: retrySession },
         } = await supabase.auth.getSession();
-        if (!session) {
+        if (!retrySession) {
           setError("Auth session missing! Please click the magic link again.");
         }
       }
@@ -121,39 +116,10 @@ export default function SetPasswordPage() {
 
     initializeAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(
-        "Auth state changed:",
-        event,
-        "Session:",
-        session ? "Present" : "Missing",
-      );
-      if (session) {
-        setError("");
-      }
-    });
-
     return () => {
       subscription.unsubscribe();
     };
   }, [supabase]);
-
-  useEffect(() => {
-    // Check if we have a session from magic link
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        setError("Auth session missing! Please click the magic link again.");
-      }
-    };
-
-    checkSession();
-  }, []);
 
   useEffect(() => {
     setPasswordStrength({
@@ -194,15 +160,29 @@ export default function SetPasswordPage() {
         return;
       }
 
-      setSuccess(true);
+      // Get role before signing out
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      let redirectPath = "/login"; // default: admin
 
-      // Sign out to clear session
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .single();
+
+        if (profile?.role === "parent") {
+          redirectPath = "/parent/login";
+        }
+      }
+
+      setSuccess(true);
       await supabase.auth.signOut();
 
       setTimeout(() => {
-        // Redirect to login page
-        // Middleware will handle role-based routing
-        window.location.href = "/login";
+        window.location.href = redirectPath;
       }, 2000);
     } catch (err) {
       console.error("Set password error:", err);

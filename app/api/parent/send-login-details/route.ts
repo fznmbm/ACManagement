@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
               <li>Parent Dashboard</li>
                 <li>View real-time attendance records</li>
                 <li>Check exam results and report cards</li>
-                <li>End of class teacher feedback</li>
+                
                 <li>View fee information and payment history</li>
                 <li>Receive important announcements and updates</li>
                 <li>Check academic progress</li>
