@@ -41,7 +41,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   useEffect(() => {
     const checkUser = async () => {
       // Skip auth check for set-password page
-      if (pathname === "/parent/set-password") {
+      if (pathname === "/set-password") {
         setLoading(false);
         return;
       }

@@ -203,7 +203,7 @@ export async function middleware(request: NextRequest) {
   );
   const isAdminLogin = pathname === "/login";
   const isParentLogin = pathname === "/parent/login";
-  const isSetPassword = pathname === "/parent/set-password";
+  const isSetPassword = pathname === "/set-password";
 
   if (isSetPassword) {
     return response;

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       console.error("❌ Failed to get user:", userError);
       return NextResponse.json(
         { error: "Unauthorized - Invalid session" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "Unauthorized - Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     if (!email || !full_name || !student_id) {
       return NextResponse.json(
         { error: "Missing required fields: email, full_name, student_id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       console.error("❌ Missing Supabase environment variables");
       return NextResponse.json(
         { error: "Server configuration error" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
           autoRefreshToken: false,
           persistSession: false,
         },
-      }
+      },
     );
 
     // Step 1: Check if profile already exists
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
             error:
               "A user with this email already exists with a different role",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -141,13 +141,13 @@ export async function POST(request: Request) {
             data: { users },
           } = await supabaseAdmin.auth.admin.listUsers();
           const existingAuthUser = users?.find(
-            (u) => u.email?.toLowerCase() === normalizedEmail
+            (u) => u.email?.toLowerCase() === normalizedEmail,
           );
 
           if (!existingAuthUser) {
             return NextResponse.json(
               { error: "Failed to find existing auth user" },
-              { status: 400 }
+              { status: 400 },
             );
           }
 
@@ -156,13 +156,13 @@ export async function POST(request: Request) {
         } else {
           return NextResponse.json(
             { error: `Failed to create user: ${signUpError.message}` },
-            { status: 400 }
+            { status: 400 },
           );
         }
       } else if (!newUser.user) {
         return NextResponse.json(
           { error: "Failed to create user" },
-          { status: 400 }
+          { status: 400 },
         );
       } else {
         console.log("✅ Auth user created:", newUser.user.id);
@@ -231,7 +231,7 @@ export async function POST(request: Request) {
 
             return NextResponse.json(
               { error: `Failed to create profile: ${profileError.message}` },
-              { status: 400 }
+              { status: 400 },
             );
           }
 
@@ -263,7 +263,7 @@ export async function POST(request: Request) {
         console.error("❌ Link creation error:", linkError);
         return NextResponse.json(
           { error: `Failed to link student: ${linkError.message}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -296,7 +296,7 @@ export async function POST(request: Request) {
             type: "magiclink",
             email: normalizedEmail,
             options: {
-              redirectTo: `${baseUrl}/parent/set-password`,
+              redirectTo: `${baseUrl}/set-password`,
             },
           });
 
@@ -315,7 +315,7 @@ export async function POST(request: Request) {
       first_name,
       last_name
     )
-  `
+  `,
             )
             .eq("parent_user_id", parentUserId);
 
@@ -423,7 +423,7 @@ export async function POST(request: Request) {
     console.error("❌ Error:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

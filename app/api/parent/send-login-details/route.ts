@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     if (!parentEmail || !studentId) {
       return NextResponse.json(
         { error: "Parent email and student ID are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
           autoRefreshToken: false,
           persistSession: false,
         },
-      }
+      },
     );
 
     // Get parent profile
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     if (parentError || !parentProfile) {
       return NextResponse.json(
         { error: "Parent profile not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           first_name,
           last_name
         )
-      `
+      `,
       )
       .eq("parent_user_id", parentProfile.id);
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         type: "magiclink",
         email: parentEmail,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/parent/set-password`,
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password`,
         },
       });
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       console.error("Error generating magic link:", resetError);
       return NextResponse.json(
         { error: "Failed to generate login link" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
       console.error("Error sending welcome email:", emailError);
       return NextResponse.json(
         { error: "Failed to send welcome email" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
     console.error("Error sending parent login details:", error);
     return NextResponse.json(
       { error: "Failed to send login details" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -28,9 +28,15 @@ export default function SetPasswordPage() {
 
   useEffect(() => {
     const initializeAuth = async () => {
+      // Check both hash and query params
       const hash = window.location.hash;
-      if (hash.includes("error=")) {
-        const params = new URLSearchParams(hash.substring(1));
+      const search = window.location.search;
+
+      // Check for errors in either format
+      if (hash.includes("error=") || search.includes("error=")) {
+        const params = new URLSearchParams(
+          hash.substring(1) || search.substring(1),
+        );
         const errorCode = params.get("error_code");
         const errorDesc = params.get("error_description");
 
@@ -46,8 +52,9 @@ export default function SetPasswordPage() {
         return;
       }
 
-      if (hash.includes("access_token")) {
-        console.log("Access token found in URL, waiting for session...");
+      // Check for tokens in hash (old format) or code in query (new format)
+      if (hash.includes("access_token") || search.includes("code")) {
+        console.log("Auth token found in URL, setting up session...");
 
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -63,23 +70,41 @@ export default function SetPasswordPage() {
         );
 
         if (!session) {
-          const { error: authError } = await supabase.auth.setSession({
-            access_token: new URLSearchParams(hash.substring(1)).get(
-              "access_token",
-            )!,
-            refresh_token: new URLSearchParams(hash.substring(1)).get(
-              "refresh_token",
-            )!,
-          });
+          // Handle both hash tokens (old) and code param (new)
+          if (hash.includes("access_token")) {
+            const { error: authError } = await supabase.auth.setSession({
+              access_token: new URLSearchParams(hash.substring(1)).get(
+                "access_token",
+              )!,
+              refresh_token: new URLSearchParams(hash.substring(1)).get(
+                "refresh_token",
+              )!,
+            });
 
-          if (authError) {
-            console.error("Error setting session:", authError);
-            setError(
-              "Failed to establish session. Please try the magic link again.",
-            );
-          } else {
-            setError("");
-            console.log("Session manually set successfully");
+            if (authError) {
+              console.error("Error setting session:", authError);
+              setError(
+                "Failed to establish session. Please try the magic link again.",
+              );
+            } else {
+              setError("");
+              console.log("Session manually set successfully");
+            }
+          } else if (search.includes("code")) {
+            // With new API, Supabase handles session automatically
+            // Just wait a bit for it to be ready
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            const {
+              data: { session: newSession },
+            } = await supabase.auth.getSession();
+
+            if (!newSession) {
+              setError(
+                "Failed to establish session. Please try the magic link again.",
+              );
+            } else {
+              setError("");
+            }
           }
         } else {
           setError("");
@@ -217,7 +242,7 @@ export default function SetPasswordPage() {
             Set Your Password
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Create a secure password for your parent portal account
+            Create a secure password for your account
           </p>
         </div>
 
