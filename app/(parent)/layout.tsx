@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
   Home,
-  FileText,
   User,
   LogOut,
   Menu,
@@ -15,10 +14,7 @@ import {
   Moon,
   Users,
   CreditCard,
-  Calendar,
-  Bell,
 } from "lucide-react";
-// CHANGE 1: Replace old hook with new unified hook
 
 interface ParentLayoutProps {
   children: React.ReactNode;
@@ -126,30 +122,10 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
     router.push("/parent/login");
   };
 
-  // CHANGE 3: Updated navigation - single Inbox instead of 3 separate tabs
   const navigation = [
     { name: "Dashboard", href: "/parent/dashboard", icon: Home, badge: 0 },
     { name: "My Children", href: "/parent/children", icon: Users, badge: 0 },
-    {
-      name: "Inbox", // RENAMED from "Notifications"
-      href: "/parent/inbox", // CHANGED from "/parent/notifications"
-      icon: Bell,
-      badge: counts.total, // CHANGED: unified badge count
-    },
-    // REMOVED: Messages tab (merged into Inbox)
-    {
-      name: "Calendar", // RENAMED from "Events"
-      href: "/parent/events",
-      icon: Calendar,
-      badge: 0, // REMOVED: no badge on calendar
-    },
     { name: "Finances", href: "/parent/finances", icon: CreditCard, badge: 0 },
-    {
-      name: "Applications",
-      href: "/parent/applications",
-      icon: FileText,
-      badge: 0,
-    },
     { name: "Profile", href: "/parent/profile", icon: User, badge: 0 },
   ];
 
