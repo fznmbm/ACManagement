@@ -127,7 +127,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
 
   // Toggle: untouched → true (prayed) → back to untouched (missed)
   const toggle = (day: Day, prayer: Prayer) => {
-    if (status === "verified") return;
+    if (status === "verified" || status === "submitted") return;
 
     const currentTouched = touched[day][prayer];
     const currentValue = grid[day][prayer];
@@ -377,7 +377,8 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       )}
 
       {/* Save Button */}
-      {status !== "verified" && (
+      {/* Save button — only show if not submitted or if flagged */}
+      {(status === null || status === "flagged") && (
         <div className="flex items-center justify-between pt-2">
           {saved ? (
             <span className="text-sm text-green-600 flex items-center gap-1">
@@ -386,8 +387,9 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
             </span>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Tip: Only tick prayers that were prayed. Everything else saves as
-              missed.
+              {status === "flagged"
+                ? "⚠️ Your sheet was flagged by admin. Please correct and resubmit."
+                : "Tip: Only tick prayers that were prayed. Everything else saves as missed."}
             </p>
           )}
           <button
@@ -405,10 +407,29 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
         </div>
       )}
 
+      {status === "submitted" && (
+        <div className="pt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p className="text-sm text-blue-700 dark:text-blue-400 text-center">
+            ✓ Sheet submitted — waiting for admin verification. Contact admin if
+            you need to make changes.
+          </p>
+        </div>
+      )}
+
       {status === "verified" && (
-        <p className="text-sm text-green-600 text-center pt-2">
-          ✓ This sheet has been verified by the admin
-        </p>
+        <div className="pt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <p className="text-sm text-green-700 dark:text-green-400 text-center">
+            ✓ Sheet verified by admin
+          </p>
+        </div>
+      )}
+
+      {status === "flagged" && saved && (
+        <div className="pt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-sm text-yellow-700 dark:text-yellow-400 text-center">
+            Sheet resubmitted — waiting for admin review
+          </p>
+        </div>
       )}
     </div>
   );
