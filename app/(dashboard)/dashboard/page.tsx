@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
-import CriticalAlerts from "@/components/dashboard/CriticalAlerts";
+
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ClassPerformance from "@/components/dashboard/ClassPerformance";
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
   const outstandingFees =
     outstandingInvoices?.reduce(
       (sum, inv) => sum + (inv.amount_due - inv.amount_paid),
-      0
+      0,
     ) || 0;
 
   // Active (Uncollected) Fines
@@ -255,9 +255,6 @@ export default async function DashboardPage() {
 
         {/* Right Column - 1/3 width - Sidebar */}
         <div className="space-y-6">
-          {/* Critical Alerts */}
-          <CriticalAlerts />
-
           {/* Quick Actions */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
