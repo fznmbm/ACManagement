@@ -44,7 +44,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     setExpandedItems((prev) =>
       prev.includes(itemName)
         ? prev.filter((name) => name !== itemName)
-        : [...prev, itemName]
+        : [...prev, itemName],
     );
   };
 
@@ -118,16 +118,10 @@ export default function Sidebar({ profile }: SidebarProps) {
       roles: ["super_admin", "admin", "teacher", "parent"],
     },
     {
-      name: "Notifications",
-      href: "/notifications",
-      icon: Bell,
-      roles: ["super_admin", "admin"],
-    },
-    {
-      name: "Alerts",
-      href: "/alerts",
-      icon: Bell,
-      roles: ["super_admin", "admin"],
+      name: "Prayer Sheets",
+      href: "/prayer-sheets",
+      icon: BookMarked,
+      roles: ["super_admin", "admin", "teacher"],
     },
     {
       name: "Curriculum & Assessment",
@@ -169,7 +163,7 @@ export default function Sidebar({ profile }: SidebarProps) {
 
   // Filter menu items based on user role
   const visibleMenuItems = menuItems.filter((item) =>
-    item.roles.includes(profile.role)
+    item.roles.includes(profile.role),
   );
 
   useEffect(() => {
@@ -228,7 +222,7 @@ export default function Sidebar({ profile }: SidebarProps) {
                       "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors",
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     <div className="flex items-center space-x-3">
@@ -248,7 +242,7 @@ export default function Sidebar({ profile }: SidebarProps) {
                       "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -269,7 +263,7 @@ export default function Sidebar({ profile }: SidebarProps) {
                               "block px-4 py-2 rounded-lg text-sm transition-colors",
                               isSubActive
                                 ? "bg-primary/10 text-primary font-medium"
-                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                             )}
                           >
                             {subItem.name}

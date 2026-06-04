@@ -19,6 +19,7 @@ import MemorizationTab from "@/components/parent/tabs/MemorizationTab";
 import FeesTab from "@/components/parent/tabs/FeesTab";
 import FinesTab from "@/components/parent/tabs/FinesTab";
 import CertificatesTab from "@/components/parent/tabs/CertificatesTab";
+import ParentPrayerSheet from "@/components/prayer/ParentPrayerSheet";
 
 interface Student {
   id: string;
@@ -43,7 +44,8 @@ type TabType =
   | "memorization"
   | "fees"
   | "fines"
-  | "certificates";
+  | "certificates"
+  | "prayers";
 
 export default function StudentDetailPage() {
   const params = useParams();
@@ -86,7 +88,7 @@ export default function StudentDetailPage() {
     can_view_financial,
     relationship,
     is_primary
-  `
+  `,
           )
           .eq("parent_user_id", user.id)
           .eq("student_id", params.id)
@@ -115,7 +117,7 @@ export default function StudentDetailPage() {
     status,
     class_id,
     enrollment_date
-  `
+  `,
           )
           .eq("id", params.id)
           .single();
@@ -251,7 +253,13 @@ export default function StudentDetailPage() {
       label: "Certificates",
       icon: Award,
       alwaysShow: false,
-      permission: parentLink?.can_view_grades, // Same as grades
+      permission: parentLink?.can_view_grades,
+    },
+    {
+      id: "prayers" as TabType,
+      label: "Prayers",
+      icon: BookOpen,
+      alwaysShow: true,
     },
   ];
 
@@ -402,7 +410,7 @@ export default function StudentDetailPage() {
                 </p>
                 <p className="text-base font-medium text-slate-900 dark:text-white">
                   {new Date(student.enrollment_date).toLocaleDateString(
-                    "en-GB"
+                    "en-GB",
                   )}
                 </p>
               </div>
@@ -436,6 +444,15 @@ export default function StudentDetailPage() {
 
         {activeTab === "certificates" && (
           <CertificatesTab studentId={params.id as string} />
+        )}
+
+        {activeTab === "prayers" && student && (
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+            <ParentPrayerSheet
+              studentId={params.id as string}
+              studentName={`${student.first_name} ${student.last_name}`}
+            />
+          </div>
         )}
       </div>
     </div>

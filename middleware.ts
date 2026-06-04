@@ -27,6 +27,7 @@ export async function middleware(request: NextRequest) {
     "/messages",
     "/events",
     "/users",
+    "/prayer-sheets",
   ];
 
   // Define all parent routes (COMPLETE LIST)
