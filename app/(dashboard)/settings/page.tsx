@@ -34,10 +34,11 @@ export default async function SettingsPage() {
     settingsMap[setting.setting_key] = setting.setting_value;
   });
 
-  // Get all users for user management
+  // Get all users for user management (exclude parents)
   const { data: users } = await supabase
     .from("profiles")
     .select("*")
+    .in("role", ["super_admin", "admin", "teacher"])
     .order("created_at", { ascending: false });
 
   return (
