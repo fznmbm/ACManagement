@@ -22,7 +22,6 @@ import { formatDate, calculateAge } from "@/lib/utils/helpers";
 import StudentFeeAssignment from "@/components/fees/StudentFeeAssignment";
 import FeeIndicator from "@/components/fees/FeeIndicator";
 import StudentProfileClient from "@/components/students/StudentProfileClient";
-import StudentFeeHistory from "@/components/students/StudentFeeHistory";
 
 export default async function StudentDetailPage({
   params,
@@ -48,7 +47,7 @@ export default async function StudentDetailPage({
         level
       ),
       status_changed_by:profiles!students_status_changed_by_fkey (full_name)
-    `
+    `,
     )
     .eq("id", params.id)
     .single();
@@ -98,7 +97,7 @@ export default async function StudentDetailPage({
         topic_name,
         subject_name
       )
-    `
+    `,
     )
     .eq("student_id", params.id)
     .order("assessment_date", { ascending: false })
@@ -125,7 +124,7 @@ export default async function StudentDetailPage({
     typedAcademic && typedAcademic.length > 0
       ? Math.round(
           typedAcademic.reduce((sum, a) => sum + a.percentage, 0) /
-            typedAcademic.length
+            typedAcademic.length,
         )
       : 0;
 
@@ -144,7 +143,7 @@ export default async function StudentDetailPage({
         category,
         arabic_text
       )
-    `
+    `,
     )
     .eq("student_id", params.id);
 
@@ -168,50 +167,50 @@ export default async function StudentDetailPage({
     ? {
         duas: {
           total: typedData.filter(
-            (m) => m.memorization_items.category === "dua"
+            (m) => m.memorization_items.category === "dua",
           ).length,
           memorized: typedData.filter(
             (m) =>
               m.memorization_items.category === "dua" &&
               (m.progress_stage === "memorized" ||
-                m.progress_stage === "mastered")
+                m.progress_stage === "mastered"),
           ).length,
           mastered: typedData.filter(
             (m) =>
               m.memorization_items.category === "dua" &&
-              m.progress_stage === "mastered"
+              m.progress_stage === "mastered",
           ).length,
         },
         surahs: {
           total: typedData.filter(
-            (m) => m.memorization_items.category === "surah"
+            (m) => m.memorization_items.category === "surah",
           ).length,
           memorized: typedData.filter(
             (m) =>
               m.memorization_items.category === "surah" &&
               (m.progress_stage === "memorized" ||
-                m.progress_stage === "mastered")
+                m.progress_stage === "mastered"),
           ).length,
           mastered: typedData.filter(
             (m) =>
               m.memorization_items.category === "surah" &&
-              m.progress_stage === "mastered"
+              m.progress_stage === "mastered",
           ).length,
         },
         hadiths: {
           total: typedData.filter(
-            (m) => m.memorization_items.category === "hadith"
+            (m) => m.memorization_items.category === "hadith",
           ).length,
           memorized: typedData.filter(
             (m) =>
               m.memorization_items.category === "hadith" &&
               (m.progress_stage === "memorized" ||
-                m.progress_stage === "mastered")
+                m.progress_stage === "mastered"),
           ).length,
           mastered: typedData.filter(
             (m) =>
               m.memorization_items.category === "hadith" &&
-              m.progress_stage === "mastered"
+              m.progress_stage === "mastered",
           ).length,
         },
       }
@@ -224,7 +223,7 @@ export default async function StudentDetailPage({
           memorizationStats.surahs.memorized +
           memorizationStats.hadiths.memorized) /
           45) *
-          100
+          100,
       )
     : 0;
 
@@ -328,10 +327,10 @@ export default async function StudentDetailPage({
                     student.status === "active"
                       ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                       : student.status === "withdrawn"
-                      ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                      : student.status === "graduated"
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
-                      : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
+                        ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                        : student.status === "graduated"
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                          : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
                   }`}
                 >
                   {student.status.charAt(0).toUpperCase() +
@@ -468,8 +467,8 @@ export default async function StudentDetailPage({
                             assessment.percentage >= 80
                               ? "text-green-600 dark:text-green-400"
                               : assessment.percentage >= 60
-                              ? "text-blue-600 dark:text-blue-400"
-                              : "text-orange-600 dark:text-orange-400"
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-orange-600 dark:text-orange-400"
                           }`}
                         >
                           {assessment.percentage}%
@@ -623,7 +622,7 @@ export default async function StudentDetailPage({
                       )}
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                          att.status
+                          att.status,
                         )}`}
                       >
                         {att.status}
@@ -675,7 +674,7 @@ export default async function StudentDetailPage({
           <StudentProfileClient studentId={student.id} />
 
           {/* Fee History */}
-          <StudentFeeHistory studentId={student.id} />
+          {/* Fee history available in the Fees module (/fees?student=id) */}
 
           {/* Active Fines (NEW) */}
           {activeFines && activeFines.length > 0 && (

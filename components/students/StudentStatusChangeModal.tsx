@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { X, AlertTriangle } from "lucide-react";
 import { useStudentManagement } from "@/hooks/useStudentManagement";
-import FinancialImpactWarning from "./FinancialImpactWarning";
 
 interface Student {
   id: string;
@@ -66,7 +65,7 @@ export default function StudentStatusChangeModal({
     const result = await updateStudentStatus(
       student.id,
       selectedStatus,
-      reason
+      reason,
     );
 
     if (result.success) {
@@ -80,7 +79,7 @@ export default function StudentStatusChangeModal({
   if (!isOpen) return null;
 
   const selectedOption = statusOptions.find(
-    (opt) => opt.value === selectedStatus
+    (opt) => opt.value === selectedStatus,
   );
   const showFinancialWarning = selectedStatus !== student.status;
 
@@ -142,15 +141,6 @@ export default function StudentStatusChangeModal({
               ))}
             </div>
           </div>
-
-          {/* Financial Impact Warning */}
-          {showFinancialWarning && (
-            <FinancialImpactWarning
-              studentId={student.id}
-              actionType="status_change"
-              newStatus={selectedStatus}
-            />
-          )}
 
           {/* Reason */}
           <div>

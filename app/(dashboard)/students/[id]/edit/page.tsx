@@ -1,7 +1,7 @@
 // app/(dashboard)/students/[id]/edit/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import EditStudentForm from "@/components/students/EditStudentForm";
+import StudentForm from "@/components/students/StudentForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -53,7 +53,7 @@ export default async function EditStudentPage({
       </div>
 
       <div className="bg-card border border-border rounded-lg p-6">
-        <EditStudentForm student={student} classes={classes || []} />
+        <StudentForm classes={classes || []} student={student} mode="edit" />
       </div>
     </div>
   );

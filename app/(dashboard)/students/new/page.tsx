@@ -29,7 +29,7 @@ export default async function NewStudentPage() {
       </div>
 
       <div className="bg-card border border-border rounded-lg p-6">
-        <StudentForm classes={classes || []} />
+        <StudentForm classes={classes || []} mode="create" />
       </div>
     </div>
   );
