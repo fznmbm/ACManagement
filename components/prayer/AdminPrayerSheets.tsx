@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   CheckCircle2,
+  XCircle,
   Flag,
   Loader2,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 
 const DAYS = [
@@ -39,7 +41,50 @@ const formatWeekLabel = (dateStr: string): string => {
   const monday = new Date(dateStr);
   const sunday = new Date(monday);
   sunday.setDate(sunday.getDate() + 6);
-  return `${monday.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+  return `${monday.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+};
+
+const generateWhatsAppMessage = (sheets: any[], weekLabel: string): string => {
+  const EMOJI = { prayed: "✅", missed: "❌" };
+  const DAY_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
+
+  let msg = `🕌 *Prayer Sheets — ${weekLabel}*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  sheets.forEach((sheet) => {
+    const student = sheet.students;
+    const total = sheet.total_prayers ?? 0;
+    const pct = Math.round((total / 35) * 100);
+    const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+
+    msg += `👤 *${student?.first_name} ${student?.last_name}*\n`;
+    msg += `${emoji} ${total}/35 prayers (${pct}%)\n`;
+    msg += `\`       M  T  W  T  F  S  S\`\n`;
+
+    PRAYERS.forEach((prayer, pi) => {
+      const row = DAY_SHORT.map((_, di) => {
+        const day = DAYS[di];
+        return sheet[`${day}_${prayer}`] ? EMOJI.prayed : EMOJI.missed;
+      }).join(" ");
+      msg += `\`${PRAYER_LABELS[pi].padEnd(7)}\` ${row}\n`;
+    });
+
+    msg += `\n`;
+  });
+
+  msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📊 *Summary:* ${sheets.length} submitted\n`;
+
+  const avgPct = sheets.length
+    ? Math.round(
+        (sheets.reduce((s, sh) => s + (sh.total_prayers ?? 0), 0) /
+          (sheets.length * 35)) *
+          100,
+      )
+    : 0;
+  msg += `📈 *Class avg:* ${avgPct}%`;
+
+  return msg;
 };
 
 export default function AdminPrayerSheets() {
@@ -49,6 +94,8 @@ export default function AdminPrayerSheets() {
   const [weekStart, setWeekStart] = useState<Date>(getMondayOfWeek(new Date()));
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [updating, setUpdating] = useState<string | null>(null);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [whatsAppMsg, setWhatsAppMsg] = useState("");
 
   useEffect(() => {
     fetchSheets();
@@ -104,6 +151,18 @@ export default function AdminPrayerSheets() {
     setUpdating(null);
   };
 
+  const handleWhatsApp = () => {
+    const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
+    const msg = generateWhatsAppMessage(sheets, weekLabel);
+    setWhatsAppMsg(msg);
+    setShowWhatsApp(true);
+  };
+
+  const sendWhatsApp = () => {
+    const encoded = encodeURIComponent(whatsAppMsg);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+  };
+
   const prevWeek = () => {
     const d = new Date(weekStart);
     d.setDate(d.getDate() - 7);
@@ -137,6 +196,15 @@ export default function AdminPrayerSheets() {
             Review and verify weekly prayer submissions
           </p>
         </div>
+        {sheets.length > 0 && (
+          <button
+            onClick={handleWhatsApp}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Send to WhatsApp
+          </button>
+        )}
       </div>
 
       {/* Week Navigation */}
@@ -218,7 +286,6 @@ export default function AdminPrayerSheets() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {/* Progress */}
                     <div className="text-right">
                       <p className="text-sm font-medium">{total}/35 prayers</p>
                       <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden mt-1">
@@ -235,7 +302,6 @@ export default function AdminPrayerSheets() {
                       </div>
                     </div>
 
-                    {/* Status Badge */}
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
                         sheet.status === "verified"
@@ -249,7 +315,6 @@ export default function AdminPrayerSheets() {
                         sheet.status.slice(1)}
                     </span>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-2">
                       {sheet.status !== "verified" && (
                         <button
@@ -318,9 +383,7 @@ export default function AdminPrayerSheets() {
                                 {sheet[`${day}_${prayer}`] ? (
                                   <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
                                 ) : (
-                                  <span className="text-muted-foreground/30">
-                                    —
-                                  </span>
+                                  <XCircle className="h-4 w-4 text-red-400 mx-auto" />
                                 )}
                               </td>
                             ))}
@@ -334,7 +397,6 @@ export default function AdminPrayerSheets() {
                   </table>
                 </div>
 
-                {/* Submitted at */}
                 <div className="px-4 pb-3 text-xs text-muted-foreground">
                   Submitted{" "}
                   {new Date(sheet.submitted_at).toLocaleDateString("en-GB", {
@@ -348,6 +410,40 @@ export default function AdminPrayerSheets() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* WhatsApp Message Modal */}
+      {showWhatsApp && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-lg max-w-lg w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              WhatsApp Group Message
+            </h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Preview the message before sending to your WhatsApp group:
+            </p>
+            <textarea
+              value={whatsAppMsg}
+              onChange={(e) => setWhatsAppMsg(e.target.value)}
+              className="w-full h-64 p-3 text-xs font-mono bg-muted rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <div className="flex items-center justify-end gap-3 mt-4">
+              <button
+                onClick={() => setShowWhatsApp(false)}
+                className="btn-outline"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendWhatsApp}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Open in WhatsApp
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

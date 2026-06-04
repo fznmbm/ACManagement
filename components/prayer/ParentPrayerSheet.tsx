@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   CheckCircle2,
-  Circle,
+  XCircle,
   ChevronLeft,
   ChevronRight,
   Save,
@@ -26,12 +26,21 @@ const PRAYER_LABELS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 type Day = (typeof DAYS)[number];
 type Prayer = (typeof PRAYERS)[number];
+// null = not filled (missed), true = prayed, false = explicitly missed
+type PrayerState = true | false;
 type PrayerGrid = Record<Day, Record<Prayer, boolean>>;
 
 const emptyGrid = (): PrayerGrid =>
   Object.fromEntries(
     DAYS.map((d) => [d, Object.fromEntries(PRAYERS.map((p) => [p, false]))]),
   ) as PrayerGrid;
+
+// Track which cells have been explicitly touched by parent
+type TouchedGrid = Record<Day, Record<Prayer, boolean>>;
+const emptyTouched = (): TouchedGrid =>
+  Object.fromEntries(
+    DAYS.map((d) => [d, Object.fromEntries(PRAYERS.map((p) => [p, false]))]),
+  ) as TouchedGrid;
 
 const getMondayOfWeek = (date: Date): Date => {
   const d = new Date(date);
@@ -57,6 +66,8 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const supabase = createClient();
   const [weekStart, setWeekStart] = useState<Date>(getMondayOfWeek(new Date()));
   const [grid, setGrid] = useState<PrayerGrid>(emptyGrid());
+  const [touched, setTouched] = useState<TouchedGrid>(emptyTouched());
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [sheetId, setSheetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -93,34 +104,59 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     if (data) {
       setSheetId(data.id);
       setStatus(data.status);
+      setIsSubmitted(true);
       const newGrid = emptyGrid();
+      const newTouched = emptyTouched();
       DAYS.forEach((d) => {
         PRAYERS.forEach((p) => {
           newGrid[d][p] = data[`${d}_${p}`] ?? false;
+          newTouched[d][p] = true; // already saved = all touched
         });
       });
       setGrid(newGrid);
+      setTouched(newTouched);
     } else {
       setSheetId(null);
       setStatus(null);
+      setIsSubmitted(false);
       setGrid(emptyGrid());
+      setTouched(emptyTouched());
     }
     setLoading(false);
   };
 
+  // Toggle: untouched → true (prayed) → back to untouched (missed)
   const toggle = (day: Day, prayer: Prayer) => {
     if (status === "verified") return;
-    setGrid((prev) => ({
-      ...prev,
-      [day]: { ...prev[day], [prayer]: !prev[day][prayer] },
-    }));
+
+    const currentTouched = touched[day][prayer];
+    const currentValue = grid[day][prayer];
+
+    if (!currentTouched) {
+      // Not touched yet → mark as prayed
+      setGrid((prev) => ({ ...prev, [day]: { ...prev[day], [prayer]: true } }));
+      setTouched((prev) => ({
+        ...prev,
+        [day]: { ...prev[day], [prayer]: true },
+      }));
+    } else if (currentValue === true) {
+      // Prayed → unmark (missed)
+      setGrid((prev) => ({
+        ...prev,
+        [day]: { ...prev[day], [prayer]: false },
+      }));
+      setTouched((prev) => ({
+        ...prev,
+        [day]: { ...prev[day], [prayer]: false },
+      }));
+    }
   };
 
-  const totalPrayers = DAYS.reduce(
+  const totalPrayed = DAYS.reduce(
     (sum, d) => sum + PRAYERS.filter((p) => grid[d][p]).length,
     0,
   );
-  const percentage = Math.round((totalPrayers / 35) * 100);
+  const percentage = Math.round((totalPrayed / 35) * 100);
 
   const handleSave = async () => {
     if (!parentUserId) return;
@@ -134,6 +170,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       status: "submitted",
     };
 
+    // Save grid — untouched = false (missed)
     DAYS.forEach((d) => {
       PRAYERS.forEach((p) => {
         payload[`${d}_${p}`] = grid[d][p];
@@ -151,6 +188,15 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       if (data) setSheetId(data.id);
     }
 
+    // Mark all as touched after save
+    const allTouched = emptyTouched();
+    DAYS.forEach((d) =>
+      PRAYERS.forEach((p) => {
+        allTouched[d][p] = true;
+      }),
+    );
+    setTouched(allTouched);
+    setIsSubmitted(true);
     setStatus("submitted");
     setSaving(false);
     setSaved(true);
@@ -172,6 +218,48 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const isCurrentWeek =
     weekStart.toISOString().split("T")[0] ===
     getMondayOfWeek(new Date()).toISOString().split("T")[0];
+
+  const renderCell = (day: Day, prayer: Prayer) => {
+    const isTouched = touched[day][prayer];
+    const isPrayed = grid[day][prayer];
+    const isVerified = status === "verified";
+
+    if (!isTouched && !isSubmitted) {
+      // Not yet marked — show empty circle
+      return (
+        <button
+          onClick={() => toggle(day, prayer)}
+          disabled={isVerified}
+          className="mx-auto block disabled:cursor-not-allowed"
+        >
+          <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30" />
+        </button>
+      );
+    }
+
+    if (isPrayed) {
+      return (
+        <button
+          onClick={() => toggle(day, prayer)}
+          disabled={isVerified}
+          className="mx-auto block disabled:cursor-not-allowed"
+        >
+          <CheckCircle2 className="h-6 w-6 text-green-500" />
+        </button>
+      );
+    }
+
+    // Missed (touched but false, or saved as false)
+    return (
+      <button
+        onClick={() => toggle(day, prayer)}
+        disabled={isVerified}
+        className="mx-auto block disabled:cursor-not-allowed"
+      >
+        <XCircle className="h-6 w-6 text-red-400" />
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -217,7 +305,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       <div className="space-y-1">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
-            {totalPrayers} / 35 prayers
+            {totalPrayed} / 35 prayers
           </span>
           <span className="font-medium">{percentage}%</span>
         </div>
@@ -233,6 +321,20 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
             style={{ width: `${percentage}%` }}
           />
         </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-4 w-4 text-green-500" /> Prayed
+        </span>
+        <span className="flex items-center gap-1">
+          <XCircle className="h-4 w-4 text-red-400" /> Missed
+        </span>
+        <span className="flex items-center gap-1">
+          <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />{" "}
+          Not marked
+        </span>
       </div>
 
       {/* Grid */}
@@ -264,17 +366,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
                   <td className="py-3 pr-4 font-medium">{PRAYER_LABELS[pi]}</td>
                   {DAYS.map((day) => (
                     <td key={day} className="py-3 px-2 text-center">
-                      <button
-                        onClick={() => toggle(day, prayer)}
-                        disabled={status === "verified"}
-                        className="mx-auto block disabled:cursor-not-allowed"
-                      >
-                        {grid[day][prayer] ? (
-                          <CheckCircle2 className="h-6 w-6 text-green-500" />
-                        ) : (
-                          <Circle className="h-6 w-6 text-muted-foreground/40" />
-                        )}
-                      </button>
+                      {renderCell(day, prayer)}
                     </td>
                   ))}
                 </tr>
@@ -287,12 +379,17 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       {/* Save Button */}
       {status !== "verified" && (
         <div className="flex items-center justify-between pt-2">
-          {saved && (
+          {saved ? (
             <span className="text-sm text-green-600 flex items-center gap-1">
-              <CheckCircle2 className="h-4 w-4" /> Saved successfully
+              <CheckCircle2 className="h-4 w-4" /> Saved — unmarked prayers
+              counted as missed
             </span>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Tip: Only tick prayers that were prayed. Everything else saves as
+              missed.
+            </p>
           )}
-          {!saved && <div />}
           <button
             onClick={handleSave}
             disabled={saving}
