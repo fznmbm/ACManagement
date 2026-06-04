@@ -197,8 +197,9 @@ export async function middleware(request: NextRequest) {
   const isAdminLogin = pathname === "/login";
   const isParentLogin = pathname === "/parent/login";
   const isSetPassword = pathname === "/set-password";
+  const isAuthCallback = pathname === "/auth/callback";
 
-  if (isSetPassword) {
+  if (isSetPassword || isAuthCallback) {
     return response;
   }
 

@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         type: "magiclink",
         email: parentEmail,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password`,
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/set-password`,
         },
       });
 
