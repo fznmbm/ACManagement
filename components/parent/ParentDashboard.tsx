@@ -5,13 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
   Users,
-  FileText,
   Calendar,
   TrendingUp,
   Book,
   DollarSign,
   ChevronRight,
-  Award,
 } from "lucide-react";
 
 interface Student {
@@ -30,7 +28,7 @@ export default function ParentDashboard() {
   const supabase = createClient();
 
   const [students, setStudents] = useState<Student[]>([]);
-  const [applications, setApplications] = useState<any[]>([]);
+  // applications removed - redirected to admin module
   const [loading, setLoading] = useState(true);
   const [parentEmail, setParentEmail] = useState("");
   const [totalStudents, setTotalStudents] = useState(0);
@@ -79,7 +77,7 @@ export default function ParentDashboard() {
       status,
       class_id
     )
-  `
+  `,
           )
           .eq("parent_user_id", user.id)
           .order("is_primary", { ascending: false })
@@ -111,7 +109,7 @@ export default function ParentDashboard() {
                 };
               }
               return student;
-            })
+            }),
           );
 
           setStudents(studentsWithClasses);
@@ -142,23 +140,7 @@ export default function ParentDashboard() {
           setStudents([]);
         }
 
-        // Get applications
-        if (profile?.email) {
-          const { data: apps, error: appsError } = await supabase
-            .from("applications")
-            .select("*")
-            .eq("parent_email", profile.email)
-            .order("created_at", { ascending: false });
-
-          console.log("Applications query result:", { apps, appsError });
-
-          if (appsError) {
-            console.error("Error fetching applications:", appsError);
-          } else if (apps) {
-            setApplications(apps);
-            console.log("Applications loaded:", apps.length);
-          }
-        }
+        // applications fetch removed
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       } finally {
@@ -182,20 +164,7 @@ export default function ParentDashboard() {
     }
   };
 
-  const getApplicationStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
-      case "accepted":
-        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "rejected":
-        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
-      case "waitlist":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-    }
-  };
+  // getApplicationStatusColor removed
 
   if (loading) {
     return (
@@ -243,20 +212,20 @@ export default function ParentDashboard() {
           </div>
         </Link>
 
-        {/* Applications - Clickable */}
-        <Link href="/parent/applications">
+        {/* Finances - Clickable */}
+        <Link href="/parent/finances">
           <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all cursor-pointer group">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Applications
+                  Finances
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {applications.length}
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                  View Invoices
                 </p>
               </div>
               <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <DollarSign className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>
@@ -372,7 +341,7 @@ export default function ParentDashboard() {
                   <div className="flex items-center space-x-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        student.status
+                        student.status,
                       )}`}
                     >
                       {student.status.charAt(0).toUpperCase() +
@@ -440,58 +409,7 @@ export default function ParentDashboard() {
         )}
       </div>
 
-      {/* Recent Applications */}
-      {applications.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-                Recent Applications
-              </h2>
-              <Link
-                href="/parent/applications"
-                className="text-sm text-primary hover:text-primary/80 font-medium"
-              >
-                View All
-              </Link>
-            </div>
-          </div>
-
-          <div className="divide-y divide-slate-200 dark:divide-slate-700">
-            {applications.slice(0, 3).map((app) => (
-              <div key={app.id} className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white">
-                      {app.student_first_name} {app.student_last_name}
-                    </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Submitted {new Date(app.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getApplicationStatusColor(
-                      app.status
-                    )}`}
-                  >
-                    {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                  </span>
-                </div>
-
-                {app.status === "accepted" && app.acceptance_date && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-3">
-                    <div className="flex items-center text-green-800 dark:text-green-400 text-sm">
-                      <Award className="h-4 w-4 mr-2" />
-                      Accepted on{" "}
-                      {new Date(app.acceptance_date).toLocaleDateString()}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Applications section removed - parents contact admin directly */}
     </div>
   );
 }
