@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   CheckCircle2,
   XCircle,
   ChevronLeft,
   ChevronRight,
-  Save,
+  Send,
   Loader2,
 } from "lucide-react";
 
@@ -26,21 +26,14 @@ const PRAYER_LABELS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 type Day = (typeof DAYS)[number];
 type Prayer = (typeof PRAYERS)[number];
-// null = not filled (missed), true = prayed, false = explicitly missed
-type PrayerState = true | false;
-type PrayerGrid = Record<Day, Record<Prayer, boolean>>;
+// null = not marked, true = prayed, false = missed
+type CellState = null | true | false;
+type PrayerGrid = Record<Day, Record<Prayer, CellState>>;
 
 const emptyGrid = (): PrayerGrid =>
   Object.fromEntries(
-    DAYS.map((d) => [d, Object.fromEntries(PRAYERS.map((p) => [p, false]))]),
+    DAYS.map((d) => [d, Object.fromEntries(PRAYERS.map((p) => [p, null]))]),
   ) as PrayerGrid;
-
-// Track which cells have been explicitly touched by parent
-type TouchedGrid = Record<Day, Record<Prayer, boolean>>;
-const emptyTouched = (): TouchedGrid =>
-  Object.fromEntries(
-    DAYS.map((d) => [d, Object.fromEntries(PRAYERS.map((p) => [p, false]))]),
-  ) as TouchedGrid;
 
 const getMondayOfWeek = (date: Date): Date => {
   const d = new Date(date);
@@ -66,13 +59,12 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const supabase = createClient();
   const [weekStart, setWeekStart] = useState<Date>(getMondayOfWeek(new Date()));
   const [grid, setGrid] = useState<PrayerGrid>(emptyGrid());
-  const [touched, setTouched] = useState<TouchedGrid>(emptyTouched());
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [sheetId, setSheetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [parentUserId, setParentUserId] = useState<string | null>(null);
   const [prayerEnabled, setPrayerEnabled] = useState<boolean | null>(null);
 
@@ -85,7 +77,6 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     };
     getUser();
 
-    // Check if prayer sheets enabled for this student's class
     const checkPrayerEnabled = async () => {
       const { data: student } = await supabase
         .from("students")
@@ -94,7 +85,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
         .single();
 
       if (!student?.class_id) {
-        setPrayerEnabled(false);
+        setPrayerEnabled(true);
         return;
       }
 
@@ -128,76 +119,61 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     if (data) {
       setSheetId(data.id);
       setStatus(data.status);
-      setIsSubmitted(true);
       const newGrid = emptyGrid();
-      const newTouched = emptyTouched();
       DAYS.forEach((d) => {
         PRAYERS.forEach((p) => {
-          newGrid[d][p] = data[`${d}_${p}`] ?? false;
-          newTouched[d][p] = true; // already saved = all touched
+          // In DB: true = prayed, false = missed, null = not marked
+          const val = data[`${d}_${p}`];
+          newGrid[d][p] = val === null ? null : val === true ? true : false;
         });
       });
       setGrid(newGrid);
-      setTouched(newTouched);
     } else {
       setSheetId(null);
       setStatus(null);
-      setIsSubmitted(false);
       setGrid(emptyGrid());
-      setTouched(emptyTouched());
     }
     setLoading(false);
   };
 
-  // Toggle: untouched → true (prayed) → back to untouched (missed)
-  const toggle = (day: Day, prayer: Prayer) => {
-    if (status === "verified" || status === "submitted") return;
+  // 3-state toggle: null → true → false → null
+  const toggle = useCallback(
+    async (day: Day, prayer: Prayer) => {
+      if (status === "submitted" || status === "verified") return;
 
-    const currentTouched = touched[day][prayer];
-    const currentValue = grid[day][prayer];
+      const current = grid[day][prayer];
+      const next: CellState =
+        current === null ? true : current === true ? false : null;
 
-    if (!currentTouched) {
-      // Not touched yet → mark as prayed
-      setGrid((prev) => ({ ...prev, [day]: { ...prev[day], [prayer]: true } }));
-      setTouched((prev) => ({
-        ...prev,
-        [day]: { ...prev[day], [prayer]: true },
-      }));
-    } else if (currentValue === true) {
-      // Prayed → unmark (missed)
-      setGrid((prev) => ({
-        ...prev,
-        [day]: { ...prev[day], [prayer]: false },
-      }));
-      setTouched((prev) => ({
-        ...prev,
-        [day]: { ...prev[day], [prayer]: false },
-      }));
-    }
-  };
+      const newGrid = {
+        ...grid,
+        [day]: { ...grid[day], [prayer]: next },
+      };
+      setGrid(newGrid);
 
-  const totalPrayed = DAYS.reduce(
-    (sum, d) => sum + PRAYERS.filter((p) => grid[d][p]).length,
-    0,
+      // Auto-save to DB as draft
+      await autoSave(newGrid);
+    },
+    [grid, status, parentUserId, sheetId, studentId, weekStart],
   );
-  const percentage = Math.round((totalPrayed / 35) * 100);
 
-  const handleSave = async () => {
+  const autoSave = async (currentGrid: PrayerGrid) => {
     if (!parentUserId) return;
-    setSaving(true);
+    setAutoSaving(true);
 
     const weekDate = weekStart.toISOString().split("T")[0];
     const payload: Record<string, any> = {
       student_id: studentId,
       parent_user_id: parentUserId,
       week_start_date: weekDate,
-      status: "submitted",
+      status: "draft",
     };
 
-    // Save grid — untouched = false (missed)
     DAYS.forEach((d) => {
       PRAYERS.forEach((p) => {
-        payload[`${d}_${p}`] = grid[d][p];
+        // null = not marked (store as null), true = prayed, false = missed
+        payload[`${d}_${p}`] =
+          currentGrid[d][p] === null ? false : currentGrid[d][p];
       });
     });
 
@@ -212,20 +188,37 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       if (data) setSheetId(data.id);
     }
 
-    // Mark all as touched after save
-    const allTouched = emptyTouched();
-    DAYS.forEach((d) =>
-      PRAYERS.forEach((p) => {
-        allTouched[d][p] = true;
-      }),
-    );
-    setTouched(allTouched);
-    setIsSubmitted(true);
-    setStatus("submitted");
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setStatus("draft");
+    setLastSaved(new Date());
+    setAutoSaving(false);
   };
+
+  const handleSubmit = async () => {
+    if (!sheetId) return;
+    setSubmitting(true);
+
+    // On submit: null cells become false (missed)
+    const payload: Record<string, any> = { status: "submitted" };
+    DAYS.forEach((d) => {
+      PRAYERS.forEach((p) => {
+        payload[`${d}_${p}`] = grid[d][p] === true;
+      });
+    });
+
+    await supabase.from("prayer_sheets").update(payload).eq("id", sheetId);
+    setStatus("submitted");
+    setSubmitting(false);
+  };
+
+  const totalPrayed = DAYS.reduce(
+    (sum, d) => sum + PRAYERS.filter((p) => grid[d][p] === true).length,
+    0,
+  );
+  const totalMarked = DAYS.reduce(
+    (sum, d) => sum + PRAYERS.filter((p) => grid[d][p] !== null).length,
+    0,
+  );
+  const percentage = Math.round((totalPrayed / 35) * 100);
 
   const prevWeek = () => {
     const d = new Date(weekStart);
@@ -243,44 +236,41 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     weekStart.toISOString().split("T")[0] ===
     getMondayOfWeek(new Date()).toISOString().split("T")[0];
 
+  const isLocked = status === "submitted" || status === "verified";
+
   const renderCell = (day: Day, prayer: Prayer) => {
-    const isTouched = touched[day][prayer];
-    const isPrayed = grid[day][prayer];
-    const isVerified = status === "verified";
+    const val = grid[day][prayer];
 
-    if (!isTouched && !isSubmitted) {
-      // Not yet marked — show empty circle
+    if (val === true) {
       return (
         <button
           onClick={() => toggle(day, prayer)}
-          disabled={isVerified}
+          disabled={isLocked}
           className="mx-auto block disabled:cursor-not-allowed"
         >
-          <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30" />
+          <CheckCircle2 className="h-7 w-7 text-green-500" />
         </button>
       );
     }
-
-    if (isPrayed) {
+    if (val === false) {
       return (
         <button
           onClick={() => toggle(day, prayer)}
-          disabled={isVerified}
+          disabled={isLocked}
           className="mx-auto block disabled:cursor-not-allowed"
         >
-          <CheckCircle2 className="h-6 w-6 text-green-500" />
+          <XCircle className="h-7 w-7 text-red-400" />
         </button>
       );
     }
-
-    // Missed (touched but false, or saved as false)
+    // null - not marked
     return (
       <button
         onClick={() => toggle(day, prayer)}
-        disabled={isVerified}
+        disabled={isLocked}
         className="mx-auto block disabled:cursor-not-allowed"
       >
-        <XCircle className="h-6 w-6 text-red-400" />
+        <div className="h-7 w-7 rounded-full border-2 border-muted-foreground/30 hover:border-primary transition-colors" />
       </button>
     );
   };
@@ -315,19 +305,43 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
           <h3 className="text-lg font-semibold">Prayer Sheet</h3>
           <p className="text-sm text-muted-foreground">{studentName}</p>
         </div>
-        {status && (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              status === "verified"
-                ? "bg-green-100 text-green-800"
-                : status === "flagged"
-                  ? "bg-red-100 text-red-800"
-                  : "bg-yellow-100 text-yellow-800"
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {autoSaving && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Saving...
+            </span>
+          )}
+          {!autoSaving && lastSaved && status === "draft" && (
+            <span className="text-xs text-muted-foreground">
+              Draft saved{" "}
+              {lastSaved.toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
+          {status && (
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                status === "verified"
+                  ? "bg-green-100 text-green-800"
+                  : status === "submitted"
+                    ? "bg-blue-100 text-blue-800"
+                    : status === "flagged"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-slate-100 text-slate-600"
+              }`}
+            >
+              {status === "draft"
+                ? "Draft"
+                : status === "submitted"
+                  ? "Submitted"
+                  : status === "verified"
+                    ? "Verified"
+                    : "Flagged"}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Week Navigation */}
@@ -351,7 +365,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       <div className="space-y-1">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
-            {totalPrayed} / 35 prayers
+            {totalPrayed} / 35 prayed · {totalMarked} marked
           </span>
           <span className="font-medium">{percentage}%</span>
         </div>
@@ -381,6 +395,11 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
           <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />{" "}
           Not marked
         </span>
+        {!isLocked && (
+          <span className="text-muted-foreground italic">
+            Tap once = ✅ · Tap twice = ❌ · Tap again = clear
+          </span>
+        )}
       </div>
 
       {/* Grid */}
@@ -412,7 +431,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
                   {DAY_LABELS[di]}
                 </td>
                 {PRAYERS.map((prayer) => (
-                  <td key={prayer} className="py-2 px-1 text-center">
+                  <td key={prayer} className="py-1 px-1 text-center">
                     {renderCell(day, prayer)}
                   </td>
                 ))}
@@ -422,42 +441,50 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
         </table>
       )}
 
-      {/* Save Button */}
-      {/* Save button — only show if not submitted or if flagged */}
-      {(status === null || status === "flagged") && (
-        <div className="flex items-center justify-between pt-2">
-          {saved ? (
-            <span className="text-sm text-green-600 flex items-center gap-1">
-              <CheckCircle2 className="h-4 w-4" /> Saved — unmarked prayers
-              counted as missed
-            </span>
+      {/* Footer */}
+      {!isLocked && (
+        <div className="pt-3 border-t border-border space-y-3">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              <strong>How to mark:</strong> Tap once for ✅ prayed, tap twice
+              for ❌ missed, tap again to clear. Your marks are{" "}
+              <strong>auto-saved as a draft</strong> every time you tap — you
+              won't lose progress if you close the app. When you're done for the
+              week, tap <strong>Submit Week</strong> to send to your teacher.
+            </p>
+          </div>
+
+          {sheetId ? (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {totalMarked} of 35 prayers marked
+              </p>
+              <button
+                onClick={handleSubmit}
+                disabled={submitting || totalMarked === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {submitting ? "Submitting..." : "Submit Week"}
+              </button>
+            </div>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              {status === "flagged"
-                ? "⚠️ Your sheet was flagged by admin. Please correct and resubmit."
-                : "Tip: Only tick prayers that were prayed. Everything else saves as missed."}
+            <p className="text-xs text-muted-foreground text-center">
+              Start marking prayers — your progress will auto-save as a draft.
             </p>
           )}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary flex items-center gap-2"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            {saving ? "Saving..." : "Save Sheet"}
-          </button>
         </div>
       )}
 
       {status === "submitted" && (
         <div className="pt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-sm text-blue-700 dark:text-blue-400 text-center">
-            ✓ Sheet submitted — waiting for admin verification. Contact admin if
-            you need to make changes.
+            ✓ Week submitted — waiting for teacher verification. Contact your
+            teacher if you need to make changes.
           </p>
         </div>
       )}
@@ -465,15 +492,15 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       {status === "verified" && (
         <div className="pt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <p className="text-sm text-green-700 dark:text-green-400 text-center">
-            ✓ Sheet verified by admin
+            ✓ Sheet verified by teacher
           </p>
         </div>
       )}
 
-      {status === "flagged" && saved && (
-        <div className="pt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-          <p className="text-sm text-yellow-700 dark:text-yellow-400 text-center">
-            Sheet resubmitted — waiting for admin review
+      {status === "flagged" && (
+        <div className="pt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-700 dark:text-red-400 text-center">
+            ⚠️ Sheet flagged by teacher — please review and resubmit.
           </p>
         </div>
       )}

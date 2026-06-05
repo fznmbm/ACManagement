@@ -21,7 +21,8 @@ export default function MemorizationItemForm({
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    item_type: item?.item_type || "dua",
+    item_type: item?.item_type || "general",
+    category_name: item?.category_name || "",
     name: item?.name || "",
     arabic_text: item?.arabic_text || "",
     transliteration: item?.transliteration || "",
@@ -36,7 +37,7 @@ export default function MemorizationItemForm({
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const value =
       e.target.type === "checkbox"
@@ -56,7 +57,9 @@ export default function MemorizationItemForm({
 
     try {
       const payload = {
-        item_type: formData.item_type,
+        item_type:
+          formData.category_name?.trim() || formData.item_type || "general",
+        category_name: formData.category_name?.trim() || null,
         name: formData.name,
         arabic_text: formData.arabic_text || null,
         transliteration: formData.transliteration || null,
@@ -68,6 +71,7 @@ export default function MemorizationItemForm({
         sequence_order: formData.sequence_order
           ? parseInt(formData.sequence_order.toString())
           : 1,
+        is_configurable: true,
       };
 
       if (isEditing) {
@@ -107,26 +111,27 @@ export default function MemorizationItemForm({
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="item_type" className="form-label">
-              Item Type *
+            <label htmlFor="category_name" className="form-label">
+              Category *
             </label>
-            <select
-              id="item_type"
-              name="item_type"
-              value={formData.item_type}
+            <input
+              type="text"
+              id="category_name"
+              name="category_name"
+              value={formData.category_name}
               onChange={handleChange}
               className="form-input"
+              placeholder="e.g., Ablution, Prayer, Duas, Surahs"
               required
-            >
-              <option value="dua">Dua</option>
-              <option value="surah">Surah</option>
-              <option value="hadith">Hadith</option>
-            </select>
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Create any category — Ablution, Prayer, Duas, Surahs, Hadiths etc.
+            </p>
           </div>
 
           <div>
             <label htmlFor="name" className="form-label">
-              Name *
+              Item Name *
             </label>
             <input
               type="text"
@@ -135,7 +140,7 @@ export default function MemorizationItemForm({
               value={formData.name}
               onChange={handleChange}
               className="form-input"
-              placeholder="e.g., Dua before eating"
+              placeholder="e.g., Can perform wudu correctly"
               required
             />
           </div>

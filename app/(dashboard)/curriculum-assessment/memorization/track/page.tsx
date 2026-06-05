@@ -28,7 +28,8 @@ export default async function TrackMemorizationPage({
   const { data: items } = await supabase
     .from("memorization_items")
     .select("*")
-    .order("sequence_order");
+    .order("category_name", { ascending: true })
+    .order("sequence_order", { ascending: true });
 
   // If student is selected, get their progress
   let studentProgress = null;
@@ -51,9 +52,9 @@ export default async function TrackMemorizationPage({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h2 className="text-2xl font-bold">Track Student Memorization</h2>
+          <h2 className="text-2xl font-bold">Track Student Progress</h2>
           <p className="text-muted-foreground">
-            Update student progress on memorization items
+            Update student progress on all tracking items
           </p>
         </div>
       </div>

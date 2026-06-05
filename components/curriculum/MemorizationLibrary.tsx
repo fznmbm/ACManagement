@@ -1,12 +1,15 @@
-// components/curriculum/MemorizationLibrary.tsx
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Edit, Trash2, BookOpen, Star } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface MemorizationItem {
   id: string;
   item_type: string;
+  category_name: string | null;
   name: string;
   arabic_text: string | null;
   transliteration: string | null;
@@ -26,14 +29,22 @@ export default function MemorizationLibrary({
   items,
   canManage,
 }: MemorizationLibraryProps) {
-  const [activeTab, setActiveTab] = useState<
-    "all" | "dua" | "surah" | "hadith"
-  >("all");
+  const supabase = createClient();
+  const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Group items by category_name (fall back to item_type for legacy items)
+  const categories = Array.from(
+    new Set(items.map((i) => i.category_name || i.item_type)),
+  ).sort();
 
   const filteredItems =
-    activeTab === "all"
+    activeCategory === "all"
       ? items
-      : items.filter((item) => item.item_type === activeTab);
+      : items.filter(
+          (i) => (i.category_name || i.item_type) === activeCategory,
+        );
 
   const getDifficultyColor = (level: string | null) => {
     switch (level) {
@@ -48,17 +59,19 @@ export default function MemorizationLibrary({
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "dua":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "surah":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "hadith":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    setDeleting(id);
+    const { error } = await supabase
+      .from("memorization_items")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      alert("Failed to delete: " + error.message);
+    } else {
+      router.refresh();
     }
+    setDeleting(null);
   };
 
   if (items.length === 0) {
@@ -66,18 +79,18 @@ export default function MemorizationLibrary({
       <div className="bg-card border border-border rounded-lg p-12 text-center">
         <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <p className="text-lg text-muted-foreground mb-2">
-          No memorization items yet
+          No progress tracking items yet
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          Start building your library of Duas, Surahs, and Hadiths
+          Add categories and items for students to track
         </p>
         {canManage && (
-          <a
+          <Link
             href="/curriculum-assessment/memorization/new"
             className="btn-primary inline-flex"
           >
             Add First Item
-          </a>
+          </Link>
         )}
       </div>
     );
@@ -85,40 +98,36 @@ export default function MemorizationLibrary({
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
-      <div className="bg-card border border-border rounded-lg p-1">
-        <div className="flex space-x-1">
-          {[
-            { id: "all" as const, label: "All Items", count: items.length },
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveCategory("all")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            activeCategory === "all"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-border hover:bg-accent"
+          }`}
+        >
+          All ({items.length})
+        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeCategory === cat
+                ? "bg-primary text-primary-foreground"
+                : "bg-card border border-border hover:bg-accent"
+            }`}
+          >
+            {cat.charAt(0).toUpperCase() + cat.slice(1)} (
             {
-              id: "dua" as const,
-              label: "Duas",
-              count: items.filter((i) => i.item_type === "dua").length,
-            },
-            {
-              id: "surah" as const,
-              label: "Surahs",
-              count: items.filter((i) => i.item_type === "surah").length,
-            },
-            {
-              id: "hadith" as const,
-              label: "Hadiths",
-              count: items.filter((i) => i.item_type === "hadith").length,
-            },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-accent"
-              }`}
-            >
-              {tab.label} ({tab.count})
-            </button>
-          ))}
-        </div>
+              items.filter((i) => (i.category_name || i.item_type) === cat)
+                .length
+            }
+            )
+          </button>
+        ))}
       </div>
 
       {/* Items Grid */}
@@ -130,35 +139,32 @@ export default function MemorizationLibrary({
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full border capitalize ${getTypeColor(
-                    item.item_type
-                  )}`}
-                >
-                  {item.item_type}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-1 text-xs font-medium rounded-full border bg-primary/10 text-primary border-primary/20 capitalize">
+                  {item.category_name || item.item_type}
                 </span>
                 {item.is_required && (
-                  <span className="flex items-center space-x-1 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                  <span className="flex items-center gap-1 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
                     <Star className="h-3 w-3" />
-                    <span>Required</span>
+                    Required
                   </span>
                 )}
               </div>
 
               {canManage && (
-                <div className="flex items-center space-x-1">
-                  <button className="p-1 hover:bg-accent rounded" title="Edit">
-                    <Edit className="h-4 w-4 text-green-600" />
-                  </button>
-                  <button
+                <div className="flex items-center gap-1">
+                  <Link
+                    href={`/curriculum-assessment/memorization/${item.id}/edit`}
                     className="p-1 hover:bg-accent rounded"
+                    title="Edit"
+                  >
+                    <Edit className="h-4 w-4 text-green-600" />
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(item.id, item.name)}
+                    disabled={deleting === item.id}
+                    className="p-1 hover:bg-accent rounded disabled:opacity-50"
                     title="Delete"
-                    onClick={() => {
-                      if (confirm(`Delete "${item.name}"?`)) {
-                        alert("Delete functionality will be implemented");
-                      }
-                    }}
                   >
                     <Trash2 className="h-4 w-4 text-red-600" />
                   </button>
@@ -171,8 +177,10 @@ export default function MemorizationLibrary({
 
             {/* Arabic Text */}
             {item.arabic_text && (
-              <div className="bg-muted/50 rounded-lg p-3 mb-3 text-center rtl">
-                <p className="text-xl font-arabic">{item.arabic_text}</p>
+              <div className="bg-muted/50 rounded-lg p-3 mb-3 text-center">
+                <p className="text-xl font-arabic" dir="rtl">
+                  {item.arabic_text}
+                </p>
               </div>
             )}
 
@@ -192,17 +200,13 @@ export default function MemorizationLibrary({
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-border">
-              <div className="flex items-center space-x-2">
-                {item.difficulty_level && (
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full capitalize ${getDifficultyColor(
-                      item.difficulty_level
-                    )}`}
-                  >
-                    {item.difficulty_level}
-                  </span>
-                )}
-              </div>
+              {item.difficulty_level && (
+                <span
+                  className={`px-2 py-1 text-xs rounded-full capitalize ${getDifficultyColor(item.difficulty_level)}`}
+                >
+                  {item.difficulty_level}
+                </span>
+              )}
               {item.reference && (
                 <span className="text-xs text-muted-foreground">
                   {item.reference}
@@ -215,7 +219,7 @@ export default function MemorizationLibrary({
 
       {filteredItems.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          <p>No items found for this category</p>
+          <p>No items in this category</p>
         </div>
       )}
     </div>

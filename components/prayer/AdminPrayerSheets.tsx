@@ -127,6 +127,7 @@ export default function AdminPrayerSheets() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [updating, setUpdating] = useState<string | null>(null);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [whatsAppMsg, setWhatsAppMsg] = useState("");
   const [whatsAppMode, setWhatsAppMode] = useState<
     "list" | "individual" | null
@@ -253,11 +254,24 @@ export default function AdminPrayerSheets() {
     setShowWhatsApp(true);
   };
 
-  const sendWhatsApp = () => {
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(whatsAppMsg)}`,
-      "_blank",
-    );
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(whatsAppMsg);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      // Fallback for older browsers
+      const el = document.createElement("textarea");
+      el.value = whatsAppMsg;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
   };
 
   const prevWeek = () => {
@@ -283,6 +297,7 @@ export default function AdminPrayerSheets() {
 
   const statusCounts = {
     all: sheets.length,
+    draft: sheets.filter((s) => s.status === "draft").length,
     submitted: sheets.filter((s) => s.status === "submitted").length,
     verified: sheets.filter((s) => s.status === "verified").length,
     flagged: sheets.filter((s) => s.status === "flagged").length,
@@ -378,20 +393,24 @@ export default function AdminPrayerSheets() {
 
       {/* Status Filter */}
       <div className="flex gap-2 flex-wrap">
-        {(["all", "submitted", "verified", "flagged"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              statusFilter === s
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border hover:bg-accent"
-            }`}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-            <span className="ml-2 text-xs opacity-70">({statusCounts[s]})</span>
-          </button>
-        ))}
+        {(["all", "draft", "submitted", "verified", "flagged"] as const).map(
+          (s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === s
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border hover:bg-accent"
+              }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+              <span className="ml-2 text-xs opacity-70">
+                ({statusCounts[s]})
+              </span>
+            </button>
+          ),
+        )}
       </div>
 
       {/* Sheets List */}
@@ -467,13 +486,14 @@ export default function AdminPrayerSheets() {
                         sheet.status.slice(1)}
                     </span>
 
-                    {/* WhatsApp individual button */}
+                    {/* Copy individual sheet */}
                     <button
                       onClick={() => handleIndividualWhatsApp(sheet)}
-                      className="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700"
+                      title="Copy prayer sheet to clipboard"
+                      className="flex items-center gap-1 px-2 py-1.5 bg-slate-600 text-white rounded-lg text-xs font-medium hover:bg-slate-700"
                     >
                       <MessageSquare className="h-3 w-3" />
-                      Send
+                      Copy
                     </button>
 
                     {sheet.status !== "verified" && (
@@ -591,20 +611,41 @@ export default function AdminPrayerSheets() {
               onChange={(e) => setWhatsAppMsg(e.target.value)}
               className="w-full h-56 p-3 text-xs font-mono bg-muted rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <div className="flex items-center justify-end gap-3 mt-4">
-              <button
-                onClick={() => setShowWhatsApp(false)}
-                className="btn-outline"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={sendWhatsApp}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Open in WhatsApp
-              </button>
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-xs text-muted-foreground">
+                Copy then paste into your WhatsApp group
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowWhatsApp(false);
+                    setCopied(false);
+                  }}
+                  className="btn-outline"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={copyToClipboard}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                    copied
+                      ? "bg-green-600 text-white"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="h-4 w-4" />
+                      Copy to Clipboard
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

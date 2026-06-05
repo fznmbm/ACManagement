@@ -46,7 +46,7 @@ export default async function CurriculumAssessmentPage() {
       *,
       students (first_name, last_name, student_number),
       subjects (name)
-    `
+    `,
     )
     .order("assessment_date", { ascending: false })
     .limit(5);
@@ -98,9 +98,7 @@ export default async function CurriculumAssessmentPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">
-                Memorization Items
-              </p>
+              <p className="text-sm text-muted-foreground">Progress Items</p>
               <p className="text-3xl font-bold mt-1">
                 {totalMemorizationItems || 0}
               </p>
@@ -167,14 +165,13 @@ export default async function CurriculumAssessmentPage() {
 
           <Link
             href="/curriculum-assessment/memorization/track"
-            //className="flex items-center space-x-3 p-4 border border-border rounded-lg hover:bg-accent transition-colors"
             className="flex items-center space-x-3 p-4  border-border bg-white dark:bg-slate-700  border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-lg font-medium hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-600 transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <div className="p-2 bg-purple-100 rounded-lg">
               <Brain className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="font-medium">Track Memorization</p>
+              <p className="font-medium">Track Progress</p>
               <p className="text-sm text-muted-foreground">
                 Update student progress
               </p>
@@ -239,7 +236,7 @@ export default async function CurriculumAssessmentPage() {
                   <div className="text-sm text-muted-foreground">
                     {assessment.assessment_date
                       ? new Date(
-                          assessment.assessment_date
+                          assessment.assessment_date,
                         ).toLocaleDateString()
                       : "N/A"}
                   </div>
@@ -290,9 +287,9 @@ export default async function CurriculumAssessmentPage() {
               <Brain className="h-6 w-6 text-purple-600" />
             </div>
             <div>
-              <h4 className="font-semibold mb-1">Memorization Library</h4>
+              <h4 className="font-semibold mb-1">Progress Tracking</h4>
               <p className="text-sm text-muted-foreground">
-                Duas, Surahs, and Hadiths tracking
+                Track student progress across all categories
               </p>
             </div>
           </div>

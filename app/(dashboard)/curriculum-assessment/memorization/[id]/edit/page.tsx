@@ -1,11 +1,14 @@
-// app/(dashboard)/curriculum-assessment/memorization/new/page.tsx
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import MemorizationItemForm from "@/components/curriculum/MemorizationItemForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default async function NewMemorizationItemPage() {
+export default async function EditMemorizationItemPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const supabase = await createClient();
 
   const {
@@ -15,14 +18,21 @@ export default async function NewMemorizationItemPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("role")
     .eq("id", user.id)
     .single();
 
-  // Only admins can add memorization items
   if (profile?.role !== "super_admin" && profile?.role !== "admin") {
     redirect("/curriculum-assessment/memorization");
   }
+
+  const { data: item, error } = await supabase
+    .from("memorization_items")
+    .select("*")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !item) notFound();
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -34,15 +44,14 @@ export default async function NewMemorizationItemPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h2 className="text-2xl font-bold">Add Progress Item</h2>
+          <h2 className="text-2xl font-bold">Edit Progress Item</h2>
           <p className="text-muted-foreground">
-            Add a new item to any category for student progress tracking
+            Update this item in the progress tracking library
           </p>
         </div>
       </div>
-
       <div className="bg-card border border-border rounded-lg p-6">
-        <MemorizationItemForm />
+        <MemorizationItemForm item={item} />
       </div>
     </div>
   );

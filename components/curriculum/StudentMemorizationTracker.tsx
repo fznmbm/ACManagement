@@ -16,6 +16,7 @@ interface Student {
 interface MemorizationItem {
   id: string;
   item_type: string;
+  category_name: string | null;
   name: string;
   arabic_text: string | null;
   transliteration: string | null;
@@ -51,7 +52,7 @@ export default function StudentMemorizationTracker({
   const supabase = createClient();
 
   const [selectedStudent, setSelectedStudent] = useState(
-    selectedStudentId || ""
+    selectedStudentId || "",
   );
   const [saving, setSaving] = useState(false);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
@@ -61,7 +62,7 @@ export default function StudentMemorizationTracker({
     const params = new URLSearchParams(searchParams.toString());
     params.set("student", studentId);
     router.push(
-      `/curriculum-assessment/memorization/track?${params.toString()}`
+      `/curriculum-assessment/memorization/track?${params.toString()}`,
     );
   };
 
@@ -72,7 +73,7 @@ export default function StudentMemorizationTracker({
   const updateProgress = async (
     itemId: string,
     status: string,
-    proficiencyRating?: number
+    proficiencyRating?: number,
   ) => {
     if (!selectedStudent) return;
 
@@ -148,7 +149,7 @@ export default function StudentMemorizationTracker({
   const calculateProgress = () => {
     if (items.length === 0) return 0;
     const mastered = studentProgress.filter(
-      (p) => p.status === "mastered"
+      (p) => p.status === "mastered",
     ).length;
     return Math.round((mastered / items.length) * 100);
   };
@@ -233,103 +234,131 @@ export default function StudentMemorizationTracker({
             </div>
           </div>
 
-          {/* Memorization Items */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Memorization Items</h3>
-            <div className="space-y-3">
-              {items.map((item) => {
-                const progress = getProgressForItem(item.id);
-                const currentStatus = progress?.status || "not_started";
-                const isUpdating = updatingItem === item.id;
+          {/* Progress Items grouped by category */}
+          <div className="space-y-4">
+            {Array.from(
+              new Set(items.map((i) => i.category_name || i.item_type)),
+            )
+              .sort()
+              .map((category) => {
+                const categoryItems = items.filter(
+                  (i) => (i.category_name || i.item_type) === category,
+                );
+                const categoryCompleted = categoryItems.filter((i) => {
+                  const p = getProgressForItem(i.id);
+                  return p?.status === "memorized" || p?.status === "mastered";
+                }).length;
 
                 return (
                   <div
-                    key={item.id}
-                    className="border border-border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                    key={category}
+                    className="bg-card border border-border rounded-lg overflow-hidden"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <span className="font-medium">{item.name}</span>
-                          {item.is_required && (
-                            <Star className="h-4 w-4 text-yellow-600" />
-                          )}
-                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded capitalize">
-                            {item.item_type}
-                          </span>
-                        </div>
-
-                        {item.arabic_text && (
-                          <p className="text-sm text-muted-foreground rtl font-arabic mb-1">
-                            {item.arabic_text}
-                          </p>
-                        )}
-
-                        {item.transliteration && (
-                          <p className="text-xs italic text-muted-foreground">
-                            {item.transliteration}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="ml-4 space-y-2">
-                        <select
-                          value={currentStatus}
-                          onChange={(e) =>
-                            updateProgress(item.id, e.target.value)
-                          }
-                          disabled={saving}
-                          className={`text-sm px-3 py-1 rounded-full border font-medium ${getStatusColor(
-                            currentStatus
-                          )}`}
-                        >
-                          <option value="not_started">Not Started</option>
-                          <option value="learning">Learning</option>
-                          <option value="memorized">Memorized</option>
-                          <option value="mastered">Mastered</option>
-                        </select>
-
-                        {isUpdating && (
-                          <div className="flex justify-center">
-                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          </div>
-                        )}
-                      </div>
+                    {/* Category Header */}
+                    <div className="flex items-center justify-between px-6 py-3 bg-muted/30 border-b border-border">
+                      <h3 className="font-semibold capitalize">{category}</h3>
+                      <span className="text-sm text-muted-foreground">
+                        {categoryCompleted}/{categoryItems.length} completed
+                      </span>
                     </div>
 
-                    {/* Proficiency Rating */}
-                    {progress && progress.status !== "not_started" && (
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-muted-foreground">
-                            Proficiency:
-                          </span>
-                          <div className="flex space-x-1">
-                            {[1, 2, 3, 4, 5].map((rating) => (
-                              <button
-                                key={rating}
-                                onClick={() =>
-                                  updateProgress(item.id, currentStatus, rating)
-                                }
-                                disabled={saving}
-                                className={`p-1 ${
-                                  progress.proficiency_rating &&
-                                  progress.proficiency_rating >= rating
-                                    ? "text-yellow-500"
-                                    : "text-gray-300"
-                                }`}
-                              >
-                                <Star className="h-4 w-4 fill-current" />
-                              </button>
-                            ))}
+                    {/* Items */}
+                    <div className="divide-y divide-border">
+                      {categoryItems.map((item) => {
+                        const progress = getProgressForItem(item.id);
+                        const currentStatus = progress?.status || "not_started";
+                        const isUpdating = updatingItem === item.id;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="p-4 hover:bg-accent/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium">
+                                    {item.name}
+                                  </span>
+                                  {item.is_required && (
+                                    <Star className="h-3 w-3 text-yellow-600 fill-current" />
+                                  )}
+                                </div>
+                                {item.arabic_text && (
+                                  <p
+                                    className="text-sm text-muted-foreground font-arabic mb-1"
+                                    dir="rtl"
+                                  >
+                                    {item.arabic_text}
+                                  </p>
+                                )}
+                                {item.transliteration && (
+                                  <p className="text-xs italic text-muted-foreground">
+                                    {item.transliteration}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="ml-4 flex items-center gap-2">
+                                {isUpdating && (
+                                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                )}
+                                <select
+                                  value={currentStatus}
+                                  onChange={(e) =>
+                                    updateProgress(item.id, e.target.value)
+                                  }
+                                  disabled={saving}
+                                  className={`text-xs px-3 py-1.5 rounded-full border font-medium cursor-pointer ${getStatusColor(currentStatus)}`}
+                                >
+                                  <option value="not_started">
+                                    Not Started
+                                  </option>
+                                  <option value="learning">Learning</option>
+                                  <option value="memorized">Memorized</option>
+                                  <option value="mastered">Mastered</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Proficiency Rating */}
+                            {progress && progress.status !== "not_started" && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  Proficiency:
+                                </span>
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((rating) => (
+                                    <button
+                                      key={rating}
+                                      onClick={() =>
+                                        updateProgress(
+                                          item.id,
+                                          currentStatus,
+                                          rating,
+                                        )
+                                      }
+                                      disabled={saving}
+                                      className={`p-0.5 ${
+                                        progress.proficiency_rating &&
+                                        progress.proficiency_rating >= rating
+                                          ? "text-yellow-500"
+                                          : "text-gray-300"
+                                      }`}
+                                    >
+                                      <Star className="h-3.5 w-3.5 fill-current" />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}
-            </div>
           </div>
         </>
       )}
@@ -338,7 +367,7 @@ export default function StudentMemorizationTracker({
         <div className="bg-card border border-border rounded-lg p-12 text-center">
           <Brain className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-lg text-muted-foreground">
-            Select a student to track their memorization progress
+            Select a student to track their progress
           </p>
         </div>
       )}
