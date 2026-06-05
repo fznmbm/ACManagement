@@ -54,7 +54,7 @@ const generateSubmissionListMessage = (
 ): string => {
   let msg = `🕌 *Prayer Sheets — ${weekLabel}*\n`;
   if (className !== "all") msg += `📚 *${className}*\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+  msg += `\n`;
 
   if (submitted.length > 0) {
     msg += `✅ *Submitted (${submitted.length})*\n`;
@@ -80,8 +80,7 @@ const generateSubmissionListMessage = (
       )
     : 0;
 
-  msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `📊 ${submitted.length + notSubmitted.length} students total | Class avg: ${avgPct}%`;
+  msg += `\n📊 ${submitted.length + notSubmitted.length} students total | Class avg: ${avgPct}%`;
 
   return msg;
 };
@@ -92,20 +91,26 @@ const generateIndividualMessage = (sheet: any, weekLabel: string): string => {
   const total = sheet.total_prayers ?? 0;
   const pct = Math.round((total / 35) * 100);
   const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+  const DAY_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
 
   let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
   msg += `📅 ${weekLabel}\n`;
   if (student?.classes?.name) msg += `📚 ${student.classes.name}\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+  msg += `\n`;
+
+  // Header row with day initials
+  msg += `         ${DAY_SHORT.join("  ")}\n`;
+  msg += `─────────────────────\n`;
 
   PRAYERS.forEach((prayer, pi) => {
+    const label = PRAYER_LABELS[pi].padEnd(8);
     const row = DAYS.map((day) =>
       sheet[`${day}_${prayer}`] ? "✅" : "❌",
     ).join(" ");
-    msg += `*${PRAYER_LABELS[pi].padEnd(7)}* ${row}\n`;
+    msg += `${label} ${row}\n`;
   });
 
-  msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `─────────────────────\n`;
   msg += `${emoji} *Total: ${total}/35 (${pct}%)*`;
 
   return msg;

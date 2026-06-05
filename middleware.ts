@@ -88,7 +88,7 @@ export async function middleware(request: NextRequest) {
     if (isParentDomain) {
       const mainDomain =
         process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
-          ? "https://al-hikmah.org"
+          ? "https://www.al-hikmah.org"
           : "https://ahic.vercel.app";
 
       return NextResponse.redirect(new URL("/parent/login", mainDomain));
