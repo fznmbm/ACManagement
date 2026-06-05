@@ -99,18 +99,18 @@ const generateIndividualMessage = (sheet: any, weekLabel: string): string => {
   msg += `\n`;
 
   // Header row with day initials
-  msg += `         ${DAY_SHORT.join("  ")}\n`;
-  msg += `─────────────────────\n`;
+  msg += `        M  T  W  T  F  S  S\n`;
+  msg += `────────────────────────────\n`;
 
   PRAYERS.forEach((prayer, pi) => {
     const label = PRAYER_LABELS[pi].padEnd(8);
     const row = DAYS.map((day) =>
       sheet[`${day}_${prayer}`] ? "✅" : "❌",
     ).join(" ");
-    msg += `${label} ${row}\n`;
+    msg += `${label}${row}\n`;
   });
 
-  msg += `─────────────────────\n`;
+  msg += `────────────────────────────\n`;
   msg += `${emoji} *Total: ${total}/35 (${pct}%)*`;
 
   return msg;
