@@ -254,8 +254,6 @@ export default function AdminPrayerSheets() {
     setShowWhatsApp(true);
   };
 
-  const [copied, setCopied] = useState(false);
-
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(whatsAppMsg);
