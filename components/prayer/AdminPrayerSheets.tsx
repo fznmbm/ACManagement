@@ -99,7 +99,7 @@ const generateIndividualMessage = (sheet: any, weekLabel: string): string => {
   msg += `\n`;
 
   // Header row with day initials
-  msg += `        M  T  W  T  F  S  S\n`;
+  msg += `         M   T   W   T   F   S   S\n`;
   msg += `────────────────────────────\n`;
 
   PRAYERS.forEach((prayer, pi) => {
