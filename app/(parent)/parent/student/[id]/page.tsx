@@ -16,8 +16,7 @@ import {
 import AttendanceTab from "@/components/parent/tabs/AttendanceTab";
 import GradesTab from "@/components/parent/tabs/GradesTab";
 import MemorizationTab from "@/components/parent/tabs/MemorizationTab";
-import FeesTab from "@/components/parent/tabs/FeesTab";
-import FinesTab from "@/components/parent/tabs/FinesTab";
+import FinancesTab from "@/components/parent/tabs/FinancesTab";
 import CertificatesTab from "@/components/parent/tabs/CertificatesTab";
 import ParentPrayerSheet from "@/components/prayer/ParentPrayerSheet";
 
@@ -38,12 +37,10 @@ interface Student {
 }
 
 type TabType =
-  | "overview"
   | "attendance"
   | "grades"
   | "memorization"
-  | "fees"
-  | "fines"
+  | "finances"
   | "certificates"
   | "prayers";
 
@@ -54,7 +51,7 @@ export default function StudentDetailPage() {
 
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [activeTab, setActiveTab] = useState<TabType>("attendance");
   const [error, setError] = useState("");
 
   // ADD THIS NEW LINE:
@@ -208,12 +205,6 @@ export default function StudentDetailPage() {
 
   const tabs = [
     {
-      id: "overview" as TabType,
-      label: "Overview",
-      icon: User,
-      alwaysShow: true,
-    },
-    {
       id: "attendance" as TabType,
       label: "Attendance",
       icon: Calendar,
@@ -232,21 +223,14 @@ export default function StudentDetailPage() {
       label: "Memorization",
       icon: BookOpen,
       alwaysShow: false,
-      permission: parentLink?.can_view_grades, // Same as grades
+      permission: parentLink?.can_view_grades,
     },
     {
-      id: "fees" as TabType,
-      label: "Fees",
+      id: "finances" as TabType,
+      label: "Finances",
       icon: DollarSign,
       alwaysShow: false,
       permission: parentLink?.can_view_financial,
-    },
-    {
-      id: "fines" as TabType,
-      label: "Fines",
-      icon: AlertCircle,
-      alwaysShow: false,
-      permission: parentLink?.can_view_financial, // Same as fees
     },
     {
       id: "certificates" as TabType,
@@ -382,50 +366,6 @@ export default function StudentDetailPage() {
         )}
         {/* end */}
 
-        {activeTab === "overview" && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-              Student Overview
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                  Date of Birth
-                </p>
-                <p className="text-base font-medium text-slate-900 dark:text-white">
-                  {new Date(student.date_of_birth).toLocaleDateString("en-GB")}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                  Gender
-                </p>
-                <p className="text-base font-medium text-slate-900 dark:text-white capitalize">
-                  {student.gender}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                  Enrollment Date
-                </p>
-                <p className="text-base font-medium text-slate-900 dark:text-white">
-                  {new Date(student.enrollment_date).toLocaleDateString(
-                    "en-GB",
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                  Status
-                </p>
-                <p className="text-base font-medium text-slate-900 dark:text-white capitalize">
-                  {student.status}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {activeTab === "attendance" && (
           <AttendanceTab studentId={params.id as string} />
         )}
@@ -438,9 +378,9 @@ export default function StudentDetailPage() {
           <MemorizationTab studentId={params.id as string} />
         )}
 
-        {activeTab === "fees" && <FeesTab studentId={params.id as string} />}
-
-        {activeTab === "fines" && <FinesTab studentId={params.id as string} />}
+        {activeTab === "finances" && (
+          <FinancesTab studentId={params.id as string} />
+        )}
 
         {activeTab === "certificates" && (
           <CertificatesTab studentId={params.id as string} />

@@ -74,6 +74,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [parentUserId, setParentUserId] = useState<string | null>(null);
+  const [prayerEnabled, setPrayerEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -83,7 +84,30 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       if (user) setParentUserId(user.id);
     };
     getUser();
-  }, []);
+
+    // Check if prayer sheets enabled for this student's class
+    const checkPrayerEnabled = async () => {
+      const { data: student } = await supabase
+        .from("students")
+        .select("class_id")
+        .eq("id", studentId)
+        .single();
+
+      if (!student?.class_id) {
+        setPrayerEnabled(false);
+        return;
+      }
+
+      const { data: cls } = await supabase
+        .from("classes")
+        .select("prayer_sheets_enabled")
+        .eq("id", student.class_id)
+        .single();
+
+      setPrayerEnabled(cls?.prayer_sheets_enabled ?? false);
+    };
+    checkPrayerEnabled();
+  }, [studentId]);
 
   useEffect(() => {
     if (!parentUserId) return;
@@ -260,6 +284,28 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       </button>
     );
   };
+
+  if (prayerEnabled === null) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!prayerEnabled) {
+    return (
+      <div className="bg-muted/30 border border-border rounded-lg p-8 text-center">
+        <p className="text-muted-foreground font-medium">
+          Prayer Sheets not enabled
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Prayer sheets are not enabled for this class. Contact admin for more
+          information.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

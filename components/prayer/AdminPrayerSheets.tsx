@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
+  List,
 } from "lucide-react";
 
 const DAYS = [
@@ -44,45 +45,68 @@ const formatWeekLabel = (dateStr: string): string => {
   return `${monday.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
 };
 
-const generateWhatsAppMessage = (sheets: any[], weekLabel: string): string => {
-  const EMOJI = { prayed: "✅", missed: "❌" };
-  const DAY_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
-
+// Message A: Who submitted / who didn't
+const generateSubmissionListMessage = (
+  submitted: any[],
+  notSubmitted: any[],
+  weekLabel: string,
+  className: string,
+): string => {
   let msg = `🕌 *Prayer Sheets — ${weekLabel}*\n`;
+  if (className !== "all") msg += `📚 *${className}*\n`;
   msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-  sheets.forEach((sheet) => {
-    const student = sheet.students;
-    const total = sheet.total_prayers ?? 0;
-    const pct = Math.round((total / 35) * 100);
-    const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
-
-    msg += `👤 *${student?.first_name} ${student?.last_name}*\n`;
-    msg += `${emoji} ${total}/35 prayers (${pct}%)\n`;
-    msg += `\`       M  T  W  T  F  S  S\`\n`;
-
-    PRAYERS.forEach((prayer, pi) => {
-      const row = DAY_SHORT.map((_, di) => {
-        const day = DAYS[di];
-        return sheet[`${day}_${prayer}`] ? EMOJI.prayed : EMOJI.missed;
-      }).join(" ");
-      msg += `\`${PRAYER_LABELS[pi].padEnd(7)}\` ${row}\n`;
+  if (submitted.length > 0) {
+    msg += `✅ *Submitted (${submitted.length})*\n`;
+    submitted.forEach((s) => {
+      const pct = Math.round(((s.total_prayers ?? 0) / 35) * 100);
+      const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+      msg += `• ${s.students?.first_name} ${s.students?.last_name} — ${s.total_prayers ?? 0}/35 ${emoji}\n`;
     });
+  }
 
-    msg += `\n`;
-  });
+  if (notSubmitted.length > 0) {
+    msg += `\n❌ *Not Submitted (${notSubmitted.length})*\n`;
+    notSubmitted.forEach((s) => {
+      msg += `• ${s.first_name} ${s.last_name}\n`;
+    });
+  }
 
-  msg += `━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `📊 *Summary:* ${sheets.length} submitted\n`;
-
-  const avgPct = sheets.length
+  const avgPct = submitted.length
     ? Math.round(
-        (sheets.reduce((s, sh) => s + (sh.total_prayers ?? 0), 0) /
-          (sheets.length * 35)) *
+        (submitted.reduce((s, sh) => s + (sh.total_prayers ?? 0), 0) /
+          (submitted.length * 35)) *
           100,
       )
     : 0;
-  msg += `📈 *Class avg:* ${avgPct}%`;
+
+  msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📊 ${submitted.length + notSubmitted.length} students total | Class avg: ${avgPct}%`;
+
+  return msg;
+};
+
+// Message B: Individual student detail
+const generateIndividualMessage = (sheet: any, weekLabel: string): string => {
+  const student = sheet.students;
+  const total = sheet.total_prayers ?? 0;
+  const pct = Math.round((total / 35) * 100);
+  const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+
+  let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
+  msg += `📅 ${weekLabel}\n`;
+  if (student?.classes?.name) msg += `📚 ${student.classes.name}\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  PRAYERS.forEach((prayer, pi) => {
+    const row = DAYS.map((day) =>
+      sheet[`${day}_${prayer}`] ? "✅" : "❌",
+    ).join(" ");
+    msg += `*${PRAYER_LABELS[pi].padEnd(7)}* ${row}\n`;
+  });
+
+  msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `${emoji} *Total: ${total}/35 (${pct}%)*`;
 
   return msg;
 };
@@ -90,16 +114,56 @@ const generateWhatsAppMessage = (sheets: any[], weekLabel: string): string => {
 export default function AdminPrayerSheets() {
   const supabase = createClient();
   const [sheets, setSheets] = useState<any[]>([]);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedClass, setSelectedClass] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [weekStart, setWeekStart] = useState<Date>(getMondayOfWeek(new Date()));
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [updating, setUpdating] = useState<string | null>(null);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [whatsAppMsg, setWhatsAppMsg] = useState("");
+  const [whatsAppMode, setWhatsAppMode] = useState<
+    "list" | "individual" | null
+  >(null);
+  const [selectedIndividual, setSelectedIndividual] = useState<any | null>(
+    null,
+  );
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
   useEffect(() => {
     fetchSheets();
-  }, [weekStart, statusFilter]);
+    fetchAllStudents();
+  }, [weekStart, selectedClass]);
+
+  const fetchClasses = async () => {
+    const { data } = await supabase
+      .from("classes")
+      .select("id, name")
+      .eq("is_active", true)
+      .eq("prayer_sheets_enabled", true)
+      .order("name");
+    setClasses(data || []);
+  };
+
+  const fetchAllStudents = async () => {
+    let query = supabase
+      .from("students")
+      .select(
+        "id, first_name, last_name, student_number, class_id, classes(name)",
+      )
+      .eq("status", "active");
+
+    if (selectedClass !== "all") {
+      query = query.eq("class_id", selectedClass);
+    }
+
+    const { data } = await query;
+    setAllStudents(data || []);
+  };
 
   const fetchSheets = async () => {
     setLoading(true);
@@ -108,34 +172,40 @@ export default function AdminPrayerSheets() {
     let query = supabase
       .from("prayer_sheets")
       .select(
-        `
-        *,
-        students (
-          first_name,
-          last_name,
-          student_number,
-          classes ( name )
-        )
-      `,
+        `*, students(first_name, last_name, student_number, class_id, classes(name))`,
       )
       .eq("week_start_date", weekDate)
       .order("submitted_at", { ascending: false });
+
+    if (selectedClass !== "all") {
+      query = query.eq("students.class_id", selectedClass);
+    }
 
     if (statusFilter !== "all") {
       query = query.eq("status", statusFilter);
     }
 
     const { data } = await query;
-    setSheets(data || []);
+
+    // Filter by class if needed (since nested filter may not work directly)
+    let filtered = data || [];
+    if (selectedClass !== "all") {
+      filtered = filtered.filter((s) => s.students?.class_id === selectedClass);
+    }
+
+    setSheets(filtered);
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchSheets();
+  }, [statusFilter]);
 
   const updateStatus = async (sheetId: string, newStatus: string) => {
     setUpdating(sheetId);
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     await supabase
       .from("prayer_sheets")
       .update({
@@ -144,23 +214,45 @@ export default function AdminPrayerSheets() {
         verified_at: new Date().toISOString(),
       })
       .eq("id", sheetId);
-
     setSheets((prev) =>
       prev.map((s) => (s.id === sheetId ? { ...s, status: newStatus } : s)),
     );
     setUpdating(null);
   };
 
-  const handleWhatsApp = () => {
+  const handleSubmissionListWhatsApp = () => {
     const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
-    const msg = generateWhatsAppMessage(sheets, weekLabel);
+    const submittedIds = new Set(sheets.map((s) => s.student_id));
+    const notSubmitted = allStudents.filter((s) => !submittedIds.has(s.id));
+    const className =
+      selectedClass !== "all"
+        ? classes.find((c) => c.id === selectedClass)?.name || "All Classes"
+        : "All Classes";
+    const msg = generateSubmissionListMessage(
+      sheets,
+      notSubmitted,
+      weekLabel,
+      className,
+    );
     setWhatsAppMsg(msg);
+    setWhatsAppMode("list");
+    setShowWhatsApp(true);
+  };
+
+  const handleIndividualWhatsApp = (sheet: any) => {
+    const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
+    const msg = generateIndividualMessage(sheet, weekLabel);
+    setWhatsAppMsg(msg);
+    setWhatsAppMode("individual");
+    setSelectedIndividual(sheet);
     setShowWhatsApp(true);
   };
 
   const sendWhatsApp = () => {
-    const encoded = encodeURIComponent(whatsAppMsg);
-    window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(whatsAppMsg)}`,
+      "_blank",
+    );
   };
 
   const prevWeek = () => {
@@ -179,6 +271,11 @@ export default function AdminPrayerSheets() {
     weekStart.toISOString().split("T")[0] ===
     getMondayOfWeek(new Date()).toISOString().split("T")[0];
 
+  const submittedIds = new Set(sheets.map((s) => s.student_id));
+  const notSubmittedCount = allStudents.filter(
+    (s) => !submittedIds.has(s.id),
+  ).length;
+
   const statusCounts = {
     all: sheets.length,
     submitted: sheets.filter((s) => s.status === "submitted").length,
@@ -189,39 +286,89 @@ export default function AdminPrayerSheets() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold">Prayer Sheets</h2>
           <p className="text-muted-foreground">
             Review and verify weekly prayer submissions
           </p>
         </div>
-        {sheets.length > 0 && (
+        <div className="flex gap-2">
           <button
-            onClick={handleWhatsApp}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+            onClick={handleSubmissionListWhatsApp}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
           >
-            <MessageSquare className="h-4 w-4" />
-            Send to WhatsApp
+            <List className="h-4 w-4" />
+            Submission List
           </button>
-        )}
+        </div>
       </div>
 
-      {/* Week Navigation */}
-      <div className="flex items-center justify-between bg-card border border-border rounded-lg px-6 py-3">
-        <button onClick={prevWeek} className="p-2 hover:bg-accent rounded-lg">
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="font-medium">
-          {formatWeekLabel(weekStart.toISOString().split("T")[0])}
-        </span>
-        <button
-          onClick={nextWeek}
-          disabled={isCurrentWeek}
-          className="p-2 hover:bg-accent rounded-lg disabled:opacity-30"
+      {/* Class Filter */}
+      <div className="flex gap-3 items-center flex-wrap">
+        <select
+          value={selectedClass}
+          onChange={(e) => setSelectedClass(e.target.value)}
+          className="px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+          <option value="all">All Prayer Sheet Classes</option>
+          {classes.map((cls) => (
+            <option key={cls.id} value={cls.id}>
+              {cls.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Week Navigation */}
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-2">
+          <button onClick={prevWeek} className="p-1 hover:bg-accent rounded">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-medium">
+            {formatWeekLabel(weekStart.toISOString().split("T")[0])}
+          </span>
+          <button
+            onClick={nextWeek}
+            disabled={isCurrentWeek}
+            className="p-1 hover:bg-accent rounded disabled:opacity-30"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Submission Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+            {sheets.length}
+          </p>
+          <p className="text-xs text-green-600 dark:text-green-500">
+            Submitted
+          </p>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+            {notSubmittedCount}
+          </p>
+          <p className="text-xs text-red-600 dark:text-red-500">
+            Not Submitted
+          </p>
+        </div>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+            {statusCounts.verified}
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-500">Verified</p>
+        </div>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+            {statusCounts.flagged}
+          </p>
+          <p className="text-xs text-yellow-600 dark:text-yellow-500">
+            Flagged
+          </p>
+        </div>
       </div>
 
       {/* Status Filter */}
@@ -266,7 +413,7 @@ export default function AdminPrayerSheets() {
                 className="bg-card border border-border rounded-lg overflow-hidden"
               >
                 {/* Sheet Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center justify-between p-4 border-b border-border flex-wrap gap-2">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
                       <span className="text-primary font-semibold text-sm">
@@ -285,10 +432,10 @@ export default function AdminPrayerSheets() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <div className="text-right">
-                      <p className="text-sm font-medium">{total}/35 prayers</p>
-                      <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden mt-1">
+                      <p className="text-sm font-medium">{total}/35</p>
+                      <div className="h-1.5 w-20 bg-muted rounded-full overflow-hidden mt-1">
                         <div
                           className={`h-full rounded-full ${
                             percentage >= 80
@@ -303,7 +450,7 @@ export default function AdminPrayerSheets() {
                     </div>
 
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
                         sheet.status === "verified"
                           ? "bg-green-100 text-green-800"
                           : sheet.status === "flagged"
@@ -315,41 +462,48 @@ export default function AdminPrayerSheets() {
                         sheet.status.slice(1)}
                     </span>
 
-                    <div className="flex gap-2">
-                      {sheet.status !== "verified" && (
-                        <button
-                          onClick={() => updateStatus(sheet.id, "verified")}
-                          disabled={updating === sheet.id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50"
-                        >
-                          {updating === sheet.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-3 w-3" />
-                          )}
-                          Verify
-                        </button>
-                      )}
-                      {sheet.status !== "flagged" && (
-                        <button
-                          onClick={() => updateStatus(sheet.id, "flagged")}
-                          disabled={updating === sheet.id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 disabled:opacity-50"
-                        >
-                          <Flag className="h-3 w-3" />
-                          Flag
-                        </button>
-                      )}
-                    </div>
+                    {/* WhatsApp individual button */}
+                    <button
+                      onClick={() => handleIndividualWhatsApp(sheet)}
+                      className="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700"
+                    >
+                      <MessageSquare className="h-3 w-3" />
+                      Send
+                    </button>
+
+                    {sheet.status !== "verified" && (
+                      <button
+                        onClick={() => updateStatus(sheet.id, "verified")}
+                        disabled={updating === sheet.id}
+                        className="flex items-center gap-1 px-2 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {updating === sheet.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-3 w-3" />
+                        )}
+                        Verify
+                      </button>
+                    )}
+                    {sheet.status !== "flagged" && (
+                      <button
+                        onClick={() => updateStatus(sheet.id, "flagged")}
+                        disabled={updating === sheet.id}
+                        className="flex items-center gap-1 px-2 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 disabled:opacity-50"
+                      >
+                        <Flag className="h-3 w-3" />
+                        Flag
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Prayer Grid */}
+                {/* Prayer Grid — days as rows */}
                 <div className="p-4 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr>
-                        <th className="text-left py-1 pr-3 text-muted-foreground w-12">
+                        <th className="text-left py-1 pr-3 text-muted-foreground w-10">
                           Day
                         </th>
                         {PRAYER_LABELS.map((p) => (
@@ -413,20 +567,24 @@ export default function AdminPrayerSheets() {
         </div>
       )}
 
-      {/* WhatsApp Message Modal */}
+      {/* WhatsApp Modal */}
       {showWhatsApp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-card border border-border rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              WhatsApp Group Message
+            <h3 className="text-lg font-semibold mb-1">
+              {whatsAppMode === "list"
+                ? "Submission List Message"
+                : `Individual Sheet — ${selectedIndividual?.students?.first_name} ${selectedIndividual?.students?.last_name}`}
             </h3>
             <p className="text-sm text-muted-foreground mb-3">
-              Preview the message before sending to your WhatsApp group:
+              {whatsAppMode === "list"
+                ? "Send this to your WhatsApp group to show who submitted and who hasn't"
+                : "Send this individual student's prayer sheet"}
             </p>
             <textarea
               value={whatsAppMsg}
               onChange={(e) => setWhatsAppMsg(e.target.value)}
-              className="w-full h-64 p-3 text-xs font-mono bg-muted rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full h-56 p-3 text-xs font-mono bg-muted rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex items-center justify-end gap-3 mt-4">
               <button

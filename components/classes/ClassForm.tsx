@@ -30,12 +30,16 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
     schedule_time: classData?.schedule?.time || "",
     schedule_room: classData?.schedule?.room || "",
     is_active: classData?.is_active !== undefined ? classData.is_active : true,
+    prayer_sheets_enabled:
+      classData?.prayer_sheets_enabled !== undefined
+        ? classData.prayer_sheets_enabled
+        : false,
   });
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const value =
       e.target.type === "checkbox"
@@ -73,6 +77,7 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
         academic_year: formData.academic_year,
         schedule: schedule,
         is_active: formData.is_active,
+        prayer_sheets_enabled: formData.prayer_sheets_enabled,
       };
 
       if (isEditing) {
@@ -280,21 +285,44 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
 
       {/* Status */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Status</h3>
-        <label className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            id="is_active"
-            name="is_active"
-            checked={formData.is_active}
-            onChange={handleChange}
-            className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
-          />
-          <span className="text-sm">Class is active</span>
-        </label>
-        <p className="text-xs text-muted-foreground mt-1">
-          Inactive classes won't appear in attendance marking
-        </p>
+        <h3 className="text-lg font-semibold mb-4">Status & Features</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="is_active"
+                name="is_active"
+                checked={formData.is_active}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+              />
+              <span className="text-sm">Class is active</span>
+            </label>
+            <p className="text-xs text-muted-foreground mt-1 ml-7">
+              Inactive classes won't appear in attendance marking
+            </p>
+          </div>
+          <div>
+            <label className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="prayer_sheets_enabled"
+                name="prayer_sheets_enabled"
+                checked={formData.prayer_sheets_enabled}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+              />
+              <span className="text-sm">
+                Enable Prayer Sheets for this class
+              </span>
+            </label>
+            <p className="text-xs text-muted-foreground mt-1 ml-7">
+              Parents in this class will see the Prayer Sheet tab in their
+              portal
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Buttons */}
@@ -313,8 +341,8 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
               ? "Saving..."
               : "Creating..."
             : isEditing
-            ? "Save Changes"
-            : "Create Class"}
+              ? "Save Changes"
+              : "Create Class"}
         </button>
       </div>
     </form>

@@ -230,7 +230,7 @@ export default function ParentDashboard() {
             </div>
           </div>
         </Link>
-{/* removed redundant stat cards */}
+      </div>
 
       {/* My Children Section */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
