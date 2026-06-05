@@ -349,37 +349,37 @@ export default function AdminPrayerSheets() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr>
-                        <th className="text-left py-1 pr-4 text-muted-foreground w-16">
-                          Prayer
+                        <th className="text-left py-1 pr-3 text-muted-foreground w-12">
+                          Day
                         </th>
-                        {DAY_LABELS.map((d) => (
+                        {PRAYER_LABELS.map((p) => (
                           <th
-                            key={d}
-                            className="text-center py-1 px-2 text-muted-foreground"
+                            key={p}
+                            className="text-center py-1 px-1 text-muted-foreground"
                           >
-                            {d}
+                            {p}
                           </th>
                         ))}
-                        <th className="text-center py-1 px-2 text-muted-foreground">
+                        <th className="text-center py-1 px-1 text-muted-foreground">
                           Total
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {PRAYERS.map((prayer, pi) => {
-                        const prayerTotal = DAYS.filter(
-                          (d) => sheet[`${d}_${prayer}`],
+                      {DAYS.map((day, di) => {
+                        const dayTotal = PRAYERS.filter(
+                          (p) => sheet[`${day}_${p}`],
                         ).length;
                         return (
-                          <tr
-                            key={prayer}
-                            className="border-t border-border/50"
-                          >
-                            <td className="py-2 pr-4 font-medium">
-                              {PRAYER_LABELS[pi]}
+                          <tr key={day} className="border-t border-border/50">
+                            <td className="py-1.5 pr-3 font-medium">
+                              {DAY_LABELS[di]}
                             </td>
-                            {DAYS.map((day) => (
-                              <td key={day} className="py-2 px-2 text-center">
+                            {PRAYERS.map((prayer) => (
+                              <td
+                                key={prayer}
+                                className="py-1.5 px-1 text-center"
+                              >
                                 {sheet[`${day}_${prayer}`] ? (
                                   <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
                                 ) : (
@@ -387,8 +387,8 @@ export default function AdminPrayerSheets() {
                                 )}
                               </td>
                             ))}
-                            <td className="py-2 px-2 text-center font-medium">
-                              {prayerTotal}/7
+                            <td className="py-1.5 px-1 text-center font-medium">
+                              {dayTotal}/5
                             </td>
                           </tr>
                         );

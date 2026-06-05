@@ -230,61 +230,7 @@ export default function ParentDashboard() {
             </div>
           </div>
         </Link>
-
-        {/* Active Students - Non-clickable */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Active Students
-              </p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                {/* {students.filter((s) => s.status === "active").length} */}
-                {activeStudents}
-              </p>
-            </div>
-            <div className="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Pending Apps - Clickable
-        <Link href="/parent/applications">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all cursor-pointer group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Pending Apps
-                </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {applications.filter((a) => a.status === "pending").length}
-                </p>
-              </div>
-              <div className="h-12 w-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Calendar className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-            </div>
-          </div>
-        </Link> */}
-
-        {/* Recent Activity - Non-clickable */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Recent Activity
-              </p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                {students.filter((s) => s.status === "active").length}
-              </p>
-            </div>
-            <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-              <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-        </div>
-      </div>
+{/* removed redundant stat cards */}
 
       {/* My Children Section */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -351,45 +297,7 @@ export default function ParentDashboard() {
                   </div>
                 </div>
 
-                {/* Quick Info Cards */}
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-                    <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs mb-1">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Attendance
-                    </div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      View →
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-                    <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs mb-1">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      Grades
-                    </div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      View →
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-                    <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs mb-1">
-                      <Book className="h-3 w-3 mr-1" />
-                      Memorization
-                    </div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      View →
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
-                    <div className="flex items-center text-slate-600 dark:text-slate-400 text-xs mb-1">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      Fees
-                    </div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      View →
-                    </p>
-                  </div>
-                </div>
+                {/* quick links removed - use tabs on student detail page */}
               </Link>
             ))}
           </div>

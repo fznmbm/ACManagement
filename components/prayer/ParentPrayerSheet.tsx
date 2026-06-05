@@ -343,37 +343,37 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th className="text-left py-2 pr-4 text-muted-foreground font-medium w-20">
-                  Prayer
+        <table className="w-full text-sm">
+          <thead>
+            <tr>
+              <th className="text-left py-2 pr-3 text-muted-foreground font-medium w-16">
+                Day
+              </th>
+              {PRAYER_LABELS.map((p) => (
+                <th
+                  key={p}
+                  className="text-center py-2 px-1 text-muted-foreground font-medium text-xs"
+                >
+                  {p}
                 </th>
-                {DAY_LABELS.map((d) => (
-                  <th
-                    key={d}
-                    className="text-center py-2 px-2 text-muted-foreground font-medium"
-                  >
-                    {d}
-                  </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {DAYS.map((day, di) => (
+              <tr key={day} className="border-t border-border">
+                <td className="py-2 pr-3 font-medium text-sm">
+                  {DAY_LABELS[di]}
+                </td>
+                {PRAYERS.map((prayer) => (
+                  <td key={prayer} className="py-2 px-1 text-center">
+                    {renderCell(day, prayer)}
+                  </td>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {PRAYERS.map((prayer, pi) => (
-                <tr key={prayer} className="border-t border-border">
-                  <td className="py-3 pr-4 font-medium">{PRAYER_LABELS[pi]}</td>
-                  {DAYS.map((day) => (
-                    <td key={day} className="py-3 px-2 text-center">
-                      {renderCell(day, prayer)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       )}
 
       {/* Save Button */}

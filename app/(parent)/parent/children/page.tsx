@@ -107,7 +107,7 @@ export default function MyChildrenPage() {
               level
             )
           )
-        `
+        `,
         )
         .eq("parent_user_id", user.id)
         .order("is_primary", { ascending: false });
@@ -125,7 +125,7 @@ export default function MyChildrenPage() {
             link.student_id,
             link.can_view_attendance,
             link.can_view_grades,
-            link.can_view_financial
+            link.can_view_financial,
           );
           statsMap.set(link.student_id, studentStats);
         }
@@ -143,7 +143,7 @@ export default function MyChildrenPage() {
     studentId: string,
     canViewAttendance: boolean,
     canViewGrades: boolean,
-    canViewFinancial: boolean
+    canViewFinancial: boolean,
   ): Promise<StudentStats> => {
     const defaultStats: StudentStats = {
       attendance: { total: 0, present: 0, rate: 0 },
@@ -161,7 +161,7 @@ export default function MyChildrenPage() {
       if (attendanceData) {
         const total = attendanceData.length;
         const present = attendanceData.filter(
-          (a) => a.status === "present"
+          (a) => a.status === "present",
         ).length;
         const rate = total > 0 ? Math.round((present / total) * 100) : 0;
         defaultStats.attendance = { total, present, rate };
@@ -178,7 +178,7 @@ export default function MyChildrenPage() {
       if (gradesData && gradesData.length > 0) {
         const average = Math.round(
           gradesData.reduce((sum, g) => sum + g.percentage, 0) /
-            gradesData.length
+            gradesData.length,
         );
         defaultStats.grades = {
           average,
@@ -202,7 +202,7 @@ export default function MyChildrenPage() {
       if (finesData) {
         const totalFines = finesData.length;
         const unpaidFines = finesData.filter(
-          (f) => f.status === "pending"
+          (f) => f.status === "pending",
         ).length;
         defaultStats.financial.totalFines = totalFines;
         defaultStats.financial.unpaidFines = unpaidFines;
@@ -210,7 +210,7 @@ export default function MyChildrenPage() {
 
       if (feesData) {
         const unpaidFees = feesData.filter(
-          (f) => f.amount_due > f.amount_paid
+          (f) => f.amount_due > f.amount_paid,
         ).length;
         defaultStats.financial.unpaidFees = unpaidFees;
       }
@@ -375,7 +375,7 @@ export default function MyChildrenPage() {
                     <div className="flex items-center justify-between">
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                          student.status
+                          student.status,
                         )}`}
                       >
                         {student.status.toUpperCase()}
@@ -446,34 +446,7 @@ export default function MyChildrenPage() {
                       <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </button>
 
-                    {/* Permissions Info */}
-                    <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                        Access Permissions:
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {link.can_view_attendance && (
-                          <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                            Attendance
-                          </span>
-                        )}
-                        {link.can_view_grades && (
-                          <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                            Grades
-                          </span>
-                        )}
-                        {link.can_view_financial && (
-                          <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                            Financial
-                          </span>
-                        )}
-                        {link.can_receive_notifications && (
-                          <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                            Notifications
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    {/* permissions removed - internal admin data */}
                   </div>
                 </div>
               );
@@ -481,25 +454,7 @@ export default function MyChildrenPage() {
           </div>
         )}
 
-        {/* Info Box */}
-        {children.length > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">
-                  About Access Permissions
-                </h4>
-                <p className="text-sm text-blue-700 dark:text-blue-400">
-                  Your access permissions are set by the school administration.
-                  If you need access to additional information, please contact
-                  the school office. The "Primary" badge indicates your main
-                  contact for that child.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* info box removed */}
       </div>
     </div>
   );
