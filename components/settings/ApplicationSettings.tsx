@@ -178,35 +178,55 @@ export default function ApplicationSettings() {
       </div>
 
       {/* Active Status Banner */}
-      {settings.is_active ? (
-        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <div>
-              <p className="font-semibold text-green-800 dark:text-green-400">
-                Applications are currently OPEN
-              </p>
-              <p className="text-sm text-green-700 dark:text-green-500">
-                Students can submit applications for {settings.academic_year}
-              </p>
+      {(() => {
+        const now = new Date();
+        const openDate = settings.application_open_date
+          ? new Date(settings.application_open_date)
+          : null;
+        const closeDate = settings.application_close_date
+          ? new Date(settings.application_close_date)
+          : null;
+        const isActuallyOpen =
+          settings.is_active &&
+          openDate &&
+          closeDate &&
+          now >= openDate &&
+          now <= closeDate;
+
+        return isActuallyOpen ? (
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="font-semibold text-green-800 dark:text-green-400">
+                  Applications are currently OPEN
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-500">
+                  Students can submit applications for {settings.academic_year}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-600" />
-            <div>
-              <p className="font-semibold text-orange-800 dark:text-orange-400">
-                Applications are currently CLOSED
-              </p>
-              <p className="text-sm text-orange-700 dark:text-orange-500">
-                Activate settings below to open applications
-              </p>
+        ) : (
+          <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              <div>
+                <p className="font-semibold text-orange-800 dark:text-orange-400">
+                  Applications are currently CLOSED
+                </p>
+                <p className="text-sm text-orange-700 dark:text-orange-500">
+                  {settings.is_active && closeDate && new Date() > closeDate
+                    ? `Application period ended on ${closeDate.toLocaleDateString("en-GB")}`
+                    : settings.is_active && openDate && new Date() < openDate
+                      ? `Applications open on ${openDate.toLocaleDateString("en-GB")}`
+                      : "Activate settings below to open applications"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Settings Form */}
       <div className="space-y-6">
