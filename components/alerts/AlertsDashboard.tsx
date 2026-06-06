@@ -86,6 +86,15 @@ const EVENT_CONFIG = {
     label: "Certificate Ready",
     priority: 5,
   },
+  fine_issued: {
+    icon: AlertCircle,
+    color: "text-red-600 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-900/20",
+    border: "border-red-200 dark:border-red-800",
+    badge: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+    label: "Fine Issued",
+    priority: 2,
+  },
 };
 
 const generateWhatsAppMessage = (event: StudentEvent): string => {
@@ -108,6 +117,9 @@ const generateWhatsAppMessage = (event: StudentEvent): string => {
     case "certificate_ready":
       return `Assalamu Alaikum ${s.parent_name},\n\nAlhamdulillah! We are pleased to inform you that ${name} has successfully completed ${metadata.subject_name} with an average of ${metadata.average_percentage}%.\n\nA certificate will be awarded at the next class. MashaAllah, well done to ${s.first_name}!\n\nJazakAllah Khair,\nAl Hikmah Institute`;
 
+    case "fine_issued":
+      return `Assalamu Alaikum ${s.parent_name},\n\nThis is to inform you that a fine of £${Number(metadata.amount).toFixed(2)} has been issued to ${name} for: ${metadata.reason}.\n\nPlease arrange payment at your earliest convenience. You can view fine details on the parent portal.\n\nJazakAllah Khair,\nAl Hikmah Institute`;
+
     default:
       return `Assalamu Alaikum ${s.parent_name},\n\nThis is Al Hikmah Institute Crawley regarding ${name}.\n\nJazakAllah Khair`;
   }
@@ -126,6 +138,8 @@ const getEventSummary = (event: StudentEvent): string => {
       return `Prayer sheet not submitted`;
     case "certificate_ready":
       return `${metadata.subject_name} — avg ${metadata.average_percentage}%`;
+    case "fine_issued":
+      return `£${Number(metadata.amount).toFixed(2)} — ${metadata.reason}`;
     default:
       return "Needs attention";
   }
@@ -294,7 +308,7 @@ export default function AlertsDashboard({ compact = false }: Props) {
       : events.filter((e) => e.event_type === filterType);
 
   const urgentEvents = filteredEvents.filter((e) =>
-    ["attendance_low", "fee_overdue"].includes(e.event_type),
+    ["attendance_low", "fee_overdue", "fine_issued"].includes(e.event_type),
   );
   const attentionEvents = filteredEvents.filter((e) =>
     ["grade_low", "prayer_missing"].includes(e.event_type),
@@ -313,6 +327,7 @@ export default function AlertsDashboard({ compact = false }: Props) {
     certificate_ready: events.filter(
       (e) => e.event_type === "certificate_ready",
     ).length,
+    fine_issued: events.filter((e) => e.event_type === "fine_issued").length,
   };
 
   const renderEvent = (event: StudentEvent) => {
