@@ -127,6 +127,23 @@ export default function Header({ profile }: HeaderProps) {
     setAlertCount(count || 0);
   };
 
+  const clearAllAlerts = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await supabase
+      .from("student_events")
+      .update({
+        status: "dismissed",
+        actioned_at: new Date().toISOString(),
+        actioned_by: user?.id,
+      })
+      .eq("status", "active");
+    setAlerts([]);
+    setAlertCount(0);
+    setShowAlerts(false);
+  };
+
   const dismissAlert = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const {
@@ -221,13 +238,23 @@ export default function Header({ profile }: HeaderProps) {
                     </span>
                   )}
                 </h3>
-                <Link
-                  href="/alerts"
-                  onClick={() => setShowAlerts(false)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  View all →
-                </Link>
+                <div className="flex items-center gap-3">
+                  {alertCount > 0 && (
+                    <button
+                      onClick={clearAllAlerts}
+                      className="text-xs text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                  <Link
+                    href="/alerts"
+                    onClick={() => setShowAlerts(false)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    View all →
+                  </Link>
+                </div>
               </div>
 
               {/* Alert List */}
