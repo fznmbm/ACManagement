@@ -25,6 +25,8 @@ interface StudentEvent {
   metadata: Record<string, any>;
   status: string;
   triggered_at: string;
+  actioned_at?: string | null;
+  actioned_by?: string | null;
   students: {
     first_name: string;
     last_name: string;
