@@ -68,7 +68,7 @@ export default function UserManagement({
 
       // Update local state
       setUsers(
-        users.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+        users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
       );
       router.refresh();
     } catch (error) {
@@ -97,8 +97,8 @@ export default function UserManagement({
       // Update local state
       setUsers(
         users.map((u) =>
-          u.id === userId ? { ...u, is_active: !currentStatus } : u
-        )
+          u.id === userId ? { ...u, is_active: !currentStatus } : u,
+        ),
       );
       router.refresh();
     } catch (error) {
@@ -117,7 +117,7 @@ export default function UserManagement({
 
     if (
       !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
+        "Are you sure you want to delete this user? This action cannot be undone.",
       )
     ) {
       return;
@@ -173,7 +173,7 @@ export default function UserManagement({
         <div>
           <h3 className="text-lg font-semibold">User Management</h3>
           <p className="text-sm text-muted-foreground">
-            Manage system users and their permissions
+            Manage admin and teacher accounts
           </p>
         </div>
         <button
@@ -279,7 +279,7 @@ export default function UserManagement({
                     {user.id === currentUserId ? (
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full inline-flex items-center space-x-1 ${getRoleBadgeColor(
-                          user.role
+                          user.role,
                         )}`}
                       >
                         {getRoleIcon(user.role)}

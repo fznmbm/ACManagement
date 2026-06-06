@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Building2, Calendar, Receipt, Shield } from "lucide-react";
 import AcademicSettings from "./AcademicSettings";
+import ApplicationSettings from "./ApplicationSettings";
 import CentreSettings from "./CentreSettings";
 import FeeSettings from "./FeeSettings";
 import FineSettings from "./FineSettings";
@@ -67,7 +68,24 @@ export default function SettingsTabs({
         )}
 
         {activeTab === "academic" && (
-          <AcademicSettings settings={initialSettings} />
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-1">Academic Settings</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Configure academic year and grading preferences
+              </p>
+              <AcademicSettings settings={initialSettings} />
+            </div>
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-semibold mb-1">
+                Application Settings
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Configure enrollment deadlines and application form settings
+              </p>
+              <ApplicationSettings />
+            </div>
+          </div>
         )}
 
         {activeTab === "financial" && (
@@ -101,10 +119,6 @@ export default function SettingsTabs({
               <PasswordSettings />
             </div>
             <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold mb-1">User Management</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Manage admin and teacher accounts
-              </p>
               <UserManagement users={users} currentUserId={currentUserId} />
             </div>
             <div className="border-t pt-8">
