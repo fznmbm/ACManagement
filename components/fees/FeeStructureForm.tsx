@@ -18,7 +18,7 @@ export default function FeeStructureForm({
     name: "",
     description: "",
     amount: "",
-    frequency: "monthly",
+    frequency: "quarterly",
     use_custom_quarters: false,
     is_active: true,
   });
@@ -34,20 +34,32 @@ export default function FeeStructureForm({
   const supabase = createClient();
 
   const frequencyOptions = [
-    { value: "monthly", label: "Monthly", description: "Charged every month" },
     {
       value: "quarterly",
       label: "Quarterly",
-      description: "Charged every quarter",
+      description: "Charged every quarter (3 months)",
     },
-    { value: "annual", label: "Annual", description: "Charged once per year" },
-    { value: "one_time", label: "One-time", description: "Single payment" },
+    {
+      value: "biannual",
+      label: "6-Monthly",
+      description: "Charged every 6 months",
+    },
+    {
+      value: "annually",
+      label: "Annual",
+      description: "Charged once per year",
+    },
+    {
+      value: "one_time",
+      label: "One-off",
+      description: "Single one-time payment",
+    },
   ];
 
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -78,7 +90,7 @@ export default function FeeStructureForm({
         quarters.length === 0
       ) {
         throw new Error(
-          "No active quarterly periods configured. Please set up quarters in Fee Settings first."
+          "No active quarterly periods configured. Please set up quarters in Fee Settings first.",
         );
       }
 
@@ -88,7 +100,8 @@ export default function FeeStructureForm({
         amount: parseFloat(formData.amount),
         frequency: formData.frequency,
         use_custom_quarters:
-          formData.frequency === "quarterly"
+          formData.frequency === "quarterly" ||
+          formData.frequency === "biannual"
             ? formData.use_custom_quarters
             : false,
         is_active: formData.is_active,
@@ -217,7 +230,8 @@ export default function FeeStructureForm({
             </div>
 
             {/* Custom Quarterly Periods Option */}
-            {formData.frequency === "quarterly" && (
+            {(formData.frequency === "quarterly" ||
+              formData.frequency === "biannual") && (
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <h4 className="font-medium mb-3 flex items-center space-x-2">
                   <Calendar className="h-4 w-4" />

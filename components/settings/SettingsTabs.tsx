@@ -99,10 +99,6 @@ export default function SettingsTabs({
               <FeeSettings />
             </div>
             <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold mb-1">Fine Settings</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Configure fine types and default amounts
-              </p>
               <FineSettings />
             </div>
           </div>

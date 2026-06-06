@@ -161,21 +161,7 @@ export default function ApplicationSettings() {
 
   return (
     <div className="space-y-6 pb-24">
-      {/* Header */}
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-              Application Management
-            </h3>
-            <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
-              Configure application periods and requirements. Applications are
-              automatically managed based on these settings.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Header removed - title shown in SettingsTabs */}
 
       {/* Active Status Banner */}
       {(() => {
