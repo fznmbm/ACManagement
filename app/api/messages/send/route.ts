@@ -1,9 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const dynamic = "force-dynamic";
 
 // Helper: Format UK phone for WhatsApp (07123456789 -> 447123456789)
@@ -21,7 +17,7 @@ function formatPhoneForWhatsApp(phone: string): string {
 // Helper: Replace template variables
 function replaceVariables(
   text: string,
-  variables: Record<string, any>
+  variables: Record<string, any>,
 ): string {
   let result = text;
   Object.keys(variables).forEach((key) => {
@@ -69,7 +65,7 @@ export async function POST(request: Request) {
     if (!messageType || !message || !deliveryMethod) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -80,7 +76,7 @@ export async function POST(request: Request) {
       if (!studentId || !parentContactType) {
         return NextResponse.json(
           { error: "Student ID and parent contact type required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -88,7 +84,7 @@ export async function POST(request: Request) {
       const { data: student, error: studentError } = await supabase
         .from("students")
         .select(
-          "first_name, last_name, parent_name, parent_email, parent_phone, parent_phone_secondary, class_id"
+          "first_name, last_name, parent_name, parent_email, parent_phone, parent_phone_secondary, class_id",
         )
         .eq("id", studentId)
         .single();
@@ -96,7 +92,7 @@ export async function POST(request: Request) {
       if (studentError || !student) {
         return NextResponse.json(
           { error: "Student not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -130,105 +126,12 @@ export async function POST(request: Request) {
           phoneNumbers.push(student.parent_phone_secondary);
       }
 
-      // EMAIL DELIVERY
+      // Email delivery removed — use WhatsApp for parent communication
       if (deliveryMethod === "email") {
-        if (!parentEmail) {
-          return NextResponse.json(
-            { error: "Parent email not available" },
-            { status: 400 }
-          );
-        }
-
-        try {
-          // Replace variables
-          const variables = {
-            student_name: `${student.first_name} ${student.last_name}`,
-            parent_name: parentName,
-            teacher_name: profile?.full_name || "Teacher",
-            class_name: className,
-            ...(body.customVariables || {}), // ✅ ADD THIS LINE - Merge custom variables
-          };
-
-          const processedMessage = replaceVariables(message, variables);
-          const processedSubject = replaceVariables(
-            subject || "Message from Teacher",
-            variables
-          );
-
-          // Send email via Resend
-          await resend.emails.send({
-            from: "Al Hikmah Institute <noreply@alhikmainstitute.org>",
-            to: parentEmail,
-            subject: processedSubject,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
-                  <h1 style="margin: 0;">Al Hikmah Institute</h1>
-                </div>
-                <div style="padding: 30px; background-color: #f9fafb;">
-                  <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${processedMessage}</pre>
-                  </div>
-                  <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;">
-                    <p>This is an automated message from Al Hikmah Institute</p>
-                  </div>
-                </div>
-              </div>
-            `,
-          });
-
-          // Save message record
-          const { data: messageRecord, error: messageError } = await supabase
-            .from("messages")
-            .insert({
-              sender_id: user.id,
-              message_type: messageType,
-              student_id: studentId,
-              parent_contact_type: parentContactType,
-              parent_name: parentName,
-              parent_phone: phoneNumbers.join(", "),
-              parent_email: parentEmail,
-              subject: processedSubject,
-              message: processedMessage,
-              template_used: templateUsed,
-              delivery_method: deliveryMethod,
-              email_sent: true,
-              email_sent_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-          if (messageError) throw messageError;
-
-          return NextResponse.json({
-            success: true,
-            method: "email",
-            message: "Email sent successfully",
-            messageId: messageRecord.id,
-          });
-        } catch (emailError: any) {
-          // Save failed message record
-          await supabase.from("messages").insert({
-            sender_id: user.id,
-            message_type: messageType,
-            student_id: studentId,
-            parent_contact_type: parentContactType,
-            parent_name: parentName,
-            parent_phone: phoneNumbers.join(", "),
-            parent_email: parentEmail,
-            subject: subject,
-            message: message,
-            template_used: templateUsed,
-            delivery_method: deliveryMethod,
-            email_sent: false,
-            email_error: emailError.message,
-          });
-
-          return NextResponse.json(
-            { error: "Failed to send email: " + emailError.message },
-            { status: 500 }
-          );
-        }
+        return NextResponse.json(
+          { error: "Email delivery is not supported. Please use WhatsApp." },
+          { status: 400 },
+        );
       }
 
       // WHATSAPP DELIVERY
@@ -236,7 +139,7 @@ export async function POST(request: Request) {
         if (phoneNumbers.length === 0) {
           return NextResponse.json(
             { error: "No parent phone numbers available" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -297,7 +200,7 @@ export async function POST(request: Request) {
       if (!classId) {
         return NextResponse.json(
           { error: "Class ID required for class messages" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -341,127 +244,27 @@ export async function POST(request: Request) {
         });
       }
 
-      // EMAIL - Send to all parents in class
+      // Email to class removed — use WhatsApp group for class communication
       if (deliveryMethod === "email") {
-        // Get all students in class with parent emails
-        const { data: students, error: studentsError } = await supabase
-          .from("students")
-          .select("id, first_name, last_name, parent_name, parent_email")
-          .eq("class_id", classId)
-          .eq("status", "active");
-
-        if (studentsError) throw studentsError;
-
-        if (!students || students.length === 0) {
-          return NextResponse.json(
-            { error: "No active students found in this class" },
-            { status: 404 }
-          );
-        }
-
-        // Filter students with valid email addresses
-        const studentsWithEmail = students.filter((s) => s.parent_email);
-
-        if (studentsWithEmail.length === 0) {
-          return NextResponse.json(
-            { error: "No parent email addresses available for this class" },
-            { status: 400 }
-          );
-        }
-
-        let successCount = 0;
-        let failCount = 0;
-
-        // Send email to each parent
-        for (const student of studentsWithEmail) {
-          try {
-            // Replace variables for each student
-            const variables = {
-              student_name: `${student.first_name} ${student.last_name}`,
-              parent_name: student.parent_name,
-              teacher_name: profile?.full_name || "Teacher",
-              class_name: classData.name,
-            };
-
-            const processedMessage = replaceVariables(message, variables);
-            const processedSubject = replaceVariables(
-              subject || `Class Message - ${classData.name}`,
-              variables
-            );
-
-            await resend.emails.send({
-              from: "Al Hikmah Institute <noreply@alhikmainstitute.org>",
-              to: student.parent_email,
-              subject: processedSubject,
-              html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <div style="background-color: #22c55e; color: white; padding: 20px; text-align: center;">
-                    <h1 style="margin: 0;">Al Hikmah Institute</h1>
-                    <p style="margin: 5px 0 0 0; opacity: 0.9;">${classData.name}</p>
-                  </div>
-                  <div style="padding: 30px; background-color: #f9fafb;">
-                    <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                      <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; margin: 0;">${processedMessage}</pre>
-                    </div>
-                    <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;">
-                      <p>This is an automated message from Al Hikmah Institute</p>
-                    </div>
-                  </div>
-                </div>
-              `,
-            });
-            successCount++;
-          } catch (error) {
-            console.error(
-              `Failed to send email to ${student.parent_email}:`,
-              error
-            );
-            failCount++;
-          }
-        }
-
-        // Save message record
-        const { data: messageRecord, error: messageError } = await supabase
-          .from("messages")
-          .insert({
-            sender_id: user.id,
-            message_type: messageType,
-            class_id: classId,
-            subject: subject,
-            message: message,
-            template_used: templateUsed,
-            delivery_method: deliveryMethod,
-            email_sent: successCount > 0,
-            email_sent_at: successCount > 0 ? new Date().toISOString() : null,
-            email_error:
-              failCount > 0 ? `${failCount} emails failed to send` : null,
-          })
-          .select()
-          .single();
-
-        if (messageError) throw messageError;
-
-        return NextResponse.json({
-          success: true,
-          method: "email",
-          message: `Emails sent: ${successCount} succeeded, ${failCount} failed`,
-          successCount,
-          failCount,
-          totalStudents: studentsWithEmail.length,
-          messageId: messageRecord.id,
-        });
+        return NextResponse.json(
+          {
+            error:
+              "Email delivery is not supported. Please use WhatsApp group.",
+          },
+          { status: 400 },
+        );
       }
     }
 
     return NextResponse.json(
       { error: "Invalid message type or delivery method" },
-      { status: 400 }
+      { status: 400 },
     );
   } catch (error: any) {
     console.error("Send Message API Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to send message" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

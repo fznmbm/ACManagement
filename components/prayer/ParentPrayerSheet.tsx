@@ -67,6 +67,10 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [parentUserId, setParentUserId] = useState<string | null>(null);
   const [prayerEnabled, setPrayerEnabled] = useState<boolean | null>(null);
+  const [streak, setStreak] = useState<{ current: number; best: number }>({
+    current: 0,
+    best: 0,
+  });
 
   useEffect(() => {
     const getUser = async () => {
@@ -104,6 +108,56 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     if (!parentUserId) return;
     fetchSheet();
   }, [weekStart, parentUserId]);
+
+  useEffect(() => {
+    if (!parentUserId) return;
+    fetchStreak();
+  }, [parentUserId, studentId]);
+
+  const fetchStreak = async () => {
+    const { data } = await supabase
+      .from("prayer_sheets")
+      .select("week_start_date, total_prayers, status")
+      .eq("student_id", studentId)
+      .in("status", ["submitted", "verified"])
+      .order("week_start_date", { ascending: false })
+      .limit(52); // Last year of weeks
+
+    if (!data || data.length === 0) return;
+
+    // Calculate current streak — consecutive perfect weeks (35/35) going back
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let tempStreak = 0;
+
+    // Sort descending by date
+    const sorted = [...data].sort(
+      (a, b) =>
+        new Date(b.week_start_date).getTime() -
+        new Date(a.week_start_date).getTime(),
+    );
+
+    // Current streak: consecutive perfect weeks from most recent
+    for (let i = 0; i < sorted.length; i++) {
+      if ((sorted[i].total_prayers ?? 0) === 35) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Best streak: longest run of perfect weeks
+    for (const sheet of sorted) {
+      if ((sheet.total_prayers ?? 0) === 35) {
+        tempStreak++;
+        bestStreak = Math.max(bestStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    setStreak({ current: currentStreak, best: bestStreak });
+  };
 
   const fetchSheet = async () => {
     setLoading(true);
@@ -360,6 +414,28 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
+
+      {/* Streak */}
+      {(streak.current > 0 || streak.best > 0) && (
+        <div className="flex items-center gap-3 flex-wrap">
+          {streak.current > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-full">
+              <span className="text-lg">🔥</span>
+              <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                {streak.current} week{streak.current > 1 ? "s" : ""} streak
+              </span>
+            </div>
+          )}
+          {streak.best > 1 && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-full">
+              <span className="text-lg">⭐</span>
+              <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                Best: {streak.best} weeks
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="space-y-1">
