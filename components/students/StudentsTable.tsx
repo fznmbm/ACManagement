@@ -33,11 +33,17 @@ interface Student {
 interface StudentsTableProps {
   students: Student[];
   onStudentUpdated: () => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export default function StudentsTable({
   students,
   onStudentUpdated,
+  selectedIds = new Set(),
+  onToggleSelect,
+  onToggleSelectAll,
 }: StudentsTableProps) {
   const { getStudentFees, refreshFees } = useFees();
   const { getStudentFines, refreshFines } = useFines();
@@ -140,6 +146,19 @@ export default function StudentsTable({
         <table className="w-full">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
+              <th className="px-4 py-3 w-10">
+                {onToggleSelectAll && (
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedIds.size === students.length &&
+                      students.length > 0
+                    }
+                    onChange={onToggleSelectAll}
+                    className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+                  />
+                )}
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Student #
               </th>
@@ -170,9 +189,18 @@ export default function StudentsTable({
             {students.map((student) => (
               <tr
                 key={student.id}
-                // className="hover:bg-muted/30 transition-colors"
-                className="table-row-hover"
+                className={`table-row-hover ${selectedIds.has(student.id) ? "bg-primary/5" : ""}`}
               >
+                <td className="px-4 py-4 w-10">
+                  {onToggleSelect && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(student.id)}
+                      onChange={() => onToggleSelect(student.id)}
+                      className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+                    />
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm font-mono text-muted-foreground">
                     {student.student_number}

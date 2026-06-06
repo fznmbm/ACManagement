@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { LogOut, Bell } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import GlobalSearch from "@/components/search/GlobalSearch";
 
 interface HeaderProps {
   profile: {
@@ -57,6 +58,7 @@ export default function Header({ profile }: HeaderProps) {
 
       {/* Actions */}
       <div className="flex items-center space-x-4">
+        <GlobalSearch />
         <ThemeToggle />
         {/* Notifications (placeholder for future) */}
         <button

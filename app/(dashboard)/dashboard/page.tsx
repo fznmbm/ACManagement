@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
+import AlertsDashboard from "@/components/alerts/AlertsDashboard";
 
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import RecentActivity from "@/components/dashboard/RecentActivity";
@@ -255,6 +256,9 @@ export default async function DashboardPage() {
 
         {/* Right Column - 1/3 width - Sidebar */}
         <div className="space-y-6">
+          {/* Alert Centre */}
+          <AlertsDashboard compact={true} />
+
           {/* Quick Actions */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { X, Receipt, CheckCircle, AlertTriangle } from "lucide-react";
+import { X, Receipt, CheckCircle, Printer } from "lucide-react";
 import { FeeInvoice, StudentData } from "@/types/fees";
 
 interface FeePaymentModalProps {
@@ -22,19 +22,99 @@ export default function FeePaymentModal({
 }: FeePaymentModalProps) {
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paymentReference, setPaymentReference] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [receiptData, setReceiptData] = useState<{
+    studentName: string;
+    studentNumber: string;
+    amount: number;
+    method: string;
+    reference: string;
+    date: string;
+    invoices: { number: string; description: string; amount: number }[];
+  } | null>(null);
 
   const supabase = createClient();
+
+  const printReceipt = (data: typeof receiptData) => {
+    if (!data) return;
+    const win = window.open("", "_blank", "width=600,height=700");
+    if (!win) return;
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Payment Receipt</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 500px; margin: 0 auto; color: #111; }
+          .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 16px; margin-bottom: 20px; }
+          .header h1 { color: #22c55e; font-size: 24px; margin: 0; }
+          .header p { color: #666; margin: 4px 0; font-size: 13px; }
+          .receipt-title { text-align: center; font-size: 18px; font-weight: bold; margin: 16px 0; letter-spacing: 2px; color: #333; }
+          .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+          .row.border-top { border-top: 1px solid #eee; margin-top: 8px; padding-top: 12px; }
+          .label { color: #666; }
+          .value { font-weight: 500; }
+          .total-row { display: flex; justify-content: space-between; padding: 12px 0; font-size: 18px; font-weight: bold; border-top: 2px solid #22c55e; margin-top: 8px; }
+          .total-row .amount { color: #22c55e; }
+          .invoices { background: #f9f9f9; border-radius: 6px; padding: 12px; margin: 16px 0; }
+          .invoice-item { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+          .footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 12px; color: #999; }
+          @media print { button { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Al Hikmah Institute Crawley</h1>
+          <p>Payment Receipt</p>
+        </div>
+        <div class="receipt-title">OFFICIAL RECEIPT</div>
+        <div class="row"><span class="label">Receipt Date</span><span class="value">${data.date}</span></div>
+        <div class="row"><span class="label">Student Name</span><span class="value">${data.studentName}</span></div>
+        <div class="row"><span class="label">Student Number</span><span class="value">${data.studentNumber}</span></div>
+        <div class="row"><span class="label">Payment Method</span><span class="value">${data.method.replace("_", " ").toUpperCase()}</span></div>
+        ${data.reference ? `<div class="row"><span class="label">Reference</span><span class="value">${data.reference}</span></div>` : ""}
+        <div class="invoices">
+          <div style="font-size:12px;font-weight:bold;margin-bottom:8px;color:#555;">INVOICES PAID</div>
+          ${data.invoices
+            .map(
+              (inv) => `
+            <div class="invoice-item">
+              <span>${inv.number} — ${inv.description}</span>
+              <span>£${inv.amount.toFixed(2)}</span>
+            </div>
+          `,
+            )
+            .join("")}
+        </div>
+        <div class="total-row">
+          <span>Total Paid</span>
+          <span class="amount">£${data.amount.toFixed(2)}</span>
+        </div>
+        <div class="footer">
+          <p>Thank you for your payment</p>
+          <p>Al Hikmah Institute Crawley · info@al-hikmah.org</p>
+          <p>Generated on ${new Date().toLocaleString("en-GB")}</p>
+        </div>
+        <br/>
+        <button onclick="window.print()" style="display:block;margin:0 auto;padding:10px 24px;background:#22c55e;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer;">
+          🖨️ Print Receipt
+        </button>
+      </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+  };
 
   if (!isOpen) return null;
 
   const outstandingInvoices = invoices.filter(
-    (invoice) => invoice !== undefined
+    (invoice) => invoice !== undefined,
   );
 
   const calculateTotal = () => {
@@ -137,13 +217,30 @@ export default function FeePaymentModal({
 
       await Promise.all(paymentPromises);
 
-      alert(
-        `Successfully recorded £${totalAmount.toFixed(2)} payment from ${
-          student.first_name
-        } ${student.last_name}`
-      );
+      // Build receipt data
+      const receipt = {
+        studentName: `${student.first_name} ${student.last_name}`,
+        studentNumber: student.student_number,
+        amount: totalAmount,
+        method: paymentMethod,
+        reference: paymentReference,
+        date: new Date().toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+        invoices: selectedInvoices.map((id) => {
+          const inv = outstandingInvoices.find((i) => i.id === id);
+          return {
+            number: inv?.invoice_number || id,
+            description: inv?.fee_structures?.name || "Fee Payment",
+            amount: parseFloat(paymentAmounts[id] || "0"),
+          };
+        }),
+      };
+
+      setReceiptData(receipt);
       onSuccess?.();
-      onClose();
     } catch (error) {
       console.error("Error processing payments:", error);
       alert("Failed to process payments");
@@ -244,7 +341,7 @@ export default function FeePaymentModal({
                               <p className="text-xs text-muted-foreground">
                                 Due:{" "}
                                 {new Date(
-                                  invoice.due_date
+                                  invoice.due_date,
                                 ).toLocaleDateString()}
                               </p>
                             </div>
@@ -273,7 +370,7 @@ export default function FeePaymentModal({
                               onChange={(e) =>
                                 handlePaymentAmountChange(
                                   invoice.id,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-32 px-3 py-1 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
@@ -354,27 +451,62 @@ export default function FeePaymentModal({
           )}
         </div>
 
-        {/* Footer */}
-        {outstandingInvoices.length > 0 && selectedInvoices.length > 0 && (
-          <div className="flex items-center justify-end space-x-3 p-6 border-t border-border bg-muted/30">
-            <button onClick={onClose} className="btn-outline">
-              Cancel
-            </button>
-            <button
-              onClick={handleProcessPayments}
-              disabled={
-                loading ||
-                selectedInvoices.length === 0 ||
-                calculateTotal() <= 0
-              }
-              className="btn-primary disabled:opacity-50"
-            >
-              {loading
-                ? "Processing..."
-                : `Record Payment £${calculateTotal().toFixed(2)}`}
-            </button>
+        {/* Receipt prompt after payment */}
+        {receiptData && (
+          <div className="p-6 border-t border-border bg-green-50 dark:bg-green-900/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-sm font-medium text-green-800 dark:text-green-400">
+                  Payment of £{receiptData.amount.toFixed(2)} recorded
+                  successfully
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => printReceipt(receiptData)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                >
+                  <Printer className="h-4 w-4" />
+                  Print Receipt
+                </button>
+                <button
+                  onClick={() => {
+                    setReceiptData(null);
+                    onClose();
+                  }}
+                  className="btn-outline text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Footer */}
+        {outstandingInvoices.length > 0 &&
+          selectedInvoices.length > 0 &&
+          !receiptData && (
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-border bg-muted/30">
+              <button onClick={onClose} className="btn-outline">
+                Cancel
+              </button>
+              <button
+                onClick={handleProcessPayments}
+                disabled={
+                  loading ||
+                  selectedInvoices.length === 0 ||
+                  calculateTotal() <= 0
+                }
+                className="btn-primary disabled:opacity-50"
+              >
+                {loading
+                  ? "Processing..."
+                  : `Record Payment £${calculateTotal().toFixed(2)}`}
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );

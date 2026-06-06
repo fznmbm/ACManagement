@@ -124,6 +124,12 @@ export default function Sidebar({ profile }: SidebarProps) {
       roles: ["super_admin", "admin", "teacher"],
     },
     {
+      name: "Alert Centre",
+      href: "/alerts",
+      icon: Bell,
+      roles: ["super_admin", "admin", "teacher"],
+    },
+    {
       name: "Curriculum & Assessment",
       href: "/curriculum-assessment",
       icon: BookOpen,
