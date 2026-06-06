@@ -10,6 +10,7 @@ import FineSettings from "./FineSettings";
 import PasswordSettings from "./PasswordSettings";
 import UserManagement from "./UserManagement";
 import OrphanedAuthCleanup from "@/components/admin/OrphanedAuthCleanup";
+import MessageLogCleanup from "@/components/admin/MessageLogCleanup";
 
 interface SettingsTabsProps {
   initialSettings: Record<string, any>;
@@ -126,7 +127,10 @@ export default function SettingsTabs({
               <p className="text-sm text-muted-foreground mb-4">
                 System cleanup and maintenance tools
               </p>
-              <OrphanedAuthCleanup />
+              <div className="space-y-6">
+                <OrphanedAuthCleanup />
+                <MessageLogCleanup />
+              </div>
             </div>
           </div>
         )}
