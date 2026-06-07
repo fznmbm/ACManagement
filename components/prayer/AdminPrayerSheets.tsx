@@ -51,6 +51,7 @@ const generateSubmissionListMessage = (
   notSubmitted: any[],
   weekLabel: string,
   className: string,
+  streaks: Record<string, number> = {},
 ): string => {
   let msg = `🕌 *Prayer Sheets — ${weekLabel}*\n`;
   if (className !== "all") msg += `📚 *${className}*\n`;
@@ -61,7 +62,9 @@ const generateSubmissionListMessage = (
     submitted.forEach((s) => {
       const pct = Math.round(((s.total_prayers ?? 0) / 35) * 100);
       const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
-      msg += `• ${s.students?.first_name} ${s.students?.last_name} — ${s.total_prayers ?? 0}/35 ${emoji}\n`;
+      const streak = streaks[s.student_id] ?? 0;
+      const streakText = streak > 0 ? ` 🔥${streak}` : "";
+      msg += `• ${s.students?.first_name} ${s.students?.last_name} — ${s.total_prayers ?? 0}/35 ${emoji}${streakText}\n`;
     });
   }
 
@@ -86,16 +89,20 @@ const generateSubmissionListMessage = (
 };
 
 // Message B: Individual student detail
-const generateIndividualMessage = (sheet: any, weekLabel: string): string => {
+const generateIndividualMessage = (
+  sheet: any,
+  weekLabel: string,
+  streak: number = 0,
+): string => {
   const student = sheet.students;
   const total = sheet.total_prayers ?? 0;
   const pct = Math.round((total / 35) * 100);
   const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
-  const DAY_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
 
   let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
   msg += `📅 ${weekLabel}\n`;
   if (student?.classes?.name) msg += `📚 ${student.classes.name}\n`;
+  if (streak > 0) msg += `🔥 ${streak} week streak\n`;
   msg += `\n`;
 
   // Header row with day initials
@@ -135,9 +142,13 @@ export default function AdminPrayerSheets() {
   const [selectedIndividual, setSelectedIndividual] = useState<any | null>(
     null,
   );
+  const [studentStreaks, setStudentStreaks] = useState<Record<string, number>>(
+    {},
+  );
 
   useEffect(() => {
     fetchClasses();
+    fetchStreaks();
   }, []);
 
   useEffect(() => {
@@ -153,6 +164,19 @@ export default function AdminPrayerSheets() {
       .eq("prayer_sheets_enabled", true)
       .order("name");
     setClasses(data || []);
+  };
+
+  const fetchStreaks = async () => {
+    const { data } = await supabase
+      .from("student_prayer_summary")
+      .select("student_id, current_streak");
+    if (data) {
+      const map: Record<string, number> = {};
+      data.forEach((r) => {
+        map[r.student_id] = r.current_streak;
+      });
+      setStudentStreaks(map);
+    }
   };
 
   const fetchAllStudents = async () => {
@@ -239,6 +263,7 @@ export default function AdminPrayerSheets() {
       notSubmitted,
       weekLabel,
       className,
+      studentStreaks,
     );
     setWhatsAppMsg(msg);
     setWhatsAppMode("list");
@@ -247,7 +272,8 @@ export default function AdminPrayerSheets() {
 
   const handleIndividualWhatsApp = (sheet: any) => {
     const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
-    const msg = generateIndividualMessage(sheet, weekLabel);
+    const streak = studentStreaks[sheet.student_id] ?? 0;
+    const msg = generateIndividualMessage(sheet, weekLabel, streak);
     setWhatsAppMsg(msg);
     setWhatsAppMode("individual");
     setSelectedIndividual(sheet);
@@ -444,9 +470,16 @@ export default function AdminPrayerSheets() {
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold">
-                        {student?.first_name} {student?.last_name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">
+                          {student?.first_name} {student?.last_name}
+                        </p>
+                        {(studentStreaks[sheet.student_id] ?? 0) > 0 && (
+                          <span className="flex items-center gap-0.5 px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full text-xs font-medium">
+                            🔥 {studentStreaks[sheet.student_id]}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {student?.student_number} ·{" "}
                         {student?.classes?.name || "No class"}
