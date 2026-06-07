@@ -99,26 +99,22 @@ const generateIndividualMessage = (
   const pct = Math.round((total / 35) * 100);
   const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
 
+  const DAY_FULL = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
   let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
   msg += `📅 ${weekLabel}\n`;
   if (student?.classes?.name) msg += `📚 ${student.classes.name}\n`;
   if (streak > 0) msg += `🔥 ${streak} week streak\n`;
   msg += `\n`;
 
-  // Header row with day initials
-  msg += `         M  T  W  T  F  S  S\n`;
-  msg += `────────────────────────────\n`;
-
-  PRAYERS.forEach((prayer, pi) => {
-    const label = PRAYER_LABELS[pi].padEnd(8);
-    const row = DAYS.map((day) =>
+  DAYS.forEach((day, di) => {
+    const dayPrayers = PRAYERS.map((prayer) =>
       sheet[`${day}_${prayer}`] ? "✅" : "❌",
     ).join(" ");
-    msg += `${label}${row}\n`;
+    msg += `*${DAY_FULL[di]}:* ${dayPrayers}\n`;
   });
 
-  msg += `────────────────────────────\n`;
-  msg += `${emoji} *Total: ${total}/35 (${pct}%)*`;
+  msg += `\n${emoji} *Total: ${total}/35 (${pct}%)*`;
 
   return msg;
 };
@@ -205,7 +201,7 @@ export default function AdminPrayerSheets() {
         `*, students(first_name, last_name, student_number, class_id, classes(name))`,
       )
       .eq("week_start_date", weekDate)
-      .in("status", ["submitted", "verified", "flagged"])
+      .in("status", ["submitted", "flagged"])
       .order("submitted_at", { ascending: false });
 
     if (selectedClass !== "all") {
@@ -323,7 +319,6 @@ export default function AdminPrayerSheets() {
   const statusCounts = {
     all: sheets.length,
     submitted: sheets.filter((s) => s.status === "submitted").length,
-    verified: sheets.filter((s) => s.status === "verified").length,
     flagged: sheets.filter((s) => s.status === "flagged").length,
   };
 
@@ -382,7 +377,7 @@ export default function AdminPrayerSheets() {
       </div>
 
       {/* Submission Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-green-700 dark:text-green-400">
             {sheets.length}
@@ -399,12 +394,6 @@ export default function AdminPrayerSheets() {
             Not Submitted
           </p>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-            {statusCounts.verified}
-          </p>
-          <p className="text-xs text-blue-600 dark:text-blue-500">Verified</p>
-        </div>
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
             {statusCounts.flagged}
@@ -417,7 +406,7 @@ export default function AdminPrayerSheets() {
 
       {/* Status Filter */}
       <div className="flex gap-2 flex-wrap">
-        {(["all", "submitted", "verified", "flagged"] as const).map((s) => (
+        {(["all", "submitted", "flagged"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -502,15 +491,12 @@ export default function AdminPrayerSheets() {
 
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        sheet.status === "verified"
-                          ? "bg-green-100 text-green-800"
-                          : sheet.status === "flagged"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
+                        sheet.status === "flagged"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                          : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                       }`}
                     >
-                      {sheet.status.charAt(0).toUpperCase() +
-                        sheet.status.slice(1)}
+                      {sheet.status === "flagged" ? "Flagged" : "Submitted"}
                     </span>
 
                     {/* Copy individual sheet */}
@@ -523,20 +509,6 @@ export default function AdminPrayerSheets() {
                       Copy
                     </button>
 
-                    {sheet.status !== "verified" && (
-                      <button
-                        onClick={() => updateStatus(sheet.id, "verified")}
-                        disabled={updating === sheet.id}
-                        className="flex items-center gap-1 px-2 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {updating === sheet.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-3 w-3" />
-                        )}
-                        Verify
-                      </button>
-                    )}
                     {sheet.status !== "flagged" && (
                       <button
                         onClick={() => updateStatus(sheet.id, "flagged")}
