@@ -71,6 +71,16 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     current: 0,
     best: 0,
   });
+  const [prayerSettings, setPrayerSettings] = useState({
+    deadline_day: 1, // Monday
+    deadline_time: "20:00",
+    fajr_unlock: "04:00",
+    dhuhr_unlock: "12:00",
+    asr_unlock: "15:00",
+    maghrib_unlock: "18:00",
+    isha_unlock: "20:00",
+    streak_threshold: 80,
+  });
 
   useEffect(() => {
     const getUser = async () => {
@@ -80,6 +90,31 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       if (user) setParentUserId(user.id);
     };
     getUser();
+
+    const fetchPrayerSettings = async () => {
+      const { data } = await supabase
+        .from("system_settings")
+        .select("setting_value")
+        .eq("setting_key", "academic")
+        .single();
+      if (data?.setting_value) {
+        const s =
+          (typeof data.setting_value === "string"
+            ? JSON.parse(data.setting_value)
+            : data.setting_value) || {};
+        setPrayerSettings({
+          deadline_day: s.prayer_sheet_deadline_day ?? 1,
+          deadline_time: s.prayer_sheet_deadline_time || "20:00",
+          fajr_unlock: s.prayer_fajr_unlock || "04:00",
+          dhuhr_unlock: s.prayer_dhuhr_unlock || "12:00",
+          asr_unlock: s.prayer_asr_unlock || "15:00",
+          maghrib_unlock: s.prayer_maghrib_unlock || "18:00",
+          isha_unlock: s.prayer_isha_unlock || "20:00",
+          streak_threshold: s.prayer_streak_threshold || 80,
+        });
+      }
+    };
+    fetchPrayerSettings();
 
     const checkPrayerEnabled = async () => {
       const { data: student } = await supabase
@@ -137,25 +172,26 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
         new Date(a.week_start_date).getTime(),
     );
 
-    // Current streak: consecutive perfect weeks from most recent
+    const threshold = Math.ceil((prayerSettings.streak_threshold / 100) * 35);
+
+    // Current streak: consecutive weeks meeting threshold from most recent
     for (let i = 0; i < sorted.length; i++) {
-      if ((sorted[i].total_prayers ?? 0) === 35) {
+      if ((sorted[i].total_prayers ?? 0) >= threshold) {
         currentStreak++;
       } else {
         break;
       }
     }
 
-    // Best streak: longest run of perfect weeks
+    // Best streak: longest run of weeks meeting threshold
     for (const sheet of sorted) {
-      if ((sheet.total_prayers ?? 0) === 35) {
+      if ((sheet.total_prayers ?? 0) >= threshold) {
         tempStreak++;
         bestStreak = Math.max(bestStreak, tempStreak);
       } else {
         tempStreak = 0;
       }
     }
-
     setStreak({ current: currentStreak, best: bestStreak });
   };
 
@@ -190,10 +226,45 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     setLoading(false);
   };
 
+  // Submission deadline check
+  const isSubmissionAllowed = (() => {
+    const deadline = new Date(weekStart);
+    const [dHour, dMin] = prayerSettings.deadline_time.split(":").map(Number);
+    // Find the next occurrence of deadline_day after week ends (Sunday)
+    const daysUntilDeadline =
+      (prayerSettings.deadline_day - deadline.getDay() + 7) % 7 || 7;
+    deadline.setDate(deadline.getDate() + daysUntilDeadline);
+    deadline.setHours(dHour, dMin, 0, 0);
+    return new Date() <= deadline;
+  })();
+
+  // Prayer unlock hours derived from settings
+  const PRAYER_UNLOCK_HOUR: Record<Prayer, number> = {
+    fajr: parseInt(prayerSettings.fajr_unlock.split(":")[0]),
+    dhuhr: parseInt(prayerSettings.dhuhr_unlock.split(":")[0]),
+    asr: parseInt(prayerSettings.asr_unlock.split(":")[0]),
+    maghrib: parseInt(prayerSettings.maghrib_unlock.split(":")[0]),
+    isha: parseInt(prayerSettings.isha_unlock.split(":")[0]),
+  };
+
   // 3-state toggle: null → true → false → null
   const toggle = useCallback(
     async (day: Day, prayer: Prayer) => {
       if (status === "submitted" || status === "verified") return;
+
+      // Block future days
+      const today = new Date();
+      const dayIndex = DAYS.indexOf(day);
+      const cellDate = new Date(weekStart);
+      cellDate.setDate(weekStart.getDate() + dayIndex);
+      cellDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      if (cellDate > today) return;
+
+      // Block future prayers today
+      const now = new Date();
+      const isToday = cellDate.getTime() === today.getTime();
+      if (isToday && now.getHours() < PRAYER_UNLOCK_HOUR[prayer]) return;
 
       const current = grid[day][prayer];
       const next: CellState =
@@ -295,12 +366,29 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const renderCell = (day: Day, prayer: Prayer) => {
     const val = grid[day][prayer];
 
+    // Calculate cell restrictions
+    const today = new Date();
+    const dayIndex = DAYS.indexOf(day);
+    const cellDate = new Date(weekStart);
+    cellDate.setDate(weekStart.getDate() + dayIndex);
+    const cellDateOnly = new Date(cellDate);
+    cellDateOnly.setHours(0, 0, 0, 0);
+    const todayOnly = new Date(today);
+    todayOnly.setHours(0, 0, 0, 0);
+
+    const isFutureDay = cellDateOnly > todayOnly;
+    const isToday = cellDateOnly.getTime() === todayOnly.getTime();
+    const isFuturePrayer =
+      isToday && today.getHours() < PRAYER_UNLOCK_HOUR[prayer];
+    const cellLocked = isLocked || isFutureDay || isFuturePrayer;
+    const dimmed = isFutureDay || isFuturePrayer;
+
     if (val === true) {
       return (
         <button
           onClick={() => toggle(day, prayer)}
-          disabled={isLocked}
-          className="mx-auto block disabled:cursor-not-allowed"
+          disabled={cellLocked}
+          className={`mx-auto block disabled:cursor-not-allowed ${dimmed ? "opacity-30" : ""}`}
         >
           <CheckCircle2 className="h-7 w-7 text-green-500" />
         </button>
@@ -310,21 +398,33 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       return (
         <button
           onClick={() => toggle(day, prayer)}
-          disabled={isLocked}
-          className="mx-auto block disabled:cursor-not-allowed"
+          disabled={cellLocked}
+          className={`mx-auto block disabled:cursor-not-allowed ${dimmed ? "opacity-30" : ""}`}
         >
           <XCircle className="h-7 w-7 text-red-400" />
         </button>
       );
     }
-    // null - not marked
     return (
       <button
         onClick={() => toggle(day, prayer)}
-        disabled={isLocked}
+        disabled={cellLocked}
+        title={
+          isFuturePrayer
+            ? "Prayer time not yet reached"
+            : isFutureDay
+              ? "Future day"
+              : undefined
+        }
         className="mx-auto block disabled:cursor-not-allowed"
       >
-        <div className="h-7 w-7 rounded-full border-2 border-muted-foreground/30 hover:border-primary transition-colors" />
+        <div
+          className={`h-7 w-7 rounded-full border-2 transition-colors ${
+            dimmed
+              ? "border-muted-foreground/10 opacity-20"
+              : "border-muted-foreground/30 hover:border-primary"
+          }`}
+        />
       </button>
     );
   };
@@ -471,11 +571,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
           <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />{" "}
           Not marked
         </span>
-        {!isLocked && (
-          <span className="text-muted-foreground italic">
-            Tap once = ✅ · Tap twice = ❌ · Tap again = clear
-          </span>
-        )}
+        {/* removed inline legend — instructions below */}
       </div>
 
       {/* Grid */}
@@ -522,22 +618,25 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
         <div className="pt-3 border-t border-border space-y-3">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              <strong>How to mark:</strong> Tap once for ✅ prayed, tap twice
-              for ❌ missed, tap again to clear. Your marks are{" "}
-              <strong>auto-saved as a draft</strong> every time you tap — you
-              won't lose progress if you close the app. When you're done for the
-              week, tap <strong>Submit Week</strong> to send to your teacher.
+              Tap once = ✅ prayed · Tap twice = ❌ missed · Tap again = clear.
+              Progress <strong>auto-saves</strong>. Tap{" "}
+              <strong>Submit Week</strong> when done — deadline is{" "}
+              <strong>Monday 8pm</strong>.
             </p>
           </div>
 
           {sheetId ? (
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                {totalMarked} of 35 prayers marked
+                {!isSubmissionAllowed
+                  ? "⏰ Submission deadline passed"
+                  : `${totalMarked} of 35 prayers marked`}
               </p>
               <button
                 onClick={handleSubmit}
-                disabled={submitting || totalMarked === 0}
+                disabled={
+                  submitting || totalMarked === 0 || !isSubmissionAllowed
+                }
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (

@@ -91,9 +91,10 @@ export default function StudentForm({
     if (!formData.parent_phone?.trim()) {
       errors.parent_phone = "Parent phone number is required";
     } else {
-      const phoneRegex = /^[\+]?[1-9][\d]{10,14}$/;
-      if (!phoneRegex.test(formData.parent_phone.replace(/\s+/g, ""))) {
-        errors.parent_phone = "Please enter a valid phone number";
+      const phoneRegex = /^(\+44|0)[1-9]\d{8,9}$/;
+      if (!phoneRegex.test(formData.parent_phone.replace(/[\s\-\(\)]/g, ""))) {
+        errors.parent_phone =
+          "Please enter a valid UK phone number (e.g. 07700 900000 or +447700900000)";
       }
     }
 
@@ -371,7 +372,7 @@ export default function StudentForm({
                 value={formData.parent_phone}
                 onChange={handleChange}
                 className={fieldClass("parent_phone")}
-                placeholder="+44 7700 900000"
+                placeholder="07700 900000"
               />
               {validationErrors.parent_phone && (
                 <p className="text-red-500 text-sm mt-1">

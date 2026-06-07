@@ -8,6 +8,7 @@ import {
   Users,
   CheckCircle,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 
 interface ApplicationSettings {
@@ -148,6 +149,27 @@ export default function ApplicationSettings() {
       setError("Failed to save settings. Please try again.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResetCount = async () => {
+    if (!settings.id) return;
+    if (
+      !confirm(
+        "Reset application count to 0? This does not delete any applications, only resets the counter.",
+      )
+    )
+      return;
+    try {
+      const { error } = await supabase
+        .from("application_settings")
+        .update({ current_applications_count: 0 })
+        .eq("id", settings.id);
+      if (error) throw error;
+      setSettings({ ...settings, current_applications_count: 0 });
+    } catch (err) {
+      console.error("Reset error:", err);
+      alert("Failed to reset count.");
     }
   };
 
@@ -332,12 +354,24 @@ export default function ApplicationSettings() {
                 {settings.current_applications_count}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-slate-300">Remaining Capacity</p>
-              <p className="text-2xl font-bold text-white">
-                {settings.max_applications -
-                  settings.current_applications_count}
-              </p>
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-right">
+                <p className="text-sm text-slate-300">Remaining Capacity</p>
+                <p className="text-2xl font-bold text-white">
+                  {settings.max_applications -
+                    settings.current_applications_count}
+                </p>
+              </div>
+              <button
+                onClick={handleResetCount}
+                disabled={
+                  !settings.id || settings.current_applications_count === 0
+                }
+                className="flex items-center gap-1 px-3 py-1 text-xs bg-slate-600 hover:bg-slate-500 text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset Count
+              </button>
             </div>
           </div>
           {settings.current_applications_count >= settings.max_applications && (

@@ -1,4 +1,3 @@
-// components/settings/AcademicSettings.tsx
 "use client";
 
 import { useState } from "react";
@@ -15,10 +14,6 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
   const [saved, setSaved] = useState(false);
 
   const academicData = settings.academic || {};
-  // const attendanceCutoff = settings.attendance_cutoff_time || {};
-  // const lowAttendanceThreshold = settings.low_attendance_threshold || {};
-  // const gradingSettings = settings.academic || {};
-  // const prayerTimes = settings.prayer_times || {};
 
   const handleSave = async () => {
     setLoading(true);
@@ -31,20 +26,12 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
       const formData = new FormData(form);
       const data: Record<string, any> = {};
 
-      // Initialize all checkboxes as false
-      data.send_alerts = false;
-      data.allow_edit_past = false;
+      // Initialize checkboxes as false
       data.show_grades_to_parents = false;
-      data.prayer_times_enabled = false;
 
       formData.forEach((value, key) => {
-        if (
-          key === "send_alerts" ||
-          key === "allow_edit_past" ||
-          key === "show_grades_to_parents" ||
-          key === "prayer_times_enabled"
-        ) {
-          data[key] = true; // Checkbox checked
+        if (key === "show_grades_to_parents") {
+          data[key] = true;
         } else {
           data[key] = value;
         }
@@ -53,10 +40,7 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
       const response = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category: "academic",
-          data: data,
-        }),
+        body: JSON.stringify({ category: "academic", data }),
       });
 
       if (!response.ok) {
@@ -77,13 +61,6 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Academic Settings</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure academic year, attendance rules, and grading system
-        </p>
-      </div>
-
       <form className="space-y-6">
         {/* Academic Year */}
         <div className="border border-border rounded-lg p-4">
@@ -123,73 +100,20 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
         {/* Attendance Rules */}
         <div className="border border-border rounded-lg p-4">
           <h4 className="font-semibold mb-3">Attendance Rules</h4>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label">Class Start Time</label>
-                <input
-                  type="time"
-                  name="class_start_time"
-                  defaultValue={academicData.class_start_time}
-                  className="form-input"
-                />
-              </div>
-              <div>
-                <label className="form-label">Grace Period (minutes)</label>
-                <input
-                  type="number"
-                  name="grace_period"
-                  defaultValue={academicData.grace_period || 15}
-                  className="form-input"
-                  min="0"
-                  max="60"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Students arriving within this time won't be marked late
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <label className="form-label">Low Attendance Threshold (%)</label>
-              <input
-                type="number"
-                name="low_attendance_threshold"
-                defaultValue={academicData.low_attendance_threshold || 75}
-                className="form-input"
-                min="0"
-                max="100"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Alert admins when student attendance falls below this percentage
-              </p>
-            </div>
-
-            <div>
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  name="send_alerts"
-                  defaultChecked={academicData.send_alerts}
-                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
-                />
-                <span className="text-sm">Send alerts for low attendance</span>
-              </label>
-            </div>
-
-            <div>
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  name="allow_edit_past"
-                  defaultChecked={academicData.allow_edit_past}
-                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
-                />
-                <span className="text-sm">
-                  Allow teachers to edit past attendance (within 7 days)
-                </span>
-              </label>
-            </div>
+          <div>
+            <label className="form-label">Low Attendance Threshold (%)</label>
+            <input
+              type="number"
+              name="low_attendance_threshold"
+              defaultValue={academicData.low_attendance_threshold || 75}
+              className="form-input"
+              min="0"
+              max="100"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Alert generated when student attendance falls below this
+              percentage
+            </p>
           </div>
         </div>
 
@@ -201,7 +125,7 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
               <label className="form-label">Grading Scale</label>
               <select
                 name="grading_scale"
-                defaultValue={academicData.grading_scale || "perentage"}
+                defaultValue={academicData.grading_scale || "percentage"}
                 className="form-input"
               >
                 <option value="percentage">Percentage (0-100)</option>
@@ -210,19 +134,17 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
                 <option value="custom">Custom Scale</option>
               </select>
             </div>
-
             <div>
               <label className="form-label">Passing Grade (%)</label>
               <input
                 type="number"
                 name="passing_grade"
-                defaultValue={academicData.passing_grade}
+                defaultValue={academicData.passing_grade || 70}
                 className="form-input"
                 min="0"
                 max="100"
               />
             </div>
-
             <div>
               <label className="flex items-center space-x-3">
                 <input
@@ -237,25 +159,119 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
           </div>
         </div>
 
-        {/* Prayer Times */}
+        {/* Prayer Sheet Settings */}
         <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-3">Prayer Times Session</h4>
-          <div>
-            <label className="flex items-center space-x-3">
+          <h4 className="font-semibold mb-1">Prayer Sheet Settings</h4>
+          <p className="text-xs text-muted-foreground mb-4">
+            Configure submission deadline and approximate prayer unlock times.
+            Prayer sheets are enabled per-class in Class settings.
+          </p>
+
+          <div className="space-y-5">
+            {/* Submission Deadline */}
+            <div>
+              <label className="form-label">Submission Deadline</label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Parents must submit the week's prayer sheet by this day and time
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Day
+                  </label>
+                  <select
+                    name="prayer_sheet_deadline_day"
+                    defaultValue={academicData.prayer_sheet_deadline_day ?? 1}
+                    className="form-input"
+                  >
+                    <option value={1}>Monday</option>
+                    <option value={2}>Tuesday</option>
+                    <option value={3}>Wednesday</option>
+                    <option value={4}>Thursday</option>
+                    <option value={5}>Friday</option>
+                    <option value={6}>Saturday</option>
+                    <option value={0}>Sunday</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    name="prayer_sheet_deadline_time"
+                    defaultValue={
+                      academicData.prayer_sheet_deadline_time || "20:00"
+                    }
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Prayer Unlock Times */}
+            <div>
+              <label className="form-label">
+                Approximate Prayer Unlock Times
+              </label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Parents cannot mark a prayer before this time on the same day
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {[
+                  {
+                    name: "prayer_fajr_unlock",
+                    label: "Fajr",
+                    default: "04:00",
+                  },
+                  {
+                    name: "prayer_dhuhr_unlock",
+                    label: "Dhuhr",
+                    default: "12:00",
+                  },
+                  { name: "prayer_asr_unlock", label: "Asr", default: "15:00" },
+                  {
+                    name: "prayer_maghrib_unlock",
+                    label: "Maghrib",
+                    default: "18:00",
+                  },
+                  {
+                    name: "prayer_isha_unlock",
+                    label: "Isha",
+                    default: "20:00",
+                  },
+                ].map((p) => (
+                  <div key={p.name}>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      {p.label}
+                    </label>
+                    <input
+                      type="time"
+                      name={p.name}
+                      defaultValue={academicData[p.name] || p.default}
+                      className="form-input"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Streak Threshold */}
+            <div>
+              <label className="form-label">Prayer Streak Threshold (%)</label>
               <input
-                type="checkbox"
-                name="prayer_times_enabled"
-                defaultChecked={academicData.prayer_times_enabled}
-                className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+                type="number"
+                name="prayer_streak_threshold"
+                defaultValue={academicData.prayer_streak_threshold || 80}
+                className="form-input"
+                min="1"
+                max="100"
               />
-              <span className="text-sm">
-                Enable prayer time attendance tracking
-              </span>
-            </label>
-            <p className="text-xs text-muted-foreground mt-2 ml-7">
-              Allow marking separate attendance for prayer sessions (Fajr,
-              Dhuhr, Asr, Maghrib, Isha)
-            </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Minimum % of prayers per week to count as a streak week (e.g. 80
+                = 28/35 prayers)
+              </p>
+            </div>
           </div>
         </div>
       </form>
