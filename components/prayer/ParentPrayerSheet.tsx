@@ -264,6 +264,9 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     [prayerSettings],
   );
 
+  console.log("prayerSettings loaded:", prayerSettings);
+  console.log("maghrib unlock hour:", getPrayerUnlockHour("maghrib"));
+
   const PRAYER_UNLOCK_HOUR: Record<Prayer, number> = {
     fajr: getPrayerUnlockHour("fajr"),
     dhuhr: getPrayerUnlockHour("dhuhr"),
