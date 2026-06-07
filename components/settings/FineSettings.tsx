@@ -68,8 +68,8 @@ export default function FineSettings() {
       prev.map((setting) =>
         setting.fine_type === fineType
           ? { ...setting, [field]: value }
-          : setting
-      )
+          : setting,
+      ),
     );
   };
 
@@ -94,7 +94,7 @@ export default function FineSettings() {
 
       const { error } = await supabase
         .from("system_settings")
-        .update({ setting_value: JSON.stringify(fineData) })
+        .update({ setting_value: fineData })
         .eq("setting_key", "fines");
 
       if (error) throw error;
@@ -172,7 +172,7 @@ export default function FineSettings() {
                     updateFineSetting(
                       setting.fine_type,
                       "is_active",
-                      e.target.checked
+                      e.target.checked,
                     )
                   }
                   className="rounded border-gray-300 text-primary"
@@ -197,7 +197,7 @@ export default function FineSettings() {
                       updateFineSetting(
                         setting.fine_type,
                         "amount",
-                        parseFloat(e.target.value) || 0
+                        parseFloat(e.target.value) || 0,
                       )
                     }
                     className="form-input pl-8"
@@ -218,7 +218,7 @@ export default function FineSettings() {
                     updateFineSetting(
                       setting.fine_type,
                       "description",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   className="form-input"

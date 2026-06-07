@@ -11,6 +11,9 @@ import {
   AlertCircle,
   Save,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils/helpers";
 import FineIndicator from "@/components/fines/FineIndicator";
@@ -94,7 +97,7 @@ export default function AttendanceMarkingInterface({
     useState<StudentFineData | null>(null);
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [studentFeeInvoices, setStudentFeeInvoices] = useState<FeeInvoice[]>(
-    []
+    [],
   );
 
   const { getStudentFees, fetchStudentInvoices, refreshFees } = useFees();
@@ -131,7 +134,7 @@ export default function AttendanceMarkingInterface({
 
   const setStudentAttendance = (
     studentId: string,
-    status: AttendanceStatus
+    status: AttendanceStatus,
   ) => {
     const newMap = new Map(attendanceMap);
     newMap.set(studentId, status);
@@ -199,6 +202,32 @@ export default function AttendanceMarkingInterface({
     } catch (error) {
       console.error("Error saving attendance:", error);
       alert("Failed to save attendance. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleClearDay = async () => {
+    if (
+      !confirm(
+        "Clear all attendance for this class on this date? This cannot be undone.",
+      )
+    )
+      return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("attendance")
+        .delete()
+        .eq("class_id", selectedClassId)
+        .eq("date", selectedDate);
+      if (error) throw error;
+      setAttendanceMap(new Map());
+      setNotesMap(new Map());
+      router.refresh();
+    } catch (error) {
+      console.error("Error clearing attendance:", error);
+      alert("Failed to clear attendance.");
     } finally {
       setSaving(false);
     }
@@ -303,15 +332,43 @@ export default function AttendanceMarkingInterface({
 
           <div>
             <label className="form-label">Date</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              max={new Date().toISOString().split("T")[0]}
-              className="form-input"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const d = new Date(selectedDate);
+                  d.setDate(d.getDate() - 1);
+                  handleDateChange(d.toISOString().split("T")[0]);
+                }}
+                className="btn-outline px-2 py-2"
+                title="Previous day"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+                className="form-input"
+              />
+              <button
+                onClick={() => {
+                  const d = new Date(selectedDate);
+                  d.setDate(d.getDate() + 1);
+                  const today = new Date().toISOString().split("T")[0];
+                  const next = d.toISOString().split("T")[0];
+                  if (next <= today) handleDateChange(next);
+                }}
+                disabled={
+                  selectedDate >= new Date().toISOString().split("T")[0]
+                }
+                className="btn-outline px-2 py-2 disabled:opacity-40"
+                title="Next day"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-
           <div>
             <label className="form-label">Quick Actions</label>
             <div className="flex gap-2">
@@ -464,30 +521,40 @@ export default function AttendanceMarkingInterface({
 
       {/* Save Button */}
       {students.length > 0 && (
-        <div className="flex items-center justify-end space-x-4">
-          {saved && (
-            <span className="text-sm text-green-600 flex items-center space-x-1">
-              <CheckCircle className="h-4 w-4" />
-              <span>Attendance saved successfully!</span>
-            </span>
-          )}
+        <div className="flex items-center justify-between space-x-4">
           <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary flex items-center space-x-2"
+            onClick={handleClearDay}
+            disabled={saving || existingAttendance.length === 0}
+            className="btn-outline flex items-center space-x-2 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40"
           >
-            {saving ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                <span>Save Attendance</span>
-              </>
-            )}
+            <Trash2 className="h-4 w-4" />
+            <span>Clear Day</span>
           </button>
+          <div className="flex items-center space-x-4">
+            {saved && (
+              <span className="text-sm text-green-600 flex items-center space-x-1">
+                <CheckCircle className="h-4 w-4" />
+                <span>Attendance saved successfully!</span>
+              </span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary flex items-center space-x-2"
+            >
+              {saving ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span>Save Attendance</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 

@@ -53,7 +53,7 @@ export default function FeeSettings() {
   const [newStructure, setNewStructure] = useState({
     name: "",
     amount: 0,
-    frequency: "monthly",
+    frequency: "quarterly",
     description: "",
     due_day: 1,
     grace_period_days: 7,
@@ -166,7 +166,8 @@ export default function FeeSettings() {
 
       if (error) throw error;
 
-      const settings = JSON.parse(data?.setting_value || "{}");
+      //const settings = JSON.parse(data?.setting_value || "{}");
+      const settings = (data?.setting_value as any) || {};
       setFeeSettings({
         auto_generate_invoices: settings.auto_generate_invoices !== false,
         overdue_grace_days: settings.overdue_grace_days || 7,
@@ -183,14 +184,14 @@ export default function FeeSettings() {
   const updateFeeStructure = (id: string, field: string, value: any) => {
     setFeeStructures((prev) =>
       prev.map((structure) =>
-        structure.id === id ? { ...structure, [field]: value } : structure
-      )
+        structure.id === id ? { ...structure, [field]: value } : structure,
+      ),
     );
   };
 
   const updateQuarter = (index: number, field: keyof Quarter, value: any) => {
     setQuarters((prev) =>
-      prev.map((q, i) => (i === index ? { ...q, [field]: value } : q))
+      prev.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
     );
   };
 
@@ -262,7 +263,7 @@ export default function FeeSettings() {
           start_month: q.start_month,
           end_month: q.end_month,
           is_active: q.is_active,
-        }))
+        })),
       );
 
       if (error) throw error;
@@ -281,7 +282,7 @@ export default function FeeSettings() {
   const resetQuartersToDefault = () => {
     if (
       confirm(
-        "Reset to default UK academic year quarters? This will lose your current settings."
+        "Reset to default UK academic year quarters? This will lose your current settings.",
       )
     ) {
       setQuarters([...defaultQuarters]);
@@ -313,7 +314,7 @@ export default function FeeSettings() {
       // Save fee settings
       const { error: settingsError } = await supabase
         .from("system_settings")
-        .update({ setting_value: JSON.stringify(feeSettings) })
+        .update({ setting_value: feeSettings })
         .eq("setting_key", "fees");
 
       if (settingsError) throw settingsError;
@@ -349,8 +350,8 @@ export default function FeeSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Fee Settings</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-lg font-semibold">Fee Settings</h2>
+        <p className="text-sm text-muted-foreground">
           Configure fee structures, quarterly periods, and automation settings
         </p>
       </div>
@@ -457,10 +458,10 @@ export default function FeeSettings() {
                       }
                       className="form-input"
                     >
-                      <option value="monthly">Monthly</option>
                       <option value="quarterly">Quarterly</option>
+                      <option value="biannual">6-Monthly</option>
                       <option value="annually">Annually</option>
-                      <option value="one_time">One Time</option>
+                      <option value="one_time">One-off</option>
                     </select>
                   </div>
                   <div>
@@ -554,7 +555,7 @@ export default function FeeSettings() {
                             updateFeeStructure(
                               structure.id,
                               "name",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="font-semibold bg-transparent border-none p-0 focus:ring-0 focus:border-none"
@@ -573,7 +574,7 @@ export default function FeeSettings() {
                           updateFeeStructure(
                             structure.id,
                             "is_active",
-                            e.target.checked
+                            e.target.checked,
                           )
                         }
                         className="rounded border-gray-300 text-primary"
@@ -599,7 +600,7 @@ export default function FeeSettings() {
                           updateFeeStructure(
                             structure.id,
                             "amount",
-                            parseFloat(e.target.value) || 0
+                            parseFloat(e.target.value) || 0,
                           )
                         }
                         className="form-input"
@@ -613,15 +614,15 @@ export default function FeeSettings() {
                           updateFeeStructure(
                             structure.id,
                             "frequency",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         className="form-input"
                       >
-                        <option value="monthly">Monthly</option>
                         <option value="quarterly">Quarterly</option>
+                        <option value="biannual">6-Monthly</option>
                         <option value="annually">Annually</option>
-                        <option value="one_time">One Time</option>
+                        <option value="one_time">One-off</option>
                       </select>
                     </div>
                     <div>
@@ -635,7 +636,7 @@ export default function FeeSettings() {
                           updateFeeStructure(
                             structure.id,
                             "due_day",
-                            parseInt(e.target.value) || 1
+                            parseInt(e.target.value) || 1,
                           )
                         }
                         className="form-input"
@@ -652,7 +653,7 @@ export default function FeeSettings() {
                           updateFeeStructure(
                             structure.id,
                             "grace_period_days",
-                            parseInt(e.target.value) || 0
+                            parseInt(e.target.value) || 0,
                           )
                         }
                         className="form-input"
@@ -671,7 +672,7 @@ export default function FeeSettings() {
                             updateFeeStructure(
                               structure.id,
                               "use_custom_quarters",
-                              e.target.checked
+                              e.target.checked,
                             )
                           }
                           className="rounded border-input text-primary"
@@ -779,7 +780,7 @@ export default function FeeSettings() {
                         updateQuarter(
                           index,
                           "start_month",
-                          parseInt(e.target.value)
+                          parseInt(e.target.value),
                         )
                       }
                       className="form-input"
@@ -801,7 +802,7 @@ export default function FeeSettings() {
                         updateQuarter(
                           index,
                           "end_month",
-                          parseInt(e.target.value)
+                          parseInt(e.target.value),
                         )
                       }
                       className="form-input"
@@ -838,7 +839,7 @@ export default function FeeSettings() {
                     <p className="text-xs text-muted-foreground">
                       {getMonthRangeDisplay(
                         quarter.start_month,
-                        quarter.end_month
+                        quarter.end_month,
                       )}
                     </p>
                     <span
