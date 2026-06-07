@@ -205,6 +205,7 @@ export default function AdminPrayerSheets() {
         `*, students(first_name, last_name, student_number, class_id, classes(name))`,
       )
       .eq("week_start_date", weekDate)
+      .in("status", ["submitted", "verified", "flagged"])
       .order("submitted_at", { ascending: false });
 
     if (selectedClass !== "all") {
@@ -321,7 +322,6 @@ export default function AdminPrayerSheets() {
 
   const statusCounts = {
     all: sheets.length,
-    draft: sheets.filter((s) => s.status === "draft").length,
     submitted: sheets.filter((s) => s.status === "submitted").length,
     verified: sheets.filter((s) => s.status === "verified").length,
     flagged: sheets.filter((s) => s.status === "flagged").length,
@@ -417,24 +417,20 @@ export default function AdminPrayerSheets() {
 
       {/* Status Filter */}
       <div className="flex gap-2 flex-wrap">
-        {(["all", "draft", "submitted", "verified", "flagged"] as const).map(
-          (s) => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                statusFilter === s
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border hover:bg-accent"
-              }`}
-            >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-              <span className="ml-2 text-xs opacity-70">
-                ({statusCounts[s]})
-              </span>
-            </button>
-          ),
-        )}
+        {(["all", "submitted", "verified", "flagged"] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              statusFilter === s
+                ? "bg-primary text-primary-foreground"
+                : "bg-card border border-border hover:bg-accent"
+            }`}
+          >
+            {s.charAt(0).toUpperCase() + s.slice(1)}
+            <span className="ml-2 text-xs opacity-70">({statusCounts[s]})</span>
+          </button>
+        ))}
       </div>
 
       {/* Sheets List */}
