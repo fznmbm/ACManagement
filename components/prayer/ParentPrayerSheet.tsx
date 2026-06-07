@@ -103,14 +103,14 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
             ? JSON.parse(data.setting_value)
             : data.setting_value) || {};
         setPrayerSettings({
-          deadline_day: s.prayer_sheet_deadline_day ?? 1,
+          deadline_day: parseInt(s.prayer_sheet_deadline_day ?? 1),
           deadline_time: s.prayer_sheet_deadline_time || "20:00",
           fajr_unlock: s.prayer_fajr_unlock || "04:00",
           dhuhr_unlock: s.prayer_dhuhr_unlock || "12:00",
           asr_unlock: s.prayer_asr_unlock || "15:00",
           maghrib_unlock: s.prayer_maghrib_unlock || "18:00",
           isha_unlock: s.prayer_isha_unlock || "20:00",
-          streak_threshold: s.prayer_streak_threshold || 80,
+          streak_threshold: parseInt(s.prayer_streak_threshold || 80),
         });
       }
     };
@@ -250,13 +250,26 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     return true;
   })();
 
-  // Prayer unlock hours derived from settings
+  const getPrayerUnlockHour = useCallback(
+    (prayer: Prayer): number => {
+      const map: Record<Prayer, string> = {
+        fajr: prayerSettings.fajr_unlock,
+        dhuhr: prayerSettings.dhuhr_unlock,
+        asr: prayerSettings.asr_unlock,
+        maghrib: prayerSettings.maghrib_unlock,
+        isha: prayerSettings.isha_unlock,
+      };
+      return parseInt(map[prayer].split(":")[0]);
+    },
+    [prayerSettings],
+  );
+
   const PRAYER_UNLOCK_HOUR: Record<Prayer, number> = {
-    fajr: parseInt(prayerSettings.fajr_unlock.split(":")[0]),
-    dhuhr: parseInt(prayerSettings.dhuhr_unlock.split(":")[0]),
-    asr: parseInt(prayerSettings.asr_unlock.split(":")[0]),
-    maghrib: parseInt(prayerSettings.maghrib_unlock.split(":")[0]),
-    isha: parseInt(prayerSettings.isha_unlock.split(":")[0]),
+    fajr: getPrayerUnlockHour("fajr"),
+    dhuhr: getPrayerUnlockHour("dhuhr"),
+    asr: getPrayerUnlockHour("asr"),
+    maghrib: getPrayerUnlockHour("maghrib"),
+    isha: getPrayerUnlockHour("isha"),
   };
 
   // 3-state toggle: null → true → false → null
@@ -276,7 +289,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       // Block future prayers today
       const now = new Date();
       const isToday = cellDate.getTime() === today.getTime();
-      if (isToday && now.getHours() < PRAYER_UNLOCK_HOUR[prayer]) return;
+      if (isToday && now.getHours() < getPrayerUnlockHour(prayer)) return;
 
       const current = grid[day][prayer];
       const next: CellState =
@@ -291,7 +304,15 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       // Auto-save to DB as draft
       await autoSave(newGrid);
     },
-    [grid, status, parentUserId, sheetId, studentId, weekStart],
+    [
+      grid,
+      status,
+      parentUserId,
+      sheetId,
+      studentId,
+      weekStart,
+      getPrayerUnlockHour,
+    ],
   );
 
   const autoSave = async (currentGrid: PrayerGrid) => {
