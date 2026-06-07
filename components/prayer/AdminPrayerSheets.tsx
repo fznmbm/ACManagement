@@ -129,10 +129,11 @@ const generateIndividualMessage = (
 
 export default function AdminPrayerSheets() {
   const supabase = createClient();
-  const [sheets, setSheets] = useState<any[]>([]);
+  const [sheets, setSheets] = useState<any[]>([]); // filtered by statusFilter
+  const [allSheets, setAllSheets] = useState<any[]>([]); // always all submitted+flagged
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("all");
+  const [selectedClass, setSelectedClass] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [weekStart, setWeekStart] = useState<Date>(getMondayOfWeek(new Date()));
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -156,6 +157,7 @@ export default function AdminPrayerSheets() {
   }, []);
 
   useEffect(() => {
+    if (!selectedClass) return;
     fetchSheets();
     fetchAllStudents();
   }, [weekStart, selectedClass]);
@@ -168,6 +170,9 @@ export default function AdminPrayerSheets() {
       .eq("prayer_sheets_enabled", true)
       .order("name");
     setClasses(data || []);
+    if (data && data.length > 0) {
+      setSelectedClass(data[0].id);
+    }
   };
 
   const fetchStreaks = async () => {
@@ -191,7 +196,7 @@ export default function AdminPrayerSheets() {
       )
       .eq("status", "active");
 
-    if (selectedClass !== "all") {
+    if (selectedClass) {
       query = query.eq("class_id", selectedClass);
     }
 
@@ -203,7 +208,8 @@ export default function AdminPrayerSheets() {
     setLoading(true);
     const weekDate = weekStart.toISOString().split("T")[0];
 
-    let query = supabase
+    // Fetch ALL sheets for this week/class (for summary cards + not submitted)
+    let allQuery = supabase
       .from("prayer_sheets")
       .select(
         `*, students(first_name, last_name, student_number, class_id, classes(name))`,
@@ -212,29 +218,33 @@ export default function AdminPrayerSheets() {
       .in("status", ["submitted", "flagged"])
       .order("submitted_at", { ascending: false });
 
-    if (selectedClass !== "all") {
-      query = query.eq("students.class_id", selectedClass);
+    if (selectedClass) {
+      allQuery = allQuery.eq("students.class_id", selectedClass);
     }
 
-    if (statusFilter !== "all") {
-      query = query.eq("status", statusFilter);
-    }
+    const { data: allData } = await allQuery;
+    const allFiltered = (allData || []).filter((s) =>
+      selectedClass ? s.students?.class_id === selectedClass : true,
+    );
+    setAllSheets(allFiltered);
 
-    const { data } = await query;
+    // Apply status filter for display only
+    const displayFiltered =
+      statusFilter !== "all"
+        ? allFiltered.filter((s) => s.status === statusFilter)
+        : allFiltered;
 
-    // Filter by class if needed (since nested filter may not work directly)
-    let filtered = data || [];
-    if (selectedClass !== "all") {
-      filtered = filtered.filter((s) => s.students?.class_id === selectedClass);
-    }
-
-    setSheets(filtered);
+    setSheets(displayFiltered);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchSheets();
-  }, [statusFilter]);
+    const displayFiltered =
+      statusFilter !== "all"
+        ? allSheets.filter((s) => s.status === statusFilter)
+        : allSheets;
+    setSheets(displayFiltered);
+  }, [statusFilter, allSheets]);
 
   const updateStatus = async (sheetId: string, newStatus: string) => {
     setUpdating(sheetId);
@@ -257,12 +267,8 @@ export default function AdminPrayerSheets() {
 
   const handleSubmissionListWhatsApp = () => {
     const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
-    const submittedIds = new Set(sheets.map((s) => s.student_id));
-    const notSubmitted = allStudents.filter((s) => !submittedIds.has(s.id));
-    const className =
-      selectedClass !== "all"
-        ? classes.find((c) => c.id === selectedClass)?.name || "All Classes"
-        : "All Classes";
+    const notSubmitted = notSubmittedStudents;
+    const className = classes.find((c) => c.id === selectedClass)?.name || "";
     const msg = generateSubmissionListMessage(
       sheets,
       notSubmitted,
@@ -319,17 +325,17 @@ export default function AdminPrayerSheets() {
     weekStart.toISOString().split("T")[0] ===
     getMondayOfWeek(new Date()).toISOString().split("T")[0];
 
-  const submittedIds = new Set(sheets.map((s) => s.student_id));
-  const notSubmittedCount = allStudents.filter(
+  const submittedIds = new Set(allSheets.map((s) => s.student_id));
+  const notSubmittedStudents = allStudents.filter(
     (s) => !submittedIds.has(s.id),
-  ).length;
+  );
+  const notSubmittedCount = notSubmittedStudents.length;
 
   const statusCounts = {
-    all: sheets.length,
-    submitted: sheets.filter((s) => s.status === "submitted").length,
-    flagged: sheets.filter((s) => s.status === "flagged").length,
+    all: allSheets.length,
+    submitted: allSheets.filter((s) => s.status === "submitted").length,
+    flagged: allSheets.filter((s) => s.status === "flagged").length,
   };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -350,7 +356,6 @@ export default function AdminPrayerSheets() {
           </button>
         </div>
       </div>
-
       {/* Class Filter */}
       <div className="flex gap-3 items-center flex-wrap">
         <select
@@ -358,12 +363,15 @@ export default function AdminPrayerSheets() {
           onChange={(e) => setSelectedClass(e.target.value)}
           className="px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="all">All Prayer Sheet Classes</option>
-          {classes.map((cls) => (
-            <option key={cls.id} value={cls.id}>
-              {cls.name}
-            </option>
-          ))}
+          {classes.length === 0 ? (
+            <option value="">No prayer sheet classes</option>
+          ) : (
+            classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
+            ))
+          )}
         </select>
 
         {/* Week Navigation */}
@@ -383,12 +391,11 @@ export default function AdminPrayerSheets() {
           </button>
         </div>
       </div>
-
       {/* Submission Summary */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-            {sheets.length}
+            {statusCounts.submitted}
           </p>
           <p className="text-xs text-green-600 dark:text-green-500">
             Submitted
@@ -411,8 +418,25 @@ export default function AdminPrayerSheets() {
           </p>
         </div>
       </div>
-
-      {/* Status Filter */}
+      {/* Not Submitted Students */}
+      {notSubmittedStudents.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">
+            ❌ Not Submitted ({notSubmittedStudents.length})
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {notSubmittedStudents.map((s) => (
+              <span
+                key={s.id}
+                className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-xs"
+              >
+                {s.first_name} {s.last_name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Status Filter */}{" "}
       <div className="flex gap-2 flex-wrap">
         {(["all", "submitted", "flagged"] as const).map((s) => (
           <button
@@ -429,7 +453,6 @@ export default function AdminPrayerSheets() {
           </button>
         ))}
       </div>
-
       {/* Sheets List */}
       {loading ? (
         <div className="flex justify-center py-12">
@@ -598,7 +621,6 @@ export default function AdminPrayerSheets() {
           })}
         </div>
       )}
-
       {/* WhatsApp Modal */}
       {showWhatsApp && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
