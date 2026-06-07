@@ -226,16 +226,28 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     setLoading(false);
   };
 
-  // Submission deadline check
   const isSubmissionAllowed = (() => {
+    const now = new Date();
+
+    // Earliest allowed: Sunday Isha time of the current week
+    const sunday = new Date(weekStart);
+    sunday.setDate(weekStart.getDate() + 6); // Sunday = Mon + 6
+    const [ishaHour, ishaMin] = prayerSettings.isha_unlock
+      .split(":")
+      .map(Number);
+    sunday.setHours(ishaHour, ishaMin, 0, 0);
+    if (now < sunday) return false; // Week not finished yet
+
+    // Latest allowed: deadline day+time after week ends
     const deadline = new Date(weekStart);
     const [dHour, dMin] = prayerSettings.deadline_time.split(":").map(Number);
-    // Find the next occurrence of deadline_day after week ends (Sunday)
     const daysUntilDeadline =
       (prayerSettings.deadline_day - deadline.getDay() + 7) % 7 || 7;
     deadline.setDate(deadline.getDate() + daysUntilDeadline);
     deadline.setHours(dHour, dMin, 0, 0);
-    return new Date() <= deadline;
+    if (now > deadline) return false; // Past deadline
+
+    return true;
   })();
 
   // Prayer unlock hours derived from settings
@@ -296,9 +308,8 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
 
     DAYS.forEach((d) => {
       PRAYERS.forEach((p) => {
-        // null = not marked (store as null), true = prayed, false = missed
-        payload[`${d}_${p}`] =
-          currentGrid[d][p] === null ? false : currentGrid[d][p];
+        // Store null as null, true as true, false as false
+        payload[`${d}_${p}`] = currentGrid[d][p];
       });
     });
 
@@ -628,9 +639,28 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
           {sheetId ? (
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                {!isSubmissionAllowed
-                  ? "⏰ Submission deadline passed"
-                  : `${totalMarked} of 35 prayers marked`}
+                {(() => {
+                  const now = new Date();
+                  const sunday = new Date(weekStart);
+                  sunday.setDate(weekStart.getDate() + 6);
+                  const [ishaHour] = prayerSettings.isha_unlock
+                    .split(":")
+                    .map(Number);
+                  sunday.setHours(ishaHour, 0, 0, 0);
+                  if (now < sunday)
+                    return "⏳ Week not finished yet — submit after Sunday Isha";
+                  const deadline = new Date(weekStart);
+                  const [dHour, dMin] = prayerSettings.deadline_time
+                    .split(":")
+                    .map(Number);
+                  const daysUntil =
+                    (prayerSettings.deadline_day - deadline.getDay() + 7) % 7 ||
+                    7;
+                  deadline.setDate(deadline.getDate() + daysUntil);
+                  deadline.setHours(dHour, dMin, 0, 0);
+                  if (now > deadline) return "⏰ Submission deadline passed";
+                  return `${totalMarked} of 35 prayers marked`;
+                })()}
               </p>
               <button
                 onClick={handleSubmit}
