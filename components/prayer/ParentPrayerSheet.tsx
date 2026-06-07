@@ -710,14 +710,13 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       )}
 
       {status === "submitted" && (
-        <div className="pt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <p className="text-sm text-blue-700 dark:text-blue-400 text-center">
-            ✓ Week submitted — waiting for teacher verification. Contact your
-            teacher if you need to make changes.
+        <div className="pt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <p className="text-sm text-green-700 dark:text-green-400 text-center">
+            ✓ Week submitted successfully. Contact your teacher if you need to
+            make any changes.
           </p>
         </div>
       )}
-
       {status === "verified" && (
         <div className="pt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <p className="text-sm text-green-700 dark:text-green-400 text-center">

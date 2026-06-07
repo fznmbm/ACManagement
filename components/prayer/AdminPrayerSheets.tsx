@@ -99,7 +99,10 @@ const generateIndividualMessage = (
   const pct = Math.round((total / 35) * 100);
   const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
 
-  const DAY_FULL = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Prayer abbrevs all same length (4 chars) for alignment
+  const PRAYER_ABBREV = ["Fajr", "Duhr", "Asr ", "Mghr", "Isha"];
+  // Day initials
+  const DAY_INITIALS = " M  T  W  T  F  S  S";
 
   let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
   msg += `📅 ${weekLabel}\n`;
@@ -107,14 +110,19 @@ const generateIndividualMessage = (
   if (streak > 0) msg += `🔥 ${streak} week streak\n`;
   msg += `\n`;
 
-  DAYS.forEach((day, di) => {
-    const dayPrayers = PRAYERS.map((prayer) =>
+  // Grid in monospace block for alignment
+  msg += `\`\`\`\n`;
+  msg += `     ${DAY_INITIALS}\n`;
+  PRAYERS.forEach((prayer, pi) => {
+    const abbrev = PRAYER_ABBREV[pi];
+    const cells = DAYS.map((day) =>
       sheet[`${day}_${prayer}`] ? "✅" : "❌",
     ).join(" ");
-    msg += `*${DAY_FULL[di]}:* ${dayPrayers}\n`;
+    msg += `${abbrev} ${cells}\n`;
   });
+  msg += `\`\`\`\n`;
 
-  msg += `\n${emoji} *Total: ${total}/35 (${pct}%)*`;
+  msg += `${emoji} *Total: ${total}/35 (${pct}%)*`;
 
   return msg;
 };
