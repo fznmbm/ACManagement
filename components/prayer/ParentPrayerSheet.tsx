@@ -250,7 +250,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     return true;
   })();
 
-  const getPrayerUnlockHour = useCallback(
+  const getPrayerUnlockMinutes = useCallback(
     (prayer: Prayer): number => {
       const map: Record<Prayer, string> = {
         fajr: prayerSettings.fajr_unlock,
@@ -259,17 +259,18 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
         maghrib: prayerSettings.maghrib_unlock,
         isha: prayerSettings.isha_unlock,
       };
-      return parseInt(map[prayer].split(":")[0]);
+      const [h, m] = map[prayer].split(":").map(Number);
+      return h * 60 + m; // total minutes since midnight
     },
     [prayerSettings],
   );
 
-  const PRAYER_UNLOCK_HOUR: Record<Prayer, number> = {
-    fajr: getPrayerUnlockHour("fajr"),
-    dhuhr: getPrayerUnlockHour("dhuhr"),
-    asr: getPrayerUnlockHour("asr"),
-    maghrib: getPrayerUnlockHour("maghrib"),
-    isha: getPrayerUnlockHour("isha"),
+  const PRAYER_UNLOCK_MINUTES: Record<Prayer, number> = {
+    fajr: getPrayerUnlockMinutes("fajr"),
+    dhuhr: getPrayerUnlockMinutes("dhuhr"),
+    asr: getPrayerUnlockMinutes("asr"),
+    maghrib: getPrayerUnlockMinutes("maghrib"),
+    isha: getPrayerUnlockMinutes("isha"),
   };
 
   // 3-state toggle: null → true → false → null
@@ -289,7 +290,8 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       // Block future prayers today
       const now = new Date();
       const isToday = cellDate.getTime() === today.getTime();
-      if (isToday && now.getHours() < getPrayerUnlockHour(prayer)) return;
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      if (isToday && nowMinutes < getPrayerUnlockMinutes(prayer)) return;
 
       const current = grid[day][prayer];
       const next: CellState =
@@ -311,7 +313,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       sheetId,
       studentId,
       weekStart,
-      getPrayerUnlockHour,
+      getPrayerUnlockMinutes,
     ],
   );
 
@@ -410,20 +412,11 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
 
     const isFutureDay = cellDateOnly > todayOnly;
     const isToday = cellDateOnly.getTime() === todayOnly.getTime();
+    const nowMinutes = today.getHours() * 60 + today.getMinutes();
     const isFuturePrayer =
-      isToday && today.getHours() < PRAYER_UNLOCK_HOUR[prayer];
+      isToday && nowMinutes < PRAYER_UNLOCK_MINUTES[prayer];
     const cellLocked = isLocked || isFutureDay || isFuturePrayer;
     const dimmed = isFutureDay || isFuturePrayer;
-    if (prayer === "isha" && day === "sunday") {
-      console.log("Isha debug:", {
-        isToday,
-        isFutureDay,
-        isFuturePrayer,
-        currentHour: today.getHours(),
-        unlockHour: PRAYER_UNLOCK_HOUR[prayer],
-        dimmed,
-      });
-    }
 
     if (val === true) {
       return (
