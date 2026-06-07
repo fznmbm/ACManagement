@@ -102,7 +102,7 @@ const generateIndividualMessage = (
   // Prayer abbrevs all same length (4 chars) for alignment
   const PRAYER_ABBREV = ["Fajr", "Duhr", "Asr ", "Mghr", "Isha"];
   // Day initials
-  const DAY_INITIALS = " M  T   W  T  F   S   S";
+  const DAY_INITIALS = " M   T   W   T  F   S   S";
 
   let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
   msg += `📅 ${weekLabel}\n`;
