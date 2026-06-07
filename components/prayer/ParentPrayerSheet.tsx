@@ -414,6 +414,16 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
       isToday && today.getHours() < PRAYER_UNLOCK_HOUR[prayer];
     const cellLocked = isLocked || isFutureDay || isFuturePrayer;
     const dimmed = isFutureDay || isFuturePrayer;
+    if (prayer === "isha" && day === "sunday") {
+      console.log("Isha debug:", {
+        isToday,
+        isFutureDay,
+        isFuturePrayer,
+        currentHour: today.getHours(),
+        unlockHour: PRAYER_UNLOCK_HOUR[prayer],
+        dimmed,
+      });
+    }
 
     if (val === true) {
       return (
