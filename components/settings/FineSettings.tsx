@@ -34,7 +34,11 @@ export default function FineSettings() {
 
       if (error) throw error;
 
-      const fineData = JSON.parse(data?.setting_value || "{}");
+      //const fineData = JSON.parse(data?.setting_value || "{}");
+      const fineData =
+        (typeof data?.setting_value === "string"
+          ? JSON.parse(data.setting_value)
+          : data?.setting_value) || {};
 
       const settings = [
         {

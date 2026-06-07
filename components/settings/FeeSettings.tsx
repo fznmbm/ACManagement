@@ -167,7 +167,11 @@ export default function FeeSettings() {
       if (error) throw error;
 
       //const settings = JSON.parse(data?.setting_value || "{}");
-      const settings = (data?.setting_value as any) || {};
+      const settings =
+        (typeof data?.setting_value === "string"
+          ? JSON.parse(data.setting_value)
+          : data?.setting_value) || {};
+
       setFeeSettings({
         auto_generate_invoices: settings.auto_generate_invoices !== false,
         overdue_grace_days: settings.overdue_grace_days || 7,
