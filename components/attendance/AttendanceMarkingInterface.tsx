@@ -216,14 +216,35 @@ export default function AttendanceMarkingInterface({
       return;
     setSaving(true);
     try {
+      // Get attendance record IDs first so we can delete associated fines
+      const { data: attendanceRecords } = await supabase
+        .from("attendance")
+        .select("id")
+        .eq("class_id", selectedClassId)
+        .eq("date", selectedDate);
+
+      if (attendanceRecords && attendanceRecords.length > 0) {
+        const attendanceIds = attendanceRecords.map((r) => r.id);
+
+        // Delete fines linked to these attendance records
+        await supabase
+          .from("fines")
+          .delete()
+          .in("attendance_record_id", attendanceIds);
+      }
+
+      // Delete attendance records
       const { error } = await supabase
         .from("attendance")
         .delete()
         .eq("class_id", selectedClassId)
         .eq("date", selectedDate);
+
       if (error) throw error;
+
       setAttendanceMap(new Map());
       setNotesMap(new Map());
+      refreshFines();
       router.refresh();
     } catch (error) {
       console.error("Error clearing attendance:", error);
