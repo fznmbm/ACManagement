@@ -39,7 +39,10 @@
     "components/ui/ThemeToggle.tsx.backup",
     "middleware.ts",
     "middleware-working.ts.backup",
-    "app/(dashboard)/dashboard/page.tsx.backup"
+    "app/(dashboard)/dashboard/page.tsx.backup",
+    "components/parent/tabs/CertificatesTab copy.tsx.backup",
+    "components/parent/tabs/AttendanceTab copy.tsx.backup",
+    "app/(parent)/parent/children/page copy.tsx.backup"
   ],
   "exclude": ["node_modules"]
 }

@@ -14,24 +14,9 @@ interface Attendance {
   id: string;
   date: string;
   status: "present" | "absent" | "late" | "excused";
-  session_type: string;
-  arrival_time?: string;
-  departure_time?: string;
   notes?: string;
   class_id?: string;
-  classes?: {
-    name: string;
-    schedule: any;
-  } | null;
-}
-
-interface AttendanceStats {
-  totalDays: number;
-  present: number;
-  absent: number;
-  late: number;
-  excused: number;
-  attendanceRate: number;
+  classes?: { name: string } | null;
 }
 
 interface AttendanceTabProps {
@@ -40,18 +25,8 @@ interface AttendanceTabProps {
 
 export default function AttendanceTab({ studentId }: AttendanceTabProps) {
   const supabase = createClient();
-
   const [attendance, setAttendance] = useState<Attendance[]>([]);
-  const [stats, setStats] = useState<AttendanceStats>({
-    totalDays: 0,
-    present: 0,
-    absent: 0,
-    late: 0,
-    excused: 0,
-    attendanceRate: 0,
-  });
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   useEffect(() => {
     fetchAttendance();
@@ -59,266 +34,181 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
 
   const fetchAttendance = async () => {
     try {
-      setLoading(true);
-
-      console.log("🔍 Fetching attendance for student:", studentId);
-
-      // Fetch attendance first
-      const { data: attendanceData, error: attendanceError } = await supabase
+      const { data } = await supabase
         .from("attendance")
         .select("*")
         .eq("student_id", studentId)
         .order("date", { ascending: false });
 
-      if (attendanceError) {
-        console.error("❌ Error fetching attendance:", attendanceError);
-        throw attendanceError;
+      if (!data) {
+        setLoading(false);
+        return;
       }
 
-      console.log("📊 Attendance data:", attendanceData);
-
-      // Get unique class IDs
-      const classIds = Array.from(
-        new Set(
-          attendanceData?.map((a) => a.class_id).filter((id) => id != null)
-        )
-      );
-
-      console.log("📚 Class IDs:", classIds);
-
-      // Fetch classes separately
+      const classIds = [
+        ...new Set(data.map((a) => a.class_id).filter(Boolean)),
+      ];
       let classesMap = new Map();
       if (classIds.length > 0) {
-        const { data: classesData, error: classesError } = await supabase
+        const { data: classes } = await supabase
           .from("classes")
-          .select("id, name, schedule, description")
+          .select("id, name")
           .in("id", classIds);
-
-        console.log("📚 Classes data:", classesData, "Error:", classesError);
-
-        if (classesData) {
-          classesData.forEach((cls) => {
-            classesMap.set(cls.id, cls);
-          });
-        }
+        classes?.forEach((c) => classesMap.set(c.id, c));
       }
 
-      // Combine data
-      const combinedData =
-        attendanceData?.map((record) => ({
-          ...record,
-          classes: record.class_id
-            ? classesMap.get(record.class_id) || null
-            : null,
-        })) || [];
-
-      console.log("✅ Combined attendance data:", combinedData);
-
-      setAttendance(combinedData);
-
-      // Calculate statistics
-      const totalDays = combinedData.length;
-      const present = combinedData.filter((a) => a.status === "present").length;
-      const absent = combinedData.filter((a) => a.status === "absent").length;
-      const late = combinedData.filter((a) => a.status === "late").length;
-      const excused = combinedData.filter((a) => a.status === "excused").length;
-      const attendanceRate =
-        totalDays > 0 ? Math.round((present / totalDays) * 100) : 0;
-
-      setStats({
-        totalDays,
-        present,
-        absent,
-        late,
-        excused,
-        attendanceRate,
-      });
+      setAttendance(
+        data.map((r) => ({
+          ...r,
+          classes: r.class_id ? classesMap.get(r.class_id) || null : null,
+        })),
+      );
     } catch (err) {
-      console.error("❌ Error fetching attendance:", err);
+      console.error("Error fetching attendance:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "present":
-        return "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400";
-      case "absent":
-        return "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400";
-      case "late":
-        return "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400";
-      case "excused":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400";
-      default:
-        return "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300";
-    }
-  };
+  const total = attendance.length;
+  const present = attendance.filter((a) => a.status === "present").length;
+  const absent = attendance.filter((a) => a.status === "absent").length;
+  const late = attendance.filter((a) => a.status === "late").length;
+  const excused = attendance.filter((a) => a.status === "excused").length;
+  const rate = total > 0 ? Math.round((present / total) * 100) : 0;
 
-  const getStatusIcon = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
       case "present":
-        return <CheckCircle className="h-4 w-4" />;
+        return {
+          bg: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
+          icon: <CheckCircle className="h-3.5 w-3.5" />,
+        };
       case "absent":
-        return <XCircle className="h-4 w-4" />;
+        return {
+          bg: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
+          icon: <XCircle className="h-3.5 w-3.5" />,
+        };
       case "late":
-        return <Clock className="h-4 w-4" />;
+        return {
+          bg: "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400",
+          icon: <Clock className="h-3.5 w-3.5" />,
+        };
       case "excused":
-        return <AlertCircle className="h-4 w-4" />;
+        return {
+          bg: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
+          icon: <AlertCircle className="h-3.5 w-3.5" />,
+        };
       default:
-        return null;
+        return { bg: "bg-slate-100 text-slate-700", icon: null };
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center">
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
-            {stats.totalDays}
-          </p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Total Days
-          </p>
-        </div>
-
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
-          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-            {stats.present}
-          </p>
-          <p className="text-sm text-green-600 dark:text-green-500">Present</p>
-        </div>
-
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
-          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-            {stats.absent}
-          </p>
-          <p className="text-sm text-red-600 dark:text-red-500">Absent</p>
-        </div>
-
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 text-center">
-          <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">
-            {stats.late}
-          </p>
-          <p className="text-sm text-orange-600 dark:text-orange-500">Late</p>
-        </div>
-
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-center">
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-            {stats.excused}
-          </p>
-          <p className="text-sm text-blue-600 dark:text-blue-500">Excused</p>
-        </div>
-      </div>
-
-      {/* Attendance Rate */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800 p-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-green-600 dark:text-green-400" />
-            Attendance Rate
-          </h3>
-          <span className="text-3xl font-bold text-green-700 dark:text-green-400">
-            {stats.attendanceRate}%
-          </span>
-        </div>
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
-          <div
-            className="bg-green-500 h-3 rounded-full transition-all duration-500"
-            style={{ width: `${stats.attendanceRate}%` }}
-          ></div>
-        </div>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
-          {stats.present} out of {stats.totalDays} days present
+  if (total === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
+        <Calendar className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          No attendance records yet
         </p>
       </div>
+    );
+  }
 
-      {/* Attendance Records */}
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-          Attendance Records
-        </h3>
+  return (
+    <div className="space-y-4">
+      {/* Compact summary */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3 flex-wrap text-sm text-slate-600 dark:text-slate-400">
+            <span>{total} days total</span>
+            <span className="text-green-600 dark:text-green-400 font-medium">
+              ✅ {present} present
+            </span>
+            {absent > 0 && (
+              <span className="text-red-600 dark:text-red-400 font-medium">
+                ❌ {absent} absent
+              </span>
+            )}
+            {late > 0 && (
+              <span className="text-orange-600 dark:text-orange-400 font-medium">
+                ⏰ {late} late
+              </span>
+            )}
+            {excused > 0 && (
+              <span className="text-blue-600 dark:text-blue-400 font-medium">
+                ℹ️ {excused} excused
+              </span>
+            )}
+          </div>
+          <span
+            className={`text-lg font-bold ${rate >= 75 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+          >
+            {rate}%
+          </span>
+        </div>
+        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all ${rate >= 75 ? "bg-green-500" : "bg-red-500"}`}
+            style={{ width: `${rate}%` }}
+          />
+        </div>
+      </div>
 
-        {attendance.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 text-center">
-            <Calendar className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-600 dark:text-slate-400">
-              No attendance records yet
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Class
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Time
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Notes
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  {attendance.map((record) => (
-                    <tr
-                      key={record.id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
-                        {new Date(record.date).toLocaleDateString("en-GB", {
-                          weekday: "short",
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                        {record.classes?.name || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(
-                            record.status
-                          )}`}
-                        >
-                          {getStatusIcon(record.status)}
-                          {record.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                        {record.arrival_time || "-"}
-                        {record.departure_time && ` - ${record.departure_time}`}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                        {record.notes || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+      {/* Records */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+          <h3 className="font-medium text-slate-900 dark:text-white text-sm">
+            Attendance Records
+          </h3>
+        </div>
+        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          {attendance.map((record) => {
+            const style = getStatusStyle(record.status);
+            return (
+              <div
+                key={record.id}
+                className="flex items-center justify-between px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    {new Date(record.date).toLocaleDateString("en-GB", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                  {record.classes?.name && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {record.classes.name}
+                    </p>
+                  )}
+                  {record.notes && (
+                    <p className="text-xs text-slate-400 italic mt-0.5">
+                      {record.notes}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${style.bg}`}
+                >
+                  {style.icon}
+                  {record.status.charAt(0).toUpperCase() +
+                    record.status.slice(1)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

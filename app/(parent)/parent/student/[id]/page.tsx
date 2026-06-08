@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Award,
   ArrowLeft,
+  MessageSquare,
 } from "lucide-react";
 import AttendanceTab from "@/components/parent/tabs/AttendanceTab";
 import GradesTab from "@/components/parent/tabs/GradesTab";
@@ -19,6 +20,7 @@ import MemorizationTab from "@/components/parent/tabs/MemorizationTab";
 import FinancesTab from "@/components/parent/tabs/FinancesTab";
 import CertificatesTab from "@/components/parent/tabs/CertificatesTab";
 import ParentPrayerSheet from "@/components/prayer/ParentPrayerSheet";
+import FeedbackTab from "@/components/parent/tabs/FeedbackTab";
 
 interface Student {
   id: string;
@@ -42,7 +44,8 @@ type TabType =
   | "memorization"
   | "finances"
   | "certificates"
-  | "prayers";
+  | "prayers"
+  | "feedback";
 
 export default function StudentDetailPage() {
   const params = useParams();
@@ -220,7 +223,7 @@ export default function StudentDetailPage() {
     },
     {
       id: "memorization" as TabType,
-      label: "Memorization",
+      label: "Progress",
       icon: BookOpen,
       alwaysShow: false,
       permission: parentLink?.can_view_grades,
@@ -243,6 +246,12 @@ export default function StudentDetailPage() {
       id: "prayers" as TabType,
       label: "Prayers",
       icon: BookOpen,
+      alwaysShow: true,
+    },
+    {
+      id: "feedback" as TabType,
+      label: "Feedback",
+      icon: MessageSquare,
       alwaysShow: true,
     },
   ];
@@ -384,6 +393,11 @@ export default function StudentDetailPage() {
 
         {activeTab === "certificates" && (
           <CertificatesTab studentId={params.id as string} />
+        )}
+        {activeTab === "feedback" && (
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+            <FeedbackTab studentId={params.id as string} />
+          </div>
         )}
 
         {activeTab === "prayers" && student && (
