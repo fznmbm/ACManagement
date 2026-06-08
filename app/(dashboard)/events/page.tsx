@@ -1,10 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Calendar, Clock, MapPin, Filter, AlertCircle } from "lucide-react";
-import WhatsAppEventModal from "@/components/events/WhatsAppEventModal";
-import EventRSVPConfig from "@/components/events/EventRSVPConfig";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Plus,
+  Trash2,
+  MessageSquare,
+  CheckCircle2,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+} from "lucide-react";
 import EventRSVPManagement from "@/components/events/EventRSVPManagement";
 
 interface Event {
@@ -19,16 +29,10 @@ interface Event {
   priority: "normal" | "urgent" | "critical";
   show_to_all: boolean;
   visible_to_parents: boolean;
-  // RSVP fields
   rsvp_required: boolean;
-  rsvp_type: "none" | "adults_only" | "family" | "students_only";
-  rsvp_collect_age_breakdown: boolean;
   rsvp_deadline: string | null;
-  max_capacity: number | null;
   created_at: string;
-  classes?: {
-    name: string;
-  };
+  classes?: { name: string } | null;
 }
 
 interface Class {
@@ -36,24 +40,28 @@ interface Class {
   name: string;
 }
 
+const EVENT_TYPE_COLORS: Record<string, string> = {
+  holiday: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  exam: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  meeting: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  celebration:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  general: "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300",
+};
+
 export default function EventsPage() {
+  const supabase = createClient();
   const [events, setEvents] = useState<Event[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [userRole, setUserRole] = useState("");
-  const [activeTab, setActiveTab] = useState<"events" | "rsvp">("events");
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [showWhatsApp, setShowWhatsApp] = useState<string | null>(null);
+  const [whatsAppMsg, setWhatsAppMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  // WhatsApp modal states
-  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [createdEvent, setCreatedEvent] = useState<Event | null>(null);
-
-  // Filter states
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterPriority, setFilterPriority] = useState<string>("all");
-
-  // Form state
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -67,118 +75,58 @@ export default function EventsPage() {
     class_id: "",
     visible_to_parents: true,
     rsvp_required: false,
-    rsvp_type: "none" as "none" | "adults_only" | "family" | "students_only",
-    rsvp_collect_age_breakdown: false,
     rsvp_deadline: "",
-    max_capacity: 0,
   });
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    loadUserRole();
     loadEvents();
     loadClasses();
-    loadUserRole();
   }, []);
 
   async function loadUserRole() {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        if (data) setUserRole(data.role);
-      }
-    } catch (error) {
-      console.error("Error loading user role:", error);
-    }
-  }
-
-  async function loadClasses() {
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("classes")
-        .select("id, name")
-        .eq("is_active", true)
-        .order("name");
-
-      if (error) throw error;
-      setClasses(data || []);
-    } catch (error) {
-      console.error("Error loading classes:", error);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (data) setUserRole(data.role);
     }
   }
 
   async function loadEvents() {
     setLoading(true);
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("events")
-        .select(
-          `
-          *,
-          classes (name)
-        `
-        )
-        .order("event_date", { ascending: true })
-        .gte("event_date", new Date().toISOString().split("T")[0]);
-
-      if (error) throw error;
-      setEvents(data || []);
-    } catch (error) {
-      console.error("Error loading events:", error);
-      alert("Failed to load events");
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await supabase
+      .from("events")
+      .select("*, classes(name)")
+      .order("event_date", { ascending: true })
+      .gte("event_date", new Date().toISOString().split("T")[0]);
+    setEvents(data || []);
+    setLoading(false);
   }
 
-  // Handler for RSVP config changes (NEW)
-  const handleRSVPConfigChange = useCallback(
-    (config: {
-      rsvp_required: boolean;
-      rsvp_type: string;
-      rsvp_collect_age_breakdown: boolean;
-      rsvp_deadline: string;
-      max_capacity: number;
-    }) => {
-      setFormData((prev) => ({
-        ...prev,
-        rsvp_required: config.rsvp_required,
-        rsvp_type: config.rsvp_type as any,
-        rsvp_collect_age_breakdown: config.rsvp_collect_age_breakdown,
-        rsvp_deadline: config.rsvp_deadline,
-        max_capacity: config.max_capacity,
-      }));
-    },
-    []
-  );
+  async function loadClasses() {
+    const { data } = await supabase
+      .from("classes")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("name");
+    setClasses(data || []);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    if (!formData.title || !formData.event_date) {
-      alert("Please fill in required fields");
-      return;
-    }
-
+    if (!formData.title || !formData.event_date) return;
     setSaving(true);
     try {
-      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
-      if (!user) throw new Error("Not authenticated");
-
-      const eventData: any = {
+      const payload: any = {
         title: formData.title,
         description: formData.description || null,
         event_date: formData.event_date,
@@ -189,37 +137,23 @@ export default function EventsPage() {
         priority: formData.priority,
         show_to_all: formData.show_to_all,
         visible_to_parents: formData.visible_to_parents,
-        created_by: user.id,
+        created_by: user?.id,
         rsvp_required: formData.rsvp_required,
-        rsvp_type: formData.rsvp_type,
-        rsvp_collect_age_breakdown: formData.rsvp_collect_age_breakdown,
-        rsvp_deadline: formData.rsvp_deadline || null,
-        max_capacity: formData.max_capacity > 0 ? formData.max_capacity : null,
+        rsvp_deadline:
+          formData.rsvp_required && formData.rsvp_deadline
+            ? formData.rsvp_deadline
+            : null,
+        rsvp_type: "family",
       };
-
       if (!formData.show_to_all && formData.class_id) {
-        eventData.class_id = formData.class_id;
+        payload.class_id = formData.class_id;
       }
-
       const { data: newEvent, error } = await supabase
         .from("events")
-        .insert(eventData)
+        .insert(payload)
         .select()
         .single();
-
       if (error) throw error;
-
-      setCreatedEvent({
-        ...newEvent,
-        description: newEvent.description ?? undefined,
-        event_time: newEvent.event_time ?? undefined,
-        end_time: newEvent.end_time ?? undefined,
-        location: newEvent.location ?? undefined,
-        rsvp_deadline: newEvent.rsvp_deadline ?? undefined,
-        max_capacity: newEvent.max_capacity ?? undefined,
-      });
-      setShowWhatsAppModal(true);
-
       setShowForm(false);
       setFormData({
         title: "",
@@ -234,684 +168,493 @@ export default function EventsPage() {
         class_id: "",
         visible_to_parents: true,
         rsvp_required: false,
-        rsvp_type: "none",
-        rsvp_collect_age_breakdown: false,
         rsvp_deadline: "",
-        max_capacity: 0,
       });
-
       loadEvents();
-    } catch (error: any) {
-      console.error("Error creating event:", error);
-      alert(error.message || "Failed to create event");
+      // Auto-show WhatsApp
+      generateWhatsAppMessage(newEvent);
+      setShowWhatsApp(newEvent.id);
+    } catch (err: any) {
+      alert(err.message || "Failed to create event");
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(eventId: string) {
-    if (!confirm("Are you sure you want to delete this event?")) return;
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("events")
-        .delete()
-        .eq("id", eventId);
-
-      if (error) throw error;
-
-      alert("Event deleted successfully");
-      loadEvents();
-    } catch (error: any) {
-      console.error("Error deleting event:", error);
-      alert(error.message || "Failed to delete event");
-    }
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this event?")) return;
+    await supabase.from("events").delete().eq("id", id);
+    setEvents((prev) => prev.filter((e) => e.id !== id));
   }
 
-  function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
+  function generateWhatsAppMessage(event: Event) {
+    const dateStr = new Date(event.event_date).toLocaleDateString("en-GB", {
       weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",
     });
+    let msg = `🕌 *Al Hikmah Institute Crawley*\n\n`;
+    if (event.priority === "urgent") msg += `⚠️ *URGENT*\n\n`;
+    if (event.priority === "critical") msg += `🚨 *IMPORTANT*\n\n`;
+    msg += `📢 *${event.title}*\n`;
+    msg += `📅 ${dateStr}\n`;
+    if (event.event_time) {
+      msg += `🕐 ${event.event_time}`;
+      if (event.end_time) msg += ` – ${event.end_time}`;
+      msg += `\n`;
+    }
+    if (event.location) msg += `📍 ${event.location}\n`;
+    if (event.description) msg += `\n${event.description}\n`;
+    if (event.rsvp_required) {
+      msg += `\n📝 *RSVP required`;
+      if (event.rsvp_deadline) {
+        const deadline = new Date(event.rsvp_deadline).toLocaleDateString(
+          "en-GB",
+          {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          },
+        );
+        msg += ` by ${deadline}`;
+      }
+      msg += `*\nPlease confirm attendance on the parent portal.`;
+    }
+    msg += `\n\nJazakAllah Khair`;
+    setWhatsAppMsg(msg);
   }
 
-  function getEventTypeColor(type: Event["event_type"]) {
-    const colors = {
-      holiday: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100",
-      exam: "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-100",
-      meeting: "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100",
-      celebration:
-        "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100",
-      general: "bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100",
-    };
-    return colors[type];
+  function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   }
 
-  function getPriorityBadge(priority: Event["priority"]) {
-    const badges = {
-      normal: {
-        text: "Normal",
-        classes:
-          "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
-        icon: null,
-      },
-      urgent: {
-        text: "Urgent",
-        classes:
-          "bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200",
-        icon: "⚠️",
-      },
-      critical: {
-        text: "Critical",
-        classes: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
-        icon: "🚨",
-      },
-    };
-    return badges[priority];
-  }
-
-  const canCreateEvent = ["super_admin", "admin", "teacher"].includes(userRole);
-
-  const filteredEvents = events.filter((event) => {
-    if (filterType !== "all" && event.event_type !== filterType) return false;
-    if (filterPriority !== "all" && event.priority !== filterPriority)
-      return false;
-    return true;
-  });
-
-  // Get events with RSVP required for RSVP tab
-  const eventsWithRSVP = events.filter((e) => e.rsvp_required);
+  const canManage = ["super_admin", "admin", "teacher"].includes(userRole);
 
   return (
-    <div className="p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Events Calendar
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Upcoming school events and activities
-            </p>
-          </div>
-          {canCreateEvent && activeTab === "events" && (
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-            >
-              {showForm ? "Cancel" : "+ Create Event"}
-            </button>
-          )}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Events</h2>
+          <p className="text-muted-foreground">
+            Upcoming school events and activities
+          </p>
         </div>
+        {canManage && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Create Event
+          </button>
+        )}
+      </div>
 
-        {/* Tabs (NEW) */}
-        <div className="mb-6 border-b border-border">
-          <div className="flex gap-1">
-            <button
-              onClick={() => {
-                setActiveTab("events");
-                setSelectedEvent(null);
-              }}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "events"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              📅 Events
-            </button>
-            <button
-              onClick={() => setActiveTab("rsvp")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "rsvp"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              📝 RSVP Management
-              {eventsWithRSVP.length > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                  {eventsWithRSVP.length}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Events Tab Content */}
-        {activeTab === "events" && (
-          <>
-            {/* Filters */}
-            <div className="mb-6 p-4 border border-input rounded-lg bg-card">
-              <div className="flex items-center gap-2 mb-3">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Filters</span>
+      {/* Create Event Form */}
+      {showForm && (
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">New Event</h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="form-label">Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="e.g. End of Term Party"
+                />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div>
+                <label className="form-label">Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={formData.event_date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, event_date: e.target.value })
+                  }
+                  className="form-input"
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Event Type</label>
+                <select
+                  value={formData.event_type}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      event_type: e.target.value as any,
+                    })
+                  }
+                  className="form-input"
+                >
+                  <option value="general">General</option>
+                  <option value="holiday">Holiday</option>
+                  <option value="exam">Exam</option>
+                  <option value="meeting">Meeting</option>
+                  <option value="celebration">Celebration</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">Start Time</label>
+                <input
+                  type="time"
+                  value={formData.event_time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, event_time: e.target.value })
+                  }
+                  className="form-input"
+                />
+              </div>
+
+              <div>
+                <label className="form-label">End Time</label>
+                <input
+                  type="time"
+                  value={formData.end_time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, end_time: e.target.value })
+                  }
+                  className="form-input"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="form-label">Location</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="e.g. Al Hikmah Institute Hall"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="form-label">Description</label>
+                <textarea
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="Event details..."
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: e.target.value as any,
+                    })
+                  }
+                  className="form-input"
+                >
+                  <option value="normal">Normal</option>
+                  <option value="urgent">Urgent ⚠️</option>
+                  <option value="critical">Critical 🚨</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-3 justify-end pb-1">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.show_to_all}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        show_to_all: e.target.checked,
+                      })
+                    }
+                    className="rounded border-input text-primary"
+                  />
+                  School-wide event
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.visible_to_parents}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        visible_to_parents: e.target.checked,
+                      })
+                    }
+                    className="rounded border-input text-primary"
+                  />
+                  Visible to parents
+                </label>
+              </div>
+
+              {!formData.show_to_all && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Event Type
-                  </label>
+                  <label className="form-label">Class</label>
                   <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                    value={formData.class_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, class_id: e.target.value })
+                    }
+                    className="form-input"
                   >
-                    <option value="all">All Types</option>
-                    <option value="general">General</option>
-                    <option value="holiday">Holiday</option>
-                    <option value="exam">Exam</option>
-                    <option value="meeting">Meeting</option>
-                    <option value="celebration">Celebration</option>
+                    <option value="">Select class</option>
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Priority
-                  </label>
-                  <select
-                    value={filterPriority}
-                    onChange={(e) => setFilterPriority(e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                  >
-                    <option value="all">All Priorities</option>
-                    <option value="normal">Normal</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="critical">Critical</option>
-                  </select>
-                </div>
+              )}
+
+              {/* RSVP */}
+              <div className="md:col-span-2 border-t pt-4">
+                <label className="flex items-center gap-2 text-sm font-medium mb-3">
+                  <input
+                    type="checkbox"
+                    checked={formData.rsvp_required}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        rsvp_required: e.target.checked,
+                      })
+                    }
+                    className="rounded border-input text-primary"
+                  />
+                  Require RSVP from parents
+                </label>
+                {formData.rsvp_required && (
+                  <div>
+                    <label className="form-label">RSVP Deadline</label>
+                    <input
+                      type="date"
+                      value={formData.rsvp_deadline}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          rsvp_deadline: e.target.value,
+                        })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Create Event Form */}
-            {showForm && (
-              <div className="mb-6 p-6 border border-input rounded-lg bg-card">
-                <h2 className="text-xl font-semibold mb-4">Create New Event</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Title *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.title}
-                        onChange={(e) =>
-                          setFormData({ ...formData, title: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                        placeholder="Event title..."
-                      />
-                    </div>
+            <div className="flex gap-3 pt-2 border-t">
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn-primary flex items-center gap-2"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                {saving ? "Creating..." : "Create Event"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="btn-outline"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Event Type
-                      </label>
-                      <select
-                        value={formData.event_type}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            event_type: e.target.value as Event["event_type"],
-                          })
-                        }
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+      {/* Events List */}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : events.length === 0 ? (
+        <div className="bg-card border border-border rounded-lg p-12 text-center">
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">No upcoming events</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {events.map((event) => (
+            <div
+              key={event.id}
+              className="bg-card border border-border rounded-lg overflow-hidden"
+            >
+              {/* Event Row */}
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span
+                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${EVENT_TYPE_COLORS[event.event_type]}`}
                       >
-                        <option value="general">General</option>
-                        <option value="holiday">Holiday</option>
-                        <option value="exam">Exam</option>
-                        <option value="meeting">Meeting</option>
-                        <option value="celebration">Celebration</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Priority *
-                      </label>
-                      <select
-                        value={formData.priority}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            priority: e.target.value as Event["priority"],
-                          })
-                        }
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                      >
-                        <option value="normal">Normal</option>
-                        <option value="urgent">Urgent ⚠️</option>
-                        <option value="critical">Critical 🚨</option>
-                      </select>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Urgent/Critical events send priority notifications to
-                        parents
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Date *
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        value={formData.event_date}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            event_date: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Time
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="time"
-                          value={formData.event_time}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              event_time: e.target.value,
-                            })
-                          }
-                          className="px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                          placeholder="Start"
-                        />
-                        <input
-                          type="time"
-                          value={formData.end_time}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              end_time: e.target.value,
-                            })
-                          }
-                          className="px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                          placeholder="End"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Location
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) =>
-                          setFormData({ ...formData, location: e.target.value })
-                        }
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                        placeholder="Event location..."
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium mb-2">
-                        Description
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            description: e.target.value,
-                          })
-                        }
-                        rows={3}
-                        className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground resize-none"
-                        placeholder="Event description..."
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 space-y-3">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.show_to_all}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              show_to_all: e.target.checked,
-                              class_id: e.target.checked
-                                ? ""
-                                : formData.class_id,
-                            })
-                          }
-                          className="rounded"
-                        />
-                        <span className="text-sm">
-                          School-wide event (all classes)
+                        {event.event_type.charAt(0).toUpperCase() +
+                          event.event_type.slice(1)}
+                      </span>
+                      {event.priority !== "normal" && (
+                        <span className="text-xs font-medium text-orange-600">
+                          {event.priority === "urgent"
+                            ? "⚠️ Urgent"
+                            : "🚨 Critical"}
                         </span>
-                      </label>
-
-                      {!formData.show_to_all && (
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Specific Class
-                          </label>
-                          <select
-                            value={formData.class_id}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                class_id: e.target.value,
-                              })
-                            }
-                            className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                          >
-                            <option value="">Select a class</option>
-                            {classes.map((cls) => (
-                              <option key={cls.id} value={cls.id}>
-                                {cls.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
                       )}
+                      {event.rsvp_required && (
+                        <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+                          RSVP Required
+                        </span>
+                      )}
+                      {!event.show_to_all && event.classes && (
+                        <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">
+                          {event.classes.name}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-base">{event.title}</h3>
+                    <div className="flex flex-wrap gap-3 mt-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDate(event.event_date)}
+                      </span>
+                      {event.event_time && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {event.event_time}
+                          {event.end_time ? ` – ${event.end_time}` : ""}
+                        </span>
+                      )}
+                      {event.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {event.location}
+                        </span>
+                      )}
+                    </div>
+                    {event.description && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {event.description}
+                      </p>
+                    )}
+                  </div>
 
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.visible_to_parents}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              visible_to_parents: e.target.checked,
-                            })
+                  {canManage && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      {event.rsvp_required && (
+                        <button
+                          onClick={() =>
+                            setSelectedEventId(
+                              selectedEventId === event.id ? null : event.id,
+                            )
                           }
-                          className="rounded"
-                        />
-                        <span className="text-sm">Visible to parents</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* RSVP Configuration Component */}
-                  <div className="md:col-span-2">
-                    <EventRSVPConfig
-                      rsvpRequired={formData.rsvp_required}
-                      rsvpType={formData.rsvp_type}
-                      collectAgeBreakdown={formData.rsvp_collect_age_breakdown}
-                      rsvpDeadline={formData.rsvp_deadline}
-                      maxCapacity={formData.max_capacity}
-                      eventType={formData.event_type}
-                      onChange={handleRSVPConfigChange}
-                    />
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                    >
-                      {saving ? "Creating..." : "Create Event"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowForm(false)}
-                      className="px-6 py-2 border border-input rounded-lg font-medium hover:bg-accent transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* Events List */}
-            {loading ? (
-              <div className="text-center py-12 text-muted-foreground">
-                Loading events...
-              </div>
-            ) : filteredEvents.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                {events.length === 0
-                  ? "No upcoming events"
-                  : "No events match the selected filters"}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredEvents.map((event) => {
-                  const priorityBadge = getPriorityBadge(event.priority);
-                  return (
-                    <div
-                      key={event.id}
-                      className="p-6 border border-input rounded-lg bg-card hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span
-                              className={`px-3 py-1 text-xs font-medium rounded-full ${getEventTypeColor(
-                                event.event_type
-                              )}`}
-                            >
-                              {event.event_type.charAt(0).toUpperCase() +
-                                event.event_type.slice(1)}
-                            </span>
-
-                            {event.priority !== "normal" && (
-                              <span
-                                className={`px-3 py-1 text-xs font-medium rounded-full ${priorityBadge.classes}`}
-                              >
-                                {priorityBadge.icon} {priorityBadge.text}
-                              </span>
-                            )}
-
-                            {event.rsvp_required && (
-                              <span className="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
-                                📝 RSVP Required
-                              </span>
-                            )}
-
-                            {event.classes && (
-                              <span className="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
-                                {event.classes.name}
-                              </span>
-                            )}
-
-                            {event.show_to_all && (
-                              <span className="px-3 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100">
-                                School-wide
-                              </span>
-                            )}
-                          </div>
-                          <h3 className="text-xl font-semibold mb-1">
-                            {event.title}
-                          </h3>
-                          <div className="text-sm text-muted-foreground mb-2 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" />
-                              <span>{formatDate(event.event_date)}</span>
-                            </div>
-                            {event.event_time && (
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                  {event.event_time}
-                                  {event.end_time && ` - ${event.end_time}`}
-                                </span>
-                              </div>
-                            )}
-                            {event.location && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4" />
-                                <span>{event.location}</span>
-                              </div>
-                            )}
-                            {event.rsvp_deadline && (
-                              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                <AlertCircle className="h-4 w-4" />
-                                <span>
-                                  RSVP by:{" "}
-                                  {new Date(
-                                    event.rsvp_deadline
-                                  ).toLocaleDateString("en-GB", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          {event.description && (
-                            <p className="text-muted-foreground mt-2">
-                              {event.description}
-                            </p>
+                          className="flex items-center gap-1 px-2 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          <Users className="h-3 w-3" />
+                          RSVPs
+                          {selectedEventId === event.id ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3" />
                           )}
-                        </div>
-
-                        {canCreateEvent && (
-                          <div className="flex flex-col gap-2">
-                            {event.rsvp_required && (
-                              <button
-                                onClick={() => {
-                                  setSelectedEvent(event);
-                                  setActiveTab("rsvp");
-                                }}
-                                className="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors whitespace-nowrap"
-                              >
-                                📊 View RSVPs
-                              </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                setCreatedEvent(event);
-                                setShowWhatsAppModal(true);
-                              }}
-                              className="px-3 py-1 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors whitespace-nowrap"
-                            >
-                              📱 WhatsApp
-                            </button>
-                            <button
-                              onClick={() => handleDelete(event.id)}
-                              className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          generateWhatsAppMessage(event);
+                          setShowWhatsApp(
+                            showWhatsApp === event.id ? null : event.id,
+                          );
+                          setCopied(false);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      >
+                        <MessageSquare className="h-3 w-3" />
+                        WhatsApp
+                      </button>
+                      <button
+                        onClick={() => handleDelete(event.id)}
+                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* RSVP Management Tab Content (NEW) */}
-        {activeTab === "rsvp" && (
-          <div>
-            {selectedEvent ? (
-              <div>
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="mb-4 text-sm text-primary hover:underline"
-                >
-                  ← Back to all events
-                </button>
-                <div className="mb-6 p-4 border border-input rounded-lg bg-muted/30">
-                  <h2 className="text-xl font-semibold">
-                    {selectedEvent.title}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(selectedEvent.event_date)}
-                    {selectedEvent.event_time &&
-                      ` • ${selectedEvent.event_time}`}
-                  </p>
+                  )}
                 </div>
-                <EventRSVPManagement
-                  eventId={selectedEvent.id}
-                  eventTitle={selectedEvent.title}
-                  rsvpType={selectedEvent.rsvp_type}
-                  collectAgeBreakdown={selectedEvent.rsvp_collect_age_breakdown}
-                />
               </div>
-            ) : eventsWithRSVP.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-4xl mb-3">📝</div>
-                <p className="text-muted-foreground">
-                  No events with RSVP enabled
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Enable RSVP when creating an event to track attendance
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Select an event to view RSVPs:
-                </p>
-                {eventsWithRSVP.map((event) => (
-                  <button
-                    key={event.id}
-                    onClick={() => setSelectedEvent(event)}
-                    className="w-full text-left p-4 border border-input rounded-lg bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(event.event_date)}
-                          {event.event_time && ` • ${event.event_time}`}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span
-                            className={`px-2 py-1 text-xs rounded ${getEventTypeColor(
-                              event.event_type
-                            )}`}
-                          >
-                            {event.event_type}
-                          </span>
-                          <span className="px-2 py-1 text-xs rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
-                            {event.rsvp_type === "adults_only" && "Adults Only"}
-                            {event.rsvp_type === "family" && "Whole Family"}
-                            {event.rsvp_type === "students_only" &&
-                              "Students Only"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-primary font-medium">View →</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* WhatsApp Modal */}
-        {createdEvent && (
-          <WhatsAppEventModal
-            isOpen={showWhatsAppModal}
-            onClose={() => {
-              setShowWhatsAppModal(false);
-              setCreatedEvent(null);
-            }}
-            event={createdEvent}
-            isClassSpecific={!createdEvent.show_to_all}
-          />
-        )}
-      </div>
+              {/* WhatsApp Panel */}
+              {showWhatsApp === event.id && (
+                <div className="px-4 pb-4 border-t border-border pt-3">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Copy and paste into WhatsApp group:
+                  </p>
+                  <textarea
+                    value={whatsAppMsg}
+                    onChange={(e) => setWhatsAppMsg(e.target.value)}
+                    rows={8}
+                    className="w-full p-3 text-xs font-mono bg-muted rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(whatsAppMsg);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 3000);
+                      }}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        copied
+                          ? "bg-green-600 text-white"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      }`}
+                    >
+                      {copied ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <MessageSquare className="h-4 w-4" />
+                      )}
+                      {copied ? "Copied!" : "Copy to Clipboard"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* RSVP Management Panel */}
+              {selectedEventId === event.id && (
+                <div className="border-t border-border">
+                  <EventRSVPManagement
+                    eventId={event.id}
+                    eventTitle={event.title}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

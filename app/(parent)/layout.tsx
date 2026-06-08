@@ -14,6 +14,7 @@ import {
   Moon,
   Users,
   CreditCard,
+  Calendar,
 } from "lucide-react";
 
 interface ParentLayoutProps {
@@ -125,6 +126,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/parent/dashboard", icon: Home, badge: 0 },
     { name: "My Children", href: "/parent/children", icon: Users, badge: 0 },
+    { name: "Events", href: "/parent/events", icon: Calendar, badge: 0 },
     { name: "Finances", href: "/parent/finances", icon: CreditCard, badge: 0 },
     { name: "Profile", href: "/parent/profile", icon: User, badge: 0 },
   ];
