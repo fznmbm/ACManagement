@@ -124,7 +124,6 @@ export default function ParentEventsPage() {
         parent_user_id: parentUserId,
         student_id: studentId,
         rsvp_status: status,
-        rsvp_type: "family",
       });
 
       if (error) throw error;
