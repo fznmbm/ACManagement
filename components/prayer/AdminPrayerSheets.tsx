@@ -102,7 +102,7 @@ const generateIndividualMessage = (
   // Prayer abbrevs all same length (4 chars) for alignment
   const PRAYER_ABBREV = ["Fajr", "Duhr", "Asr ", "Mghr", "Isha"];
   // Day initials
-  const DAY_INITIALS = " M   T   W   T  F   S   S";
+  const DAY_INITIALS = " M  T  W  T  F  S  S";
 
   let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
   msg += `📅 ${weekLabel}\n`;
@@ -123,6 +123,62 @@ const generateIndividualMessage = (
   msg += `\`\`\`\n`;
 
   msg += `${emoji} *Total: ${total}/35 (${pct}%)*`;
+
+  return msg;
+};
+
+const generateAllIndividualMessage = (
+  sheets: any[],
+  notSubmitted: any[],
+  weekLabel: string,
+  className: string,
+  streaks: Record<string, number> = {},
+): string => {
+  const PRAYER_ABBREV = ["Fajr", "Duhr", "Asr ", "Mghr", "Isha"];
+  const DAY_INITIALS = " M  T  W  T  F  S  S";
+
+  let msg = `🕌 *Prayer Sheets — ${className}*\n`;
+  msg += `📅 ${weekLabel}\n\n`;
+
+  sheets.forEach((sheet) => {
+    const student = sheet.students;
+    const total = sheet.total_prayers ?? 0;
+    const pct = Math.round((total / 35) * 100);
+    const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+    const streak = streaks[sheet.student_id] ?? 0;
+
+    msg += `*${student?.first_name} ${student?.last_name}*`;
+    if (streak > 0) msg += ` 🔥${streak}`;
+    msg += `\n\`\`\`\n`;
+    msg += `     ${DAY_INITIALS}\n`;
+    PRAYERS.forEach((prayer, pi) => {
+      const abbrev = PRAYER_ABBREV[pi];
+      const cells = DAYS.map((day) =>
+        sheet[`${day}_${prayer}`] ? "✅" : "❌",
+      ).join(" ");
+      msg += `${abbrev} ${cells}\n`;
+    });
+    msg += `\`\`\``;
+    msg += `${emoji} *${total}/35 (${pct}%)*\n`;
+    msg += `───────────────\n\n`;
+  });
+
+  if (notSubmitted.length > 0) {
+    msg += `❌ *Not Submitted:*\n`;
+    notSubmitted.forEach((s) => {
+      msg += `• ${s.first_name} ${s.last_name}\n`;
+    });
+    msg += `\n`;
+  }
+
+  const avgPct = sheets.length
+    ? Math.round(
+        (sheets.reduce((s, sh) => s + (sh.total_prayers ?? 0), 0) /
+          (sheets.length * 35)) *
+          100,
+      )
+    : 0;
+  msg += `📊 *${sheets.length} submitted · Class avg: ${avgPct}%*`;
 
   return msg;
 };
@@ -281,6 +337,21 @@ export default function AdminPrayerSheets() {
     setShowWhatsApp(true);
   };
 
+  const handleAllIndividualWhatsApp = () => {
+    const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
+    const className = classes.find((c) => c.id === selectedClass)?.name || "";
+    const msg = generateAllIndividualMessage(
+      allSheets,
+      notSubmittedStudents,
+      weekLabel,
+      className,
+      studentStreaks,
+    );
+    setWhatsAppMsg(msg);
+    setWhatsAppMode("list");
+    setShowWhatsApp(true);
+  };
+
   const handleIndividualWhatsApp = (sheet: any) => {
     const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
     const streak = studentStreaks[sheet.student_id] ?? 0;
@@ -346,10 +417,18 @@ export default function AdminPrayerSheets() {
             Review and verify weekly prayer submissions
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={handleAllIndividualWhatsApp}
+            disabled={allSheets.length === 0}
+            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+          >
+            <MessageSquare className="h-4 w-4" />
+            All Prayer Sheets
+          </button>
           <button
             onClick={handleSubmissionListWhatsApp}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+            className="flex items-center gap-2 px-3 py-2 bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700"
           >
             <List className="h-4 w-4" />
             Submission List
@@ -477,7 +556,7 @@ export default function AdminPrayerSheets() {
                 className="bg-card border border-border rounded-lg overflow-hidden"
               >
                 {/* Sheet Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border flex-wrap gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border-b border-border gap-2">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
                       <span className="text-primary font-semibold text-sm">
@@ -503,7 +582,7 @@ export default function AdminPrayerSheets() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <div className="text-right">
                       <p className="text-sm font-medium">{total}/35</p>
                       <div className="h-1.5 w-20 bg-muted rounded-full overflow-hidden mt-1">
@@ -554,7 +633,7 @@ export default function AdminPrayerSheets() {
                 </div>
 
                 {/* Prayer Grid — days as rows */}
-                <div className="p-4 overflow-x-auto">
+                <div className="hidden sm:block p-4 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr>
@@ -604,6 +683,56 @@ export default function AdminPrayerSheets() {
                       })}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile — compact grid */}
+                <div className="sm:hidden p-3">
+                  <div className="grid grid-cols-7 gap-0.5 mb-1">
+                    <div className="text-xs text-muted-foreground font-medium">
+                      Day
+                    </div>
+                    {["Faj", "Dhu", "Asr", "Mag", "Ish"].map((p) => (
+                      <div
+                        key={p}
+                        className="text-center text-xs text-muted-foreground font-medium"
+                      >
+                        {p}
+                      </div>
+                    ))}
+                    <div className="text-center text-xs text-muted-foreground font-medium">
+                      Tot
+                    </div>
+                  </div>
+                  {DAYS.map((day, di) => {
+                    const dayTotal = PRAYERS.filter(
+                      (p) => sheet[`${day}_${p}`],
+                    ).length;
+                    return (
+                      <div
+                        key={day}
+                        className="grid grid-cols-7 gap-0.5 border-t border-border/30 py-1"
+                      >
+                        <div className="text-xs font-medium flex items-center">
+                          {DAY_LABELS[di]}
+                        </div>
+                        {PRAYERS.map((prayer) => (
+                          <div
+                            key={prayer}
+                            className="flex items-center justify-center"
+                          >
+                            {sheet[`${day}_${prayer}`] ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                            ) : (
+                              <XCircle className="h-3.5 w-3.5 text-red-400" />
+                            )}
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-center text-xs font-medium">
+                          {dayTotal}/5
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="px-4 pb-3 text-xs text-muted-foreground">

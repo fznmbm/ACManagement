@@ -35,6 +35,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ profile }: SidebarProps) {
+  const [mobileCollapsed, setMobileCollapsed] = useState(true);
   const [centreName, setCentreName] = useState("Loading...");
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const pathname = usePathname();
@@ -194,14 +195,14 @@ export default function Sidebar({ profile }: SidebarProps) {
   }, []);
 
   return (
-    <aside className="w-64 bg-card border-r border-border flex flex-col">
+    <aside className="w-14 md:w-64 bg-card border-r border-border flex flex-col transition-all duration-200">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-border">
+      <div className="px-3 md:px-6 py-5 border-b border-border">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="p-2 bg-primary/10 rounded-lg shrink-0">
             <GraduationCap className="h-6 w-6 text-primary" />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 hidden md:block">
             <h1 className="text-base font-bold text-primary leading-tight">
               {centreName}
             </h1>
@@ -210,55 +211,64 @@ export default function Sidebar({ profile }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 m-2">
-        <ul className="space-y-2">
+      <nav className="flex-1 overflow-y-auto py-4 px-2">
+        <ul className="space-y-1">
           {visibleMenuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname === item.href ||
+              item.submenu?.some((s) => pathname === s.href);
             const isExpanded = expandedItems.includes(item.name);
             const hasSubmenu = item.submenu && item.submenu.length > 0;
 
             return (
               <li key={item.href}>
-                {/* Main Menu Item */}
                 {hasSubmenu ? (
                   <button
                     onClick={() => toggleExpand(item.name)}
+                    title={item.name}
                     className={cn(
-                      "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors",
+                      "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
                     <div className="flex items-center space-x-3">
-                      <Icon className="h-5 w-5" />
-                      <span className="font-medium">{item.name}</span>
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="font-medium hidden md:inline">
+                        {item.name}
+                      </span>
                     </div>
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
+                    <span className="hidden md:inline">
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </span>
                   </button>
                 ) : (
                   <Link
                     href={item.href}
+                    title={item.name}
                     className={cn(
-                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
+                      "flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     )}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{item.name}</span>
+                    <Icon className="h-5 w-5 shrink-0" />
+                    <span className="font-medium hidden md:inline">
+                      {item.name}
+                    </span>
                   </Link>
                 )}
 
-                {/* Submenu Items */}
+                {/* Submenu — desktop only */}
                 {hasSubmenu && isExpanded && (
-                  <ul className="ml-4 mt-2 space-y-1 border-l-2 border-border pl-4">
+                  <ul className="hidden md:block ml-4 mt-1 space-y-1 border-l-2 border-border pl-4">
                     {item.submenu!.map((subItem) => {
                       const isSubActive = pathname === subItem.href;
                       return (
@@ -266,7 +276,7 @@ export default function Sidebar({ profile }: SidebarProps) {
                           <Link
                             href={subItem.href}
                             className={cn(
-                              "block px-4 py-2 rounded-lg text-sm transition-colors",
+                              "block px-3 py-2 rounded-lg text-sm transition-colors",
                               isSubActive
                                 ? "bg-primary/10 text-primary font-medium"
                                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -286,14 +296,14 @@ export default function Sidebar({ profile }: SidebarProps) {
       </nav>
 
       {/* User Info */}
-      <div className="p-4 border-t border-border">
+      <div className="p-3 border-t border-border">
         <div className="flex items-center space-x-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-primary font-semibold">
+          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <span className="text-primary font-semibold text-sm">
               {profile.full_name.charAt(0).toUpperCase()}
             </span>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 hidden md:block">
             <p className="text-sm font-medium truncate">{profile.full_name}</p>
             <p className="text-xs text-muted-foreground capitalize">
               {profile.role.replace("_", " ")}
