@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { Eye, Calendar, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 interface Application {
   id: string;
@@ -17,10 +19,46 @@ interface Application {
 }
 
 export default function ApplicationsTable({
-  applications,
+  applications: initialApplications,
 }: {
   applications: Application[];
 }) {
+  const [applications, setApplications] =
+    useState<Application[]>(initialApplications);
+  const supabase = createClient();
+
+  useEffect(() => {
+    setApplications(initialApplications);
+  }, [initialApplications]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("applications-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setApplications((prev) => [payload.new as Application, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            setApplications((prev) =>
+              prev.map((a) =>
+                a.id === payload.new.id ? (payload.new as Application) : a,
+              ),
+            );
+          } else if (payload.eventType === "DELETE") {
+            setApplications((prev) =>
+              prev.filter((a) => a.id !== payload.old.id),
+            );
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   const getStatusBadge = (status: string) => {
     const styles = {
       pending:
@@ -118,7 +156,7 @@ export default function ApplicationsTable({
                     <Calendar className="h-4 w-4" />
                     {format(
                       new Date(application.submission_date),
-                      "MMM dd, yyyy"
+                      "MMM dd, yyyy",
                     )}
                   </div>
                 </td>
