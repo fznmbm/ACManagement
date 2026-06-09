@@ -68,7 +68,7 @@ export default async function ApplicationsPage({
   if (searchParams.search) {
     const searchTerm = `%${searchParams.search}%`;
     query = query.or(
-      `child_first_name.ilike.${searchTerm},child_last_name.ilike.${searchTerm},parent_email.ilike.${searchTerm},application_number.ilike.${searchTerm}`
+      `child_first_name.ilike.${searchTerm},child_last_name.ilike.${searchTerm},parent_email.ilike.${searchTerm},application_number.ilike.${searchTerm}`,
     );
   }
 

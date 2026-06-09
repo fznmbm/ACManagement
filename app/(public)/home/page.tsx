@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title:
     "Al Hikmah Institute Crawley | Islamic Education Centre in West Sussex",
   description:
-    "Quality Islamic education for children in Crawley, West Sussex. Comprehensive Quran memorization, Islamic Studies, and Arabic language programs. Enroll now for 2025-2026.",
+    "Quality Islamic education for children in Crawley, West Sussex. Comprehensive Quran memorization, Islamic Studies, and Arabic language programs. Enroll now for 2026-2027.",
   keywords: [
     "Islamic school Crawley",
     "Madrasah West Sussex",

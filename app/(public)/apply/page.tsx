@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Apply Now for 2025-2026 | Al Hikmah Institute Crawley",
+  title: "Apply Now for 2026-2027 | Al Hikmah Institute Crawley",
   description:
-    "Enroll your child at Al Hikmah Institute Crawley for the 2025-2026 academic year. Simple online application for Islamic education programs in West Sussex.",
+    "Enroll your child at Al Hikmah Institute Crawley for the 2026-2027 academic year. Simple online application for Islamic education programs in West Sussex.",
   keywords: [
     "enroll Islamic school",
     "madrasah application",
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   ],
 
   openGraph: {
-    title: "Apply for 2025-2026 | Al Hikmah Institute Crawley",
+    title: "Apply for 2026-2027 | Al Hikmah Institute Crawley",
     description: "Enroll your child for quality Islamic education in Crawley.",
     url: "https://al-hikmah.org/apply",
     type: "website",
@@ -180,7 +180,7 @@ export default async function ApplyPage() {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
-                  }
+                  },
                 )}
               </div>
             </div>
