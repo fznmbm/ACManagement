@@ -212,7 +212,7 @@ export function PublicMobileMenu({
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
-            Apply Now for 2025-2026
+            Apply Now for 2026-2027
           </Link>
 
           {/* Divider */}
