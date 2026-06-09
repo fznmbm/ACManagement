@@ -128,7 +128,7 @@ export default function HomePage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-12 bg-background">
+        {/* <section className="py-12 bg-background">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="text-center">
@@ -157,7 +157,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Coming Soon */}
         <ComingSoonBanner />

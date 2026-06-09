@@ -44,49 +44,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Mission & Vision */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Mission */}
-            <div className="bg-card border rounded-lg p-8">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
-                <Target className="h-6 w-6 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                To provide quality Islamic education that nurtures young Muslims
-                with strong faith, moral character, and comprehensive knowledge
-                of the Quran, Arabic language, and Islamic principles.
-              </p>
-              <p className="text-muted-foreground leading-relaxed">
-                We strive to create a supportive learning environment where
-                students develop a deep connection with their Islamic identity
-                while excelling academically and spiritually.
-              </p>
-            </div>
-
-            {/* Vision */}
-            <div className="bg-card border rounded-lg p-8">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
-                <Eye className="h-6 w-6 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold mb-4">Our Vision</h2>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                To be a leading center of Islamic education in West Sussex,
-                recognized for excellence in Quranic studies, Islamic
-                scholarship, and character development.
-              </p>
-              <p className="text-muted-foreground leading-relaxed">
-                We envision a future generation of confident, knowledgeable
-                Muslims who contribute positively to society while maintaining
-                strong Islamic values and principles.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Coming Soon */}
       <ComingSoonBanner />
     </div>

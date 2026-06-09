@@ -30,6 +30,8 @@ DELETE FROM attendance;
 DELETE FROM academic_progress;
 DELETE FROM student_memorization;
 DELETE FROM certificates;
+DELETE FROM student_feedback;        -- ADD THIS
+DELETE FROM class_feedback_sessions; -- ADD THIS
 
 -- 6. Clear parent links and notifications
 DELETE FROM parent_student_links;
@@ -42,7 +44,11 @@ DELETE FROM applications;
 -- 8. Clear messages and logs
 DELETE FROM messages;
 
--- 9. Clear students (last, after all dependencies)
+-- 9. Clear events and RSVPs
+DELETE FROM event_rsvps;
+DELETE FROM events;
+
+-- 10. Clear students (last, after all dependencies)
 DELETE FROM students;
 
 -- Re-enable triggers

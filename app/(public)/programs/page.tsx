@@ -87,13 +87,10 @@ export default function ProgramsPage() {
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
                 Our Programs
               </h1>
-              <p className="text-xl text-muted-foreground mb-8">
-                Comprehensive Islamic education tailored for different learning
-                needs
-              </p>
+
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                We offer structured programs in Quranic studies, Islamic
-                education, and Arabic language for children aged 7 and above.
+                We offer structured programs in Islamic education for children
+                aged 7 and above.
               </p>
             </div>
           </div>
