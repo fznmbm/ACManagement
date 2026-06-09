@@ -64,8 +64,9 @@ export const ApplicationAcceptedEmail = ({
         <strong>
           {childFirstName} {childLastName}
         </strong>
-        has been <strong style={{ color: "#16a34a" }}>ACCEPTED</strong> for the{" "}
-        {academicYear} academic year!
+        has been <strong style={{ color: "#16a34a" }}>ACCEPTED</strong>
+        {/* for the{" "}
+        {academicYear} academic year! */}
       </p>
 
       <div
@@ -120,7 +121,7 @@ export const ApplicationAcceptedEmail = ({
                 {studentNumber}
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td
                 style={{
                   padding: "10px 0",
@@ -139,7 +140,7 @@ export const ApplicationAcceptedEmail = ({
               >
                 {academicYear}
               </td>
-            </tr>
+            </tr> */}
           </tbody>
         </table>
       </div>
@@ -167,8 +168,8 @@ export const ApplicationAcceptedEmail = ({
           {/* <li>Complete the registration form (link will be sent separately)</li>
           <li>Submit required documents (ID proof, medical records)</li>
           <li>Pay the registration fee</li> */}
-          <li>You will receive the confirmation on WhatsApp</li>
-          <li>Attend the parents meeting (date will be communicated)</li>
+          <li>You will receive the parent login information via email.</li>
+          {/* <li>Attend the parents meeting (date will be communicated)</li> */}
         </ol>
       </div>
 
@@ -190,7 +191,7 @@ export const ApplicationAcceptedEmail = ({
         <br />
         <strong>Phone:</strong>{" "}
         <a href="tel:+447411061242" style={{ color: "#16a34a" }}>
-          +44 7411 061242
+          +44 7411 061242 | +44 7738 314404
         </a>
         <br />
         <strong>Email:</strong>{" "}
@@ -219,10 +220,10 @@ export const ApplicationAcceptedEmail = ({
       }}
     >
       <p style={{ margin: 0 }}>
-        © 2025 Al Hikmah Institute Crawley. All rights reserved.
+        © 2026 Al Hikmah Institute Crawley. All rights reserved.
       </p>
       <p style={{ margin: "10px 0 0 0" }}>
-        Crawley, West Sussex | +44 7411 061242|
+        Crawley, West Sussex | +44 7411 061242 | +44 7738 314404
         alhikmahinstitutecrawley@gmail.com
       </p>
     </div>

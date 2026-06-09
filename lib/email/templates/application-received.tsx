@@ -85,7 +85,7 @@ export const ApplicationReceivedEmail = ({
                 {applicationNumber}
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td
                 style={{
                   padding: "10px 0",
@@ -104,7 +104,7 @@ export const ApplicationReceivedEmail = ({
               >
                 {academicYear}
               </td>
-            </tr>
+            </tr> */}
             <tr>
               <td
                 style={{
@@ -152,7 +152,7 @@ export const ApplicationReceivedEmail = ({
         <br />
         <strong>Phone:</strong>{" "}
         <a href="tel:+447411061242" style={{ color: "#16a34a" }}>
-          +44 7411 061242
+          +44 7411 061242, ++44 7738 314404
         </a>
         <br />
         <strong>Email:</strong>{" "}
@@ -181,10 +181,10 @@ export const ApplicationReceivedEmail = ({
       }}
     >
       <p style={{ margin: 0 }}>
-        © 2025 Al Hikmah Institute Crawley. All rights reserved.
+        © 2026 Al Hikmah Institute Crawley. All rights reserved.
       </p>
       <p style={{ margin: "10px 0 0 0" }}>
-        Crawley, West Sussex | +44 7411 061242|
+        Crawley, West Sussex | +44 7411 061242 | +44 7738 314404
         alhikmahinstitutecrawley@gmail.com
       </p>
     </div>

@@ -153,13 +153,13 @@ export async function POST(request: NextRequest) {
             <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
               <h3 style="margin-top: 0; color: #d97706;">What You Can Do</h3>
               <ul style="margin: 10px 0;">
-              <li>Parent Dashboard</li>
-                <li>View real-time attendance records</li>
-                <li>Check exam results and report cards</li>
-                
-                <li>View fee information and payment history</li>
-                <li>Receive important announcements and updates</li>
-                <li>Check academic progress</li>
+         <li>Parent Dashboard</li>
+          <li>View Attendance </li>
+          <li>Track their academic progress.</li>
+          
+          <li>End-of-Class teacher feedback.</li>
+          <li>Submit weekly prayer sheets.</li>
+          <li>Manage fees and invoices.</li>
               
               </ul>
             </div>
