@@ -45,7 +45,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
     // Additional Information
     medical_conditions: "",
     special_requirements: "",
-    can_read_write_english: true,
+    can_read_write_english: false,
 
     // Photo Consent
     photo_consent: "",
@@ -125,7 +125,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
       // English literacy check
       if (!formData.can_read_write_english) {
         newErrors.can_read_write_english =
-          "Child should be able to read and write English. This is required for admission.";
+          "Your child must be able to read and write English to enrol at Al Hikmah Institute. If you have any questions, please contact us before applying.";
       }
     }
 
@@ -211,8 +211,8 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                   step === currentStep
                     ? "border-primary bg-primary text-primary-foreground"
                     : step < currentStep
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-muted-foreground/30 bg-background text-muted-foreground"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-muted-foreground/30 bg-background text-muted-foreground"
                 }`}
               >
                 {step < currentStep ? (
@@ -805,7 +805,7 @@ export default function ApplicationForm({ settings }: ApplicationFormProps) {
                     onChange={(e) =>
                       updateFormData(
                         "parent_declaration_accepted",
-                        e.target.checked
+                        e.target.checked,
                       )
                     }
                     className="mt-1 mr-3"
