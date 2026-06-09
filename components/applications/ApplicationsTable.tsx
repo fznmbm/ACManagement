@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Eye, Calendar, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface Application {
   id: string;
@@ -26,6 +27,7 @@ export default function ApplicationsTable({
   const [applications, setApplications] =
     useState<Application[]>(initialApplications);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     setApplications(initialApplications);
@@ -51,6 +53,8 @@ export default function ApplicationsTable({
               prev.filter((a) => a.id !== payload.old.id),
             );
           }
+          // Refresh server component to update stats cards
+          router.refresh();
         },
       )
       .subscribe();
