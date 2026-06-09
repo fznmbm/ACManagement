@@ -28,10 +28,13 @@ export async function POST(request: NextRequest) {
     );
 
     // Get parent profile
+    // Normalise email to lowercase
+    const normalisedEmail = parentEmail?.toLowerCase() || "";
+
     const { data: parentProfile, error: parentError } = await supabase
       .from("profiles")
       .select("id, full_name, email")
-      .eq("email", parentEmail)
+      .ilike("email", normalisedEmail)
       .eq("role", "parent")
       .single();
 
@@ -41,7 +44,6 @@ export async function POST(request: NextRequest) {
         { status: 404 },
       );
     }
-
     // Get student details
     const { data: student, error: studentError } = await supabase
       .from("students")

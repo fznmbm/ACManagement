@@ -53,6 +53,9 @@ export async function POST(
       );
     }
 
+    // Normalise email to lowercase to avoid case mismatch
+    const parentEmail = application.parent_email?.toLowerCase() || null;
+
     // Check if already accepted
     if (application.status === "accepted") {
       return NextResponse.json(
@@ -87,7 +90,7 @@ export async function POST(
         date_of_birth: application.date_of_birth,
         gender: application.gender,
         parent_name: application.parent_name,
-        parent_email: application.parent_email || null,
+        parent_email: parentEmail,
         parent_phone: application.parent_phone,
         parent_phone_secondary: application.parent_phone_alternate || null,
         address: application.address || null,
@@ -174,16 +177,16 @@ export async function POST(
     const { data: existingParent } = await supabase
       .from("profiles")
       .select("id")
-      .eq("email", application.parent_email)
+      .ilike("email", parentEmail || "")
       .single();
 
     parentUserId = existingParent?.id;
 
-    if (!existingParent && application.parent_email) {
+    if (!existingParent && parentEmail) {
       // Try to create new auth user
       const { data: authUser, error: authError } =
         await supabaseAdmin.auth.admin.createUser({
-          email: application.parent_email,
+          email: parentEmail,
           email_confirm: true,
           user_metadata: {
             full_name: application.parent_name,
@@ -204,7 +207,7 @@ export async function POST(
           // Find the existing auth user via admin API
           const { data: userList } = await supabaseAdmin.auth.admin.listUsers();
           const existingAuthUser = userList?.users?.find(
-            (u) => u.email === application.parent_email,
+            (u) => u.email?.toLowerCase() === parentEmail,
           );
           if (existingAuthUser) {
             parentUserId = existingAuthUser.id;
@@ -246,7 +249,7 @@ export async function POST(
 
     // Send acceptance email - NEW EMAIL INTEGRATION
     try {
-      console.log("📧 Sending acceptance email to:", application.parent_email);
+      console.log("📧 Sending acceptance email to:", parentEmail);
       const emailResult = await sendApplicationAcceptedEmail(
         application,
         newStudent.student_number,
@@ -267,7 +270,7 @@ export async function POST(
     console.log("=== APPLICATION ACCEPTED ===");
     console.log(`Application: ${application.application_number}`);
     console.log(`Student Created: ${newStudent.student_number}`);
-    console.log(`Parent Email: ${application.parent_email}`);
+    console.log(`Parent Email: ${parentEmail}`);
     console.log(
       `Parent Account: ${parentUserId ? "Created/Linked" : "Pending"}`,
     );
