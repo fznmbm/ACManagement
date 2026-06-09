@@ -18,7 +18,7 @@ function getApplicationReceivedEmailHTML(
   childLastName: string,
   applicationNumber: string,
   academicYear: string,
-  submissionDate: string,
+  submissionDate: string
 ): string {
   return `
     <!DOCTYPE html>
@@ -58,7 +58,10 @@ function getApplicationReceivedEmailHTML(
                   <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Application Number:</td>
                   <td style="padding: 10px 0; color: #1f2937; text-align: right;">${applicationNumber}</td>
                 </tr>
-
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Academic Year:</td>
+                  <td style="padding: 10px 0; color: #1f2937; text-align: right;">${academicYear}</td>
+                </tr>
                 <tr>
                   <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Submitted On:</td>
                   <td style="padding: 10px 0; color: #1f2937; text-align: right;">${submissionDate}</td>
@@ -77,7 +80,7 @@ function getApplicationReceivedEmailHTML(
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
                Please keep your application number for reference. If you have any questions, feel free to contact us:<br/>
-  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a> | <a href="tel:+447738314404" style="color: #16a34a; text-decoration: none;">+44 7738 314404</a><br/>
+  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a><br/>
   <strong>Email:</strong> <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
             </p>
             
@@ -89,7 +92,7 @@ function getApplicationReceivedEmailHTML(
           
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© 2026 Al Hikmah Institute Crawley. All rights reserved.</p>
+            <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
             <p style="margin: 10px 0 0 0;">Crawley, West Sussex | +44 7411 061242 | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
@@ -104,7 +107,7 @@ function getApplicationAcceptedEmailHTML(
   childLastName: string,
   applicationNumber: string,
   studentNumber: string,
-  academicYear: string,
+  academicYear: string
 ): string {
   return `
     <!DOCTYPE html>
@@ -138,7 +141,7 @@ function getApplicationAcceptedEmailHTML(
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
               We are delighted to inform you that the application for <strong>${childFirstName} ${childLastName}</strong> 
-              has been <strong style="color: #16a34a;">ACCEPTED</strong> at Al Hikmah Institute Crawley!
+              has been <strong style="color: #16a34a;">ACCEPTED</strong> for the ${academicYear} academic year!
             </p>
             
             <!-- Details Box -->
@@ -152,7 +155,10 @@ function getApplicationAcceptedEmailHTML(
                   <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Student Number:</td>
                   <td style="padding: 10px 0; color: #16a34a; text-align: right; font-weight: bold;">${studentNumber}</td>
                 </tr>
-   
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Academic Year:</td>
+                  <td style="padding: 10px 0; color: #1f2937; text-align: right;">${academicYear}</td>
+                </tr>
               </table>
             </div>
             
@@ -160,15 +166,15 @@ function getApplicationAcceptedEmailHTML(
             <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0;">
               <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 16px;">📋 Next Steps:</h3>
               <ol style="color: #1e40af; margin: 0; padding-left: 20px; line-height: 1.8;">
-               <li>You will receive the parent login information via email.</li>
-              
+               <li>You will receive the confirmation on WhatsApp</li>
+                <li>Attend the parents meeting (date will be communicated)</li>
               </ol>
             </div>
             
             <p style="color: #4b5563; line-height: 1.6; margin: 15px 0;">
               We look forward to welcoming <strong>${childFirstName}</strong> to Al Hikmah Institute Crawley! 
   If you have any questions, please contact us:<br/>
-  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a> | <a href="tel:+447738314404" style="color: #16a34a; text-decoration: none;">+44 7738 314404</a><br/>
+  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a><br/>
   <strong>Email:</strong> <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
             </p>
             
@@ -180,7 +186,7 @@ function getApplicationAcceptedEmailHTML(
           
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© 2026 Al Hikmah Institute Crawley. All rights reserved.</p>
+            <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
             <p style="margin: 10px 0 0 0;">Crawley, West Sussex | +44 7411 061242 | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
@@ -195,7 +201,7 @@ function getApplicationRejectedEmailHTML(
   childLastName: string,
   applicationNumber: string,
   rejectionReason: string,
-  academicYear: string,
+  academicYear: string
 ): string {
   return `
     <!DOCTYPE html>
@@ -272,7 +278,7 @@ function getApplicationRejectedEmailHTML(
               <p style="color: #1e40af; margin: 0; line-height: 1.6;">
                  We encourage you to apply again in future academic years. If you have any 
   questions or would like to discuss this further, please contact us:<br/>
-  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a> | <a href="tel:+447738314404" style="color: #16a34a; text-decoration: none;">+44 7738 314404</a><br/>
+  <strong>Phone:</strong> <a href="tel:+447411061242" style="color: #16a34a; text-decoration: none;">+44 7411 061242</a><br/>
   <strong>Email:</strong> <a href="mailto:alhikmahinstitutecrawley@gmail.com" style="color: #16a34a; text-decoration: none;">alhikmahinstitutecrawley@gmail.com</a>
               </p>
             </div>
@@ -285,7 +291,7 @@ function getApplicationRejectedEmailHTML(
           
           <!-- Footer -->
           <div style="background-color: #1f2937; padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
-            <p style="margin: 0;">© 2026 Al Hikmah Institute Crawley. All rights reserved.</p>
+            <p style="margin: 0;">© 2025 Al Hikmah Institute Crawley. All rights reserved.</p>
             <p style="margin: 10px 0 0 0;">Crawley, West Sussex | +44 7411 061242 | alhikmahinstitutecrawley@gmail.com</p>
           </div>
         </div>
@@ -308,7 +314,7 @@ export async function sendApplicationReceivedEmail(application: Application) {
         application.child_last_name,
         application.application_number,
         application.academic_year,
-        format(new Date(application.submission_date), "MMMM dd, yyyy"),
+        format(new Date(application.submission_date), "MMMM dd, yyyy")
       ),
     });
 
@@ -328,7 +334,7 @@ export async function sendApplicationReceivedEmail(application: Application) {
 // Send acceptance email when application is accepted
 export async function sendApplicationAcceptedEmail(
   application: Application,
-  studentNumber: string,
+  studentNumber: string
 ) {
   try {
     const { data, error } = await resend.emails.send({
@@ -342,7 +348,7 @@ export async function sendApplicationAcceptedEmail(
         application.child_last_name,
         application.application_number,
         studentNumber,
-        application.academic_year,
+        application.academic_year
       ),
     });
 
@@ -362,7 +368,7 @@ export async function sendApplicationAcceptedEmail(
 // Send rejection email when application is rejected
 export async function sendApplicationRejectedEmail(
   application: Application,
-  rejectionReason: string,
+  rejectionReason: string
 ) {
   try {
     const { data, error } = await resend.emails.send({
@@ -376,7 +382,7 @@ export async function sendApplicationRejectedEmail(
         application.child_last_name,
         application.application_number,
         rejectionReason,
-        application.academic_year,
+        application.academic_year
       ),
     });
 
