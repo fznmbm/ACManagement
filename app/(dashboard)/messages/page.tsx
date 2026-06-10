@@ -95,23 +95,33 @@ export default function MessagesPage() {
     setSending(true);
     try {
       // Get student's parent user id
-      const { data: link } = await supabase
+      const { data: link, error: linkError } = await supabase
         .from("parent_student_links")
         .select("parent_user_id")
         .eq("student_id", selectedStudent)
         .eq("is_primary", true)
         .single();
 
+      console.log("Link data:", link, "Link error:", linkError);
+
       if (link?.parent_user_id) {
-        await supabase.from("parent_notifications").insert({
-          parent_user_id: link.parent_user_id,
-          student_id: selectedStudent,
-          type: "admin_message",
-          priority,
-          title: title.trim(),
-          message: message.trim(),
-          is_read: false,
-        });
+        const { error: insertError } = await supabase
+          .from("parent_notifications")
+          .insert({
+            parent_user_id: link.parent_user_id,
+            student_id: selectedStudent,
+            type: "admin_message",
+            priority,
+            title: title.trim(),
+            message: message.trim(),
+            is_read: false,
+          });
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          alert("Failed to send: " + insertError.message);
+          setSending(false);
+          return;
+        }
       }
 
       // Generate WhatsApp message
