@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/helpers";
 import {
   LayoutDashboard,
@@ -39,6 +39,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   const [centreName, setCentreName] = useState("Loading...");
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const pathname = usePathname();
+  const router = useRouter();
 
   // ADD THIS FUNCTION
   const toggleExpand = (itemName: string) => {
@@ -225,7 +226,13 @@ export default function Sidebar({ profile }: SidebarProps) {
               <li key={item.href}>
                 {hasSubmenu ? (
                   <button
-                    onClick={() => toggleExpand(item.name)}
+                    onClick={() => {
+                      if (window.innerWidth < 768) {
+                        router.push(item.href);
+                      } else {
+                        toggleExpand(item.name);
+                      }
+                    }}
                     title={item.name}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors",

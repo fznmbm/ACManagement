@@ -99,7 +99,16 @@ export default function ParentDashboard() {
               .filter((s: any) => s.class_id)
               .map((s: any) => s.class_id),
           );
-        setNewFeedbackCount(fbCount || 0);
+
+        // Count unread admin notices
+        const { count: noticeCount } = await supabase
+          .from("parent_notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("parent_user_id", user.id)
+          .eq("type", "admin_message")
+          .eq("is_read", false);
+
+        setNewFeedbackCount((fbCount || 0) + (noticeCount || 0));
 
         // Count pending fines
         const { count: finesCount } = await supabase
@@ -152,7 +161,7 @@ export default function ParentDashboard() {
             </p>
           </div>
         </Link>
-        <Link href="/parent/events">
+        <Link href="/parent/children">
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center hover:border-primary transition-colors relative">
             {newFeedbackCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center">

@@ -184,7 +184,7 @@ export default function ClassFeedbackPage() {
       .eq("class_id", classId)
       .eq("status", "completed")
       .order("session_date", { ascending: false })
-      .limit(5);
+      .limit(50);
     setPastSessions(sessions || []);
 
     setLoading(false);
