@@ -142,7 +142,61 @@ export default function StudentsTable({
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden divide-y divide-border">
+        {students.map((student) => {
+          const fees = getStudentFees(student.id);
+          const fines = getStudentFines(student.id);
+          return (
+            <div key={student.id} className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-primary font-semibold text-xs">
+                      {student.first_name[0]}
+                      {student.last_name[0]}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {student.first_name} {student.last_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      #{student.student_number}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(student.status)}`}
+                >
+                  {student.status}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground pl-12">
+                <span>{student.classes?.name || "No class"}</span>
+                <span>·</span>
+                <span>{student.parent_phone}</span>
+              </div>
+              <div className="flex items-center gap-2 pl-12">
+                <Link
+                  href={`/students/${student.id}`}
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  <Eye className="h-3 w-3" /> View
+                </Link>
+                <Link
+                  href={`/students/${student.id}/edit`}
+                  className="text-xs text-muted-foreground hover:underline flex items-center gap-1"
+                >
+                  <Edit className="h-3 w-3" /> Edit
+                </Link>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50 border-b border-border">
             <tr>

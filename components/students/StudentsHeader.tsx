@@ -27,10 +27,10 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
   const supabase = createClient();
 
   const [selectedClass, setSelectedClass] = useState(
-    searchParams.get("class") || ""
+    searchParams.get("class") || "",
   );
   const [selectedStatus, setSelectedStatus] = useState(
-    searchParams.get("status") || ""
+    searchParams.get("status") || "",
   );
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
           parent_student_links (
             id
           )
-        `
+        `,
           )
           .eq("status", "active");
 
@@ -55,7 +55,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
         const count = students.filter(
           (student: any) =>
             !student.parent_student_links ||
-            student.parent_student_links.length === 0
+            student.parent_student_links.length === 0,
         ).length;
 
         setUnlinkedCount(count);
@@ -93,10 +93,10 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
   return (
     <div className="space-y-4">
       {/* Title and Add Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">All Students</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl md:text-2xl font-bold">All Students</h2>
+          <p className="text-muted-foreground text-sm">
             Manage and track all students in your centre
           </p>
         </div>
@@ -108,7 +108,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
           <span>Add Student</span>
         </Link> */}
 
-        <div className="flex gap-3">
+        <div className="flex gap-2 shrink-0">
           {/* Link Parents Button with Badge */}
           <Link
             href="/students/link-parents"
@@ -186,20 +186,18 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-4 items-center">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-wrap gap-2 items-center">
+            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
 
             {/* Class Filter */}
             <select
               value={selectedClass}
-              onChange={(e) => {
-                setSelectedClass(e.target.value);
-              }}
-              className="px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="flex-1 min-w-[130px] px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground text-sm"
             >
               <option value="">All Classes</option>
-              <option value="unassigned">🔍 Unassigned Students</option>
-              <option disabled>────────────────</option>
+              <option value="unassigned">🔍 Unassigned</option>
+              <option disabled>────────────</option>
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {cls.name}
@@ -210,10 +208,8 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
             {/* Status Filter */}
             <select
               value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value);
-              }}
-              className="px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="flex-1 min-w-[120px] px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground text-sm"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -225,7 +221,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
             <button
               type="button"
               onClick={updateFilters}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm"
             >
               Apply Filters
             </button>
@@ -236,18 +232,17 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
                 onClick={clearFilters}
                 className="text-sm text-destructive hover:underline"
               >
-                Clear All
+                Clear
               </button>
             )}
 
-            {/* Export Button (Placeholder) */}
             <button
               type="button"
-              className="btn-outline ml-auto flex items-center space-x-2"
+              className="btn-outline ml-auto flex items-center gap-1 text-sm"
               title="Export to Excel"
             >
               <Download className="h-4 w-4" />
-              <span>Export</span>
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </form>

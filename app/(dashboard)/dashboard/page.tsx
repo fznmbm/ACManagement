@@ -203,7 +203,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome Message */}
       <div>
-        <h2 className="text-3xl font-bold text-foreground">
+        <h2 className="text-xl md:text-3xl font-bold text-foreground">
           Welcome back, {profile?.full_name}!
         </h2>
         <p className="text-muted-foreground mt-1">
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Statistics Cards - 8 cards in 4 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -238,7 +238,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main Content Grid - 2 columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Left Column - 2/3 width */}
         <div className="lg:col-span-2 space-y-6">
           {/* Financial Overview */}

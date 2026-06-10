@@ -335,7 +335,7 @@ export default function AttendanceMarkingInterface({
     <div className="space-y-6">
       {/* Class and Date Selection */}
       <div className="bg-card border border-border rounded-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
           <div>
             <label className="form-label">Class</label>
             <select
@@ -413,7 +413,7 @@ export default function AttendanceMarkingInterface({
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-4">
         <div className="bg-card border border-border rounded-lg p-4">
           <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-2xl font-bold">{stats.total}</p>

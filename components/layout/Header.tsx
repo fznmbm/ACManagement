@@ -199,7 +199,9 @@ export default function Header({ profile }: HeaderProps) {
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{getPageTitle()}</h1>
+        <h1 className="text-lg md:text-2xl font-bold text-foreground">
+          {getPageTitle()}
+        </h1>
       </div>
 
       {/* Actions */}
@@ -323,7 +325,9 @@ export default function Header({ profile }: HeaderProps) {
         >
           <LogOut className="h-4 w-4" />
           <span className="text-sm font-medium">
-            {loading ? "Logging out..." : "Logout"}
+            <span className="hidden sm:inline">
+              {loading ? "Logging out..." : "Logout"}
+            </span>
           </span>
         </button>
       </div>
