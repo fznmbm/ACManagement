@@ -110,7 +110,7 @@ export default function MessagesPage() {
           .insert({
             parent_user_id: link.parent_user_id,
             student_id: selectedStudent,
-            type: "admin_message",
+            type: "announcement",
             priority,
             title: title.trim(),
             message: message.trim(),
@@ -166,7 +166,7 @@ export default function MessagesPage() {
             links.map((link) => ({
               parent_user_id: link.parent_user_id,
               student_id: link.student_id,
-              type: "admin_message",
+              type: "announcement",
               priority,
               title: title.trim(),
               message: message.trim(),

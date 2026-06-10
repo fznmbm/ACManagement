@@ -105,7 +105,7 @@ export default function ParentDashboard() {
           .from("parent_notifications")
           .select("*", { count: "exact", head: true })
           .eq("parent_user_id", user.id)
-          .eq("type", "admin_message")
+          .eq("type", "announcement")
           .eq("is_read", false);
 
         setNewFeedbackCount((fbCount || 0) + (noticeCount || 0));
