@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -15,7 +15,13 @@ export default function ParentLoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const linkError = searchParams.get("error");
+  const [error, setError] = useState(
+    linkError === "link_expired"
+      ? "Your setup link has expired or already been used. Please contact the school to request a new one."
+      : "",
+  );
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

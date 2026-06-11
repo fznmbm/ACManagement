@@ -171,7 +171,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-base shrink-0">📢</span>
+                  <span className="text-base shrink-0">💬</span>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-medium text-slate-900 dark:text-white">

@@ -372,7 +372,7 @@ export async function POST(request: Request) {
   </div>
   
   <p style="margin: 5px 0; font-size: 12px; color: #666;">
-    <em>Note: This setup link will expire in 24 hours. If you already have an account, you can ignore this link and use your existing password.</em>
+    <em>⚠️ Important: This link can only be used once and expires in 24 hours. Once clicked, complete the password setup without closing the browser. If the link has expired, please contact us for a new one.</em>
   </p>
 </div>
 
