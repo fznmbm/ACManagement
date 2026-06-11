@@ -22,11 +22,11 @@ export default function FeesPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(
-    null
+    null,
   );
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [outstandingInvoices, setOutstandingInvoices] = useState<FeeInvoice[]>(
-    []
+    [],
   );
 
   // Filters
@@ -92,7 +92,7 @@ export default function FeesPage() {
           *,
           students (first_name, last_name, student_number,  class_id, status),
           fee_structures (name, frequency)
-        `
+        `,
         )
         .order("due_date", { ascending: false });
 
@@ -103,25 +103,25 @@ export default function FeesPage() {
 
       if (classFilter) {
         filteredData = filteredData.filter(
-          (invoice) => invoice.students?.class_id === classFilter
+          (invoice) => invoice.students?.class_id === classFilter,
         );
       }
 
       if (studentFilter) {
         filteredData = filteredData.filter(
-          (invoice) => invoice.student_id === studentFilter
+          (invoice) => invoice.student_id === studentFilter,
         );
       }
 
       if (dateFromFilter) {
         filteredData = filteredData.filter(
-          (invoice) => invoice.due_date >= dateFromFilter
+          (invoice) => invoice.due_date >= dateFromFilter,
         );
       }
 
       if (dateToFilter) {
         filteredData = filteredData.filter(
-          (invoice) => invoice.due_date <= dateToFilter
+          (invoice) => invoice.due_date <= dateToFilter,
         );
       }
 
@@ -157,7 +157,7 @@ export default function FeesPage() {
           `
           *,
           fee_structures (name, frequency)
-        `
+        `,
         )
         .eq("student_id", student.id)
         .in("status", ["pending", "partial", "overdue"])
@@ -208,7 +208,7 @@ export default function FeesPage() {
   const generateInvoices = async () => {
     if (
       !confirm(
-        "Generate new invoices for all active fee structures? This may take a moment."
+        "Generate new invoices for all active fee structures? This may take a moment.",
       )
     ) {
       return;
@@ -310,10 +310,10 @@ export default function FeesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Fee Management</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Fee Management</h1>
           <p className="text-muted-foreground">
             Manage student fees, invoices, and payments
           </p>
@@ -338,7 +338,7 @@ export default function FeesPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 md:gap-4">
         <div className="bg-card border border-border rounded-lg p-4 text-center">
           <p className="text-2xl font-bold">{stats.total}</p>
           <p className="text-sm text-muted-foreground">Total Invoices</p>
@@ -395,7 +395,7 @@ export default function FeesPage() {
 
       {/* Filters */}
       <div className="bg-card border border-border rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
           <div>
             <label className="form-label">Fee Type</label>
             <select
@@ -485,7 +485,99 @@ export default function FeesPage() {
             Fee Invoices ({filteredInvoices.length})
           </h3>
         </div>
-        <div className="overflow-x-auto">
+        {/* Mobile card view */}
+        <div className="md:hidden divide-y divide-border">
+          {filteredInvoices.map((invoice) => {
+            const outstanding = invoice.amount_due - invoice.amount_paid;
+            const isOverdue = new Date(invoice.due_date) < new Date();
+            return (
+              <div key={invoice.id} className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">
+                      {invoice.students?.first_name}{" "}
+                      {invoice.students?.last_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {invoice.students?.student_number}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full font-medium ${
+                      invoice.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : invoice.status === "paid"
+                          ? "bg-green-100 text-green-800"
+                          : invoice.status === "overdue"
+                            ? "bg-red-100 text-red-800"
+                            : invoice.status === "partial"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {invoice.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{invoice.fee_structures?.name}</span>
+                  <span>{invoice.invoice_number}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span
+                    className={
+                      isOverdue
+                        ? "text-red-600 font-medium"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    Due: {formatDate(invoice.due_date)}
+                    {isOverdue ? " OVERDUE" : ""}
+                  </span>
+                  <span className="font-semibold">
+                    £{invoice.amount_due.toFixed(2)}
+                  </span>
+                </div>
+                {outstanding > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Outstanding: £{outstanding.toFixed(2)}
+                  </p>
+                )}
+                <div className="flex gap-3 pt-1">
+                  {["pending", "partial", "overdue"].includes(
+                    invoice.status,
+                  ) && (
+                    <>
+                      <button
+                        onClick={() =>
+                          handleViewStudentInvoices({
+                            id: invoice.student_id,
+                            first_name: invoice.students?.first_name,
+                            last_name: invoice.students?.last_name,
+                            student_number: invoice.students?.student_number,
+                          })
+                        }
+                        className="text-primary text-xs hover:underline"
+                      >
+                        Collect Payment
+                      </button>
+                      <button
+                        onClick={() => handleCancelInvoice(invoice.id)}
+                        className="text-red-600 text-xs hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  {invoice.status === "paid" && (
+                    <span className="text-green-600 text-xs">✓ Paid</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -584,12 +676,12 @@ export default function FeesPage() {
                           invoice.status === "pending"
                             ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                             : invoice.status === "partial"
-                            ? "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400"
-                            : invoice.status === "paid"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                            : invoice.status === "overdue"
-                            ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                            : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400"
+                              ? "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400"
+                              : invoice.status === "paid"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                                : invoice.status === "overdue"
+                                  ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
+                                  : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400"
                         }`}
                       >
                         {invoice.status.toUpperCase()}
@@ -598,7 +690,7 @@ export default function FeesPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center space-x-2">
                         {["pending", "partial", "overdue"].includes(
-                          invoice.status
+                          invoice.status,
                         ) && (
                           <>
                             <button

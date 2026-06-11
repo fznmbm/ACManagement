@@ -455,7 +455,7 @@ export default function AttendanceMarkingInterface({
                   key={student.id}
                   className="p-4 hover:bg-muted/30 transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                     <div className="flex items-center space-x-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-primary font-semibold">
@@ -495,7 +495,7 @@ export default function AttendanceMarkingInterface({
                     </div>
 
                     {/* Status Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {(
                         [
                           "present",
@@ -507,7 +507,7 @@ export default function AttendanceMarkingInterface({
                         <button
                           key={s}
                           onClick={() => setStudentAttendance(student.id, s)}
-                          className={`px-3 py-2 rounded-lg border-2 transition-all flex items-center space-x-1 text-sm font-medium ${
+                          className={`px-2 py-1.5 md:px-3 md:py-2 rounded-lg border-2 transition-all flex items-center gap-1 text-xs md:text-sm font-medium ${
                             status === s
                               ? getStatusColor(s)
                               : "bg-background border-border text-muted-foreground hover:border-primary/50"
@@ -515,7 +515,9 @@ export default function AttendanceMarkingInterface({
                           title={s.charAt(0).toUpperCase() + s.slice(1)}
                         >
                           {getStatusIcon(s)}
-                          <span className="capitalize">{s}</span>
+                          <span className="capitalize hidden sm:inline">
+                            {s}
+                          </span>
                         </button>
                       ))}
                     </div>

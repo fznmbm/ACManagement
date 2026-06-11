@@ -63,7 +63,7 @@ export default function SettingsTabs({
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         {activeTab === "centre" && (
           <CentreSettings settings={initialSettings} />
         )}

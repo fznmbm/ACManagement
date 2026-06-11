@@ -121,8 +121,8 @@ export default async function ApplicationsPage({
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card border rounded-lg p-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-card border rounded-lg p-3 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
@@ -134,7 +134,7 @@ export default async function ApplicationsPage({
           </div>
         </div>
 
-        <div className="bg-card border rounded-lg p-6">
+        <div className="bg-card border rounded-lg p-3 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Pending Review</p>
@@ -146,7 +146,7 @@ export default async function ApplicationsPage({
           </div>
         </div>
 
-        <div className="bg-card border rounded-lg p-6">
+        <div className="bg-card border rounded-lg p-3 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Accepted</p>
@@ -158,7 +158,7 @@ export default async function ApplicationsPage({
           </div>
         </div>
 
-        <div className="bg-card border rounded-lg p-6">
+        <div className="bg-card border rounded-lg p-3 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Rejected</p>

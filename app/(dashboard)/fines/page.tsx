@@ -107,7 +107,7 @@ export default function FinesPage() {
         .map((fine) => ({
           ...fine,
           students: studentsData?.find(
-            (student) => student.id === fine.student_id
+            (student) => student.id === fine.student_id,
           ),
         }))
         .filter((fine) => fine.students); // Only include fines with valid student data
@@ -116,7 +116,7 @@ export default function FinesPage() {
       let filteredData = finesWithStudents;
       if (classFilter) {
         filteredData = filteredData.filter(
-          (fine) => fine.students?.class_id === classFilter
+          (fine) => fine.students?.class_id === classFilter,
         );
       }
 
@@ -232,7 +232,7 @@ export default function FinesPage() {
   const handleWaiveFine = async (fineId: string, amount: number) => {
     if (
       !confirm(
-        `Waive this £${amount.toFixed(2)} fine? This action cannot be undone.`
+        `Waive this £${amount.toFixed(2)} fine? This action cannot be undone.`,
       )
     )
       return;
@@ -321,10 +321,10 @@ export default function FinesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Fine Management</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Fine Management</h1>
           <p className="text-muted-foreground">
             Manage student fines and collection records
           </p>
@@ -348,7 +348,7 @@ export default function FinesPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-4">
         <div className="bg-card border border-border rounded-lg p-4 text-center">
           <p className="text-2xl font-bold">{stats.total}</p>
           <p className="text-sm text-muted-foreground">Total Fines</p>
@@ -389,7 +389,7 @@ export default function FinesPage() {
 
       {/* Filters */}
       <div className="bg-card border border-border rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <div>
             <label className="form-label">Class</label>
             <select
@@ -502,7 +502,73 @@ export default function FinesPage() {
             Fine Records ({filteredFines.length})
           </h3>
         </div>
-        <div className="overflow-x-auto">
+        {/* Mobile card view */}
+        <div className="md:hidden divide-y divide-border">
+          {filteredFines.map((fine) => (
+            <div key={fine.id} className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">
+                    {fine.students?.first_name} {fine.students?.last_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {fine.students?.student_number}
+                  </p>
+                </div>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full font-medium ${
+                    fine.status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : fine.status === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {fine.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="capitalize">{fine.fine_type}</span>
+                <span className="font-semibold text-foreground">
+                  £{fine.amount.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Issued: {formatDate(fine.issued_date)}
+              </p>
+              <div className="flex gap-3 pt-1">
+                {fine.status === "pending" && (
+                  <>
+                    <button
+                      onClick={() =>
+                        handleViewStudentFines({
+                          id: fine.student_id,
+                          first_name: fine.students?.first_name,
+                          last_name: fine.students?.last_name,
+                          student_number: fine.students?.student_number,
+                        })
+                      }
+                      className="text-primary text-xs hover:underline"
+                    >
+                      Collect
+                    </button>
+                    <button
+                      onClick={() => handleWaiveFine(fine.id, fine.amount)}
+                      className="text-orange-600 text-xs hover:underline"
+                    >
+                      Waive
+                    </button>
+                  </>
+                )}
+                {fine.status === "paid" && (
+                  <span className="text-green-600 text-xs">✓ Paid</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -539,8 +605,8 @@ export default function FinesPage() {
                         fine.status === "pending"
                           ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                           : fine.status === "paid"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                            : "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
                       }`}
                     >
                       {fine.status}

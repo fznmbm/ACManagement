@@ -46,7 +46,55 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Mobile card view */}
+      <div className="md:hidden divide-y divide-border">
+        {classes.map((classItem) => (
+          <div key={classItem.id} className="p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">{classItem.name}</p>
+                {classItem.description && (
+                  <p className="text-xs text-muted-foreground">
+                    {classItem.description}
+                  </p>
+                )}
+              </div>
+              <span
+                className={`px-2 py-0.5 text-xs font-medium rounded-full ${classItem.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+              >
+                {classItem.is_active ? "Active" : "Inactive"}
+              </span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                {classItem.student_count} students
+              </span>
+              {classItem.profiles && (
+                <span>{classItem.profiles.full_name}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <Link
+                href={`/classes/${classItem.id}`}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <Eye className="h-3 w-3" /> View
+              </Link>
+              {canEdit && (
+                <Link
+                  href={`/classes/${classItem.id}/edit`}
+                  className="text-xs text-muted-foreground hover:underline flex items-center gap-1"
+                >
+                  <Edit className="h-3 w-3" /> Edit
+                </Link>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
@@ -161,11 +209,11 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
                           onClick={() => {
                             if (
                               confirm(
-                                "Are you sure you want to delete this class?"
+                                "Are you sure you want to delete this class?",
                               )
                             ) {
                               alert(
-                                "Delete functionality will be implemented in edit page"
+                                "Delete functionality will be implemented in edit page",
                               );
                             }
                           }}
