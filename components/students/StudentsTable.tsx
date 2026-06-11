@@ -28,6 +28,7 @@ interface Student {
     id: string;
     name: string;
   } | null;
+  portalStatus?: "active" | "pending" | "no_account";
 }
 
 interface StudentsTableProps {
@@ -177,6 +178,23 @@ export default function StudentsTable({
                 <span>·</span>
                 <span>{student.parent_phone}</span>
               </div>
+              <div className="pl-12">
+                {student.portalStatus === "active" && (
+                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-full">
+                    ✓ Portal Active
+                  </span>
+                )}
+                {student.portalStatus === "pending" && (
+                  <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full">
+                    ⏳ Not Set Up
+                  </span>
+                )}
+                {student.portalStatus === "no_account" && (
+                  <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded-full">
+                    ✕ No Account
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 pl-12">
                 <Link
                   href={`/students/${student.id}`}
@@ -233,6 +251,9 @@ export default function StudentsTable({
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Portal
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Actions
@@ -317,6 +338,23 @@ export default function StudentsTable({
                   >
                     {student.status}
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {student.portalStatus === "active" && (
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-full font-medium whitespace-nowrap">
+                      ✓ Active
+                    </span>
+                  )}
+                  {student.portalStatus === "pending" && (
+                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full font-medium whitespace-nowrap">
+                      ⏳ Not Set Up
+                    </span>
+                  )}
+                  {student.portalStatus === "no_account" && (
+                    <span className="text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded-full font-medium whitespace-nowrap">
+                      ✕ No Account
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {/* <div className="flex items-center space-x-2">

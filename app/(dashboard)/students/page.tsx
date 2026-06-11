@@ -20,6 +20,7 @@ interface Student {
     id: string;
     name: string;
   } | null;
+  portalStatus?: "active" | "pending" | "no_account";
 }
 
 interface Class {
@@ -75,7 +76,45 @@ export default function StudentsPage() {
         console.error("Error fetching students:", error);
         setStudents([]);
       } else {
-        setStudents(data || []);
+        const studentsData = data || [];
+
+        // Fetch parent links for these students
+        const { data: links } = await supabase
+          .from("parent_student_links")
+          .select("student_id, parent_user_id")
+          .in(
+            "student_id",
+            studentsData.map((s: any) => s.id),
+          )
+          .eq("is_primary", true);
+
+        // Fetch portal status from view
+        const parentIds =
+          links?.map((l: any) => l.parent_user_id).filter(Boolean) || [];
+        const { data: portalData } =
+          parentIds.length > 0
+            ? await supabase
+                .from("parent_portal_status")
+                .select("id, portal_status")
+                .in("id", parentIds)
+            : { data: [] };
+
+        // Map portal status to each student
+        const studentsWithStatus = studentsData.map((s: any) => {
+          const link = links?.find((l: any) => l.student_id === s.id);
+          if (!link) return { ...s, portalStatus: "no_account" };
+          const portal = portalData?.find(
+            (p: any) => p.id === link.parent_user_id,
+          );
+          if (!portal) return { ...s, portalStatus: "no_account" };
+          return {
+            ...s,
+            portalStatus:
+              portal.portal_status === "active" ? "active" : "pending",
+          };
+        });
+
+        setStudents(studentsWithStatus);
       }
     } catch (error) {
       console.error("Error fetching students:", error);
