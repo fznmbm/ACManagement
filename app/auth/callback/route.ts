@@ -41,6 +41,20 @@ export async function GET(request: NextRequest) {
       token_hash: tokenHash,
     });
     if (!error) return response;
+
+    // Log the actual error for debugging
+    console.error("verifyOtp error:", JSON.stringify(error));
+    console.error("token_hash:", tokenHash?.substring(0, 20) + "...");
+    console.error("type:", type);
+  }
+
+  // If no code and no tokenHash, check if session already exists
+  // (handles case where user clicks link in same browser session)
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session) {
+    return response;
   }
 
   return NextResponse.redirect(`${origin}/parent/login?error=link_expired`);

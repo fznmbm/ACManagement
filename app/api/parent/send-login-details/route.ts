@@ -78,9 +78,9 @@ export async function POST(request: NextRequest) {
     const { data: resetData, error: resetError } =
       await supabase.auth.admin.generateLink({
         type: "magiclink",
-        email: parentEmail,
+        email: normalisedEmail,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/set-password`,
+          redirectTo: `https://www.al-hikmah.org/auth/callback?next=/set-password`,
         },
       });
 
