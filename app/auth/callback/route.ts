@@ -48,14 +48,7 @@ export async function GET(request: NextRequest) {
     console.error("type:", type);
   }
 
-  // If no code and no tokenHash, check if session already exists
-  // (handles case where user clicks link in same browser session)
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (session) {
-    return response;
-  }
-
-  return NextResponse.redirect(`${origin}/parent/login?error=link_expired`);
+  // If no code and no tokenHash but hash tokens present (implicit flow)
+  // redirect to set-password and let client-side handle the hash
+  return NextResponse.redirect(`${origin}/set-password`);
 }
