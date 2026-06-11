@@ -412,7 +412,7 @@ export default function AdminPrayerSheets() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Prayer Sheets</h2>
+          <h2 className="text-xl md:text-2xl font-bold">Prayer Sheets</h2>
           <p className="text-muted-foreground">
             Review and verify weekly prayer submissions
           </p>

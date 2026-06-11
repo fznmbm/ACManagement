@@ -82,7 +82,7 @@ export default async function ReportsPage({
       </div>
 
       {/* Tab Content */}
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="bg-card border border-border rounded-lg p-3 md:p-6">
         {activeTab === "attendance" && (
           <AttendanceReportGenerator
             classes={classes || []}
