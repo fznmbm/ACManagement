@@ -522,7 +522,7 @@ export default function ParentMeetingPage() {
         <div className="bg-card border border-border rounded-xl p-5">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-primary" />
-            Class Feedback History
+            Feedback History
             <span className="text-xs font-normal text-muted-foreground">
               (last {feedbackSessions.length} sessions)
             </span>

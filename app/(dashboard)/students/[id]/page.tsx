@@ -290,7 +290,9 @@ export default async function StudentDetailPage({
         </Link>
         <Link
           href={`/students/${student.id}/meeting`}
-          className="btn-outline flex items-center space-x-2"
+          target="_blank"
+          //rel="noopener noreferrer"
+          //className="btn-outline flex items-center space-x-2"
         >
           <Users className="h-4 w-4" />
           <span>Parent Meeting</span>
