@@ -4,7 +4,7 @@ import { sendApplicationRejectedEmail } from "@/lib/email/send-application-email
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const supabase = await createClient();
@@ -34,7 +34,7 @@ export async function POST(
     if (!reason || !reason.trim()) {
       return NextResponse.json(
         { error: "Rejection reason is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,7 +48,7 @@ export async function POST(
     if (fetchError || !application) {
       return NextResponse.json(
         { error: "Application not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(
     if (application.status === "rejected") {
       return NextResponse.json(
         { error: "Application already rejected" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -64,7 +64,7 @@ export async function POST(
     if (application.status === "accepted") {
       return NextResponse.json(
         { error: "Cannot reject an accepted application" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,28 +84,34 @@ export async function POST(
       console.error("Error rejecting application:", updateError);
       return NextResponse.json(
         { error: "Failed to reject application" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    // Send rejection email - NEW EMAIL INTEGRATION
-    try {
-      console.log("📧 Sending rejection email to:", application.parent_email);
-      const emailResult = await sendApplicationRejectedEmail(
-        application,
-        reason.trim()
-      );
+    // ============================================================
+    // EMAIL TEMPORARILY DISABLED — June 2026
+    // Reason: Reducing email volume during initial rollout. Admin
+    // communicates rejection directly via WhatsApp with explanation.
+    // To re-enable: uncomment the block below.
+    // ============================================================
+    // // Send rejection email - NEW EMAIL INTEGRATION
+    // try {
+    //   console.log("📧 Sending rejection email to:", application.parent_email);
+    //   const emailResult = await sendApplicationRejectedEmail(
+    //     application,
+    //     reason.trim()
+    //   );
 
-      if (emailResult.success) {
-        console.log("✅ Rejection email sent successfully");
-      } else {
-        console.error("⚠️ Email failed but application was rejected");
-      }
-    } catch (emailError) {
-      console.error("Email error:", emailError);
-      // Don't fail the operation if email fails
-      // Application is already rejected, email is secondary
-    }
+    //   if (emailResult.success) {
+    //     console.log("✅ Rejection email sent successfully");
+    //   } else {
+    //     console.error("⚠️ Email failed but application was rejected");
+    //   }
+    // } catch (emailError) {
+    //   console.error("Email error:", emailError);
+    //   // Don't fail the operation if email fails
+    //   // Application is already rejected, email is secondary
+    // }
 
     // TODO: Send rejection email to parent
     console.log("=== APPLICATION REJECTED ===");
@@ -119,13 +125,13 @@ export async function POST(
         success: true,
         message: "Application rejected successfully",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Reject application error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

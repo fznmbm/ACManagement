@@ -247,24 +247,31 @@ export async function POST(
       }
     }
 
-    // Send acceptance email - NEW EMAIL INTEGRATION
-    try {
-      console.log("📧 Sending acceptance email to:", parentEmail);
-      const emailResult = await sendApplicationAcceptedEmail(
-        application,
-        newStudent.student_number,
-      );
+    // ============================================================
+    // EMAIL TEMPORARILY DISABLED — June 2026
+    // Reason: Reducing email volume during initial rollout. Admin
+    // communicates acceptance directly via WhatsApp. The parent
+    // portal setup email (send-login-details) is sufficient.
+    // To re-enable: uncomment the block below.
+    // ============================================================
+    // // Send acceptance email - NEW EMAIL INTEGRATION
+    // try {
+    //   console.log("📧 Sending acceptance email to:", parentEmail);
+    //   const emailResult = await sendApplicationAcceptedEmail(
+    //     application,
+    //     newStudent.student_number,
+    //   );
 
-      if (emailResult.success) {
-        console.log("✅ Acceptance email sent successfully");
-      } else {
-        console.error("⚠️ Email failed but student was created");
-      }
-    } catch (emailError) {
-      console.error("Email error:", emailError);
-      // Don't fail the operation if email fails
-      // Student is already created, email is secondary
-    }
+    //   if (emailResult.success) {
+    //     console.log("✅ Acceptance email sent successfully");
+    //   } else {
+    //     console.error("⚠️ Email failed but student was created");
+    //   }
+    // } catch (emailError) {
+    //   console.error("Email error:", emailError);
+    //   // Don't fail the operation if email fails
+    //   // Student is already created, email is secondary
+    // }
 
     // TODO: Send acceptance email to parent
     console.log("=== APPLICATION ACCEPTED ===");

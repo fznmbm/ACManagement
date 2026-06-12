@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
           autoRefreshToken: false,
           persistSession: false,
         },
-      }
+      },
     );
 
     // Parse the request body
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       if (!formData[field]) {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (!settings) {
       return NextResponse.json(
         { error: "Applications are not currently open for this academic year" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Applications are closed. Please check the application dates.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           error:
             "Maximum application capacity reached. Applications are now closed.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         {
           error: `Applicant must be at least ${settings.minimum_age} years old`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       console.error("Database error:", insertError);
       return NextResponse.json(
         { error: "Failed to submit application. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -164,24 +164,30 @@ export async function POST(request: NextRequest) {
       // Don't fail the application submission if counter increment fails
     }
 
-    // Send confirmation email (basic version - we'll enhance this later)
-    try {
-      console.log(
-        "📧 Sending confirmation email to:",
-        application.parent_email
-      );
-      // await sendConfirmationEmail(application, settings);
-      const emailResult = await sendApplicationReceivedEmail(application);
+    // ============================================================
+    // EMAIL TEMPORARILY DISABLED — June 2026
+    // Reason: Reducing email volume during initial rollout to avoid
+    // confusing parents. Admin communicates application receipt via
+    // WhatsApp directly. Re-enable by uncommenting the block below.
+    // ============================================================
+    //// Send confirmation email (also don't fail application if email fails)
+    // try {
+    //   console.log(
+    //     "📧 Sending confirmation email to:",
+    //     application.parent_email
+    //   );
+    //   // await sendConfirmationEmail(application, settings);
+    //   const emailResult = await sendApplicationReceivedEmail(application);
 
-      if (emailResult.success) {
-        console.log("✅ Confirmation email sent successfully");
-      } else {
-        console.error("⚠️ Email failed but application was saved");
-      }
-    } catch (emailError) {
-      console.error("Email error:", emailError);
-      // Don't fail the application if email fails
-    }
+    //   if (emailResult.success) {
+    //     console.log("✅ Confirmation email sent successfully");
+    //   } else {
+    //     console.error("⚠️ Email failed but application was saved");
+    //   }
+    // } catch (emailError) {
+    //   console.error("Email error:", emailError);
+    //   // Don't fail the application if email fails
+    // }
 
     // Return success with application number
     return NextResponse.json(
@@ -190,13 +196,13 @@ export async function POST(request: NextRequest) {
         application_number: application.application_number,
         message: "Application submitted successfully",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Application submission error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -211,7 +217,7 @@ async function sendConfirmationEmail(application: any, settings: any) {
   console.log(`Subject: Application Received - Al Hikmah Institute Crawley`);
   console.log(`Application Number: ${application.application_number}`);
   console.log(
-    `Child Name: ${application.child_first_name} ${application.child_last_name}`
+    `Child Name: ${application.child_first_name} ${application.child_last_name}`,
   );
   console.log(`Parent Name: ${application.parent_name}`);
   console.log("===========================");
