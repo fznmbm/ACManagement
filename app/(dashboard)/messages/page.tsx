@@ -44,6 +44,7 @@ export default function MessagesPage() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
+  const [isAcademicNote, setIsAcademicNote] = useState(false);
 
   useEffect(() => {
     fetchClasses();
@@ -110,7 +111,7 @@ export default function MessagesPage() {
           .insert({
             parent_user_id: link.parent_user_id,
             student_id: selectedStudent,
-            type: "announcement",
+            type: isAcademicNote ? "academic_note" : "announcement",
             priority,
             title: title.trim(),
             message: message.trim(),
@@ -201,6 +202,7 @@ export default function MessagesPage() {
     setTitle("");
     setMessage("");
     setPriority("normal");
+    setIsAcademicNote(false);
     setSent(false);
     setShowWhatsApp(false);
     setWhatsAppMsg("");
@@ -338,6 +340,32 @@ export default function MessagesPage() {
               </button>
             </div>
           </div>
+
+          {/* Academic Note toggle — individual student only */}
+          {mode === "student" && (
+            <div
+              onClick={() => setIsAcademicNote(!isAcademicNote)}
+              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                isAcademicNote
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isAcademicNote}
+                onChange={() => setIsAcademicNote(!isAcademicNote)}
+                className="mt-0.5 h-4 w-4 rounded border-input text-primary"
+              />
+              <div>
+                <p className="text-sm font-medium">Mark as Academic Note</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Will appear in parent's Feedback tab and student's meeting
+                  report
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Title */}
           <div>

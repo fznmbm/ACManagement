@@ -288,6 +288,13 @@ export default async function StudentDetailPage({
           <Edit className="h-4 w-4" />
           <span>Edit Student</span>
         </Link>
+        <Link
+          href={`/students/${student.id}/meeting`}
+          className="btn-outline flex items-center space-x-2"
+        >
+          <Users className="h-4 w-4" />
+          <span>Parent Meeting</span>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

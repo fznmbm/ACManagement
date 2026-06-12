@@ -22,6 +22,7 @@ interface AdminNotice {
   created_at: string;
   is_read: boolean;
   type: "notice";
+  notificationType?: "announcement" | "academic_note";
 }
 
 type FeedbackItem = FeedbackSession | AdminNotice;
@@ -71,7 +72,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
           .from("parent_notifications")
           .select("id, title, message, priority, created_at, is_read")
           .eq("parent_user_id", user.id)
-          .eq("type", "announcement")
+          .in("type", ["announcement", "academic_note"])
           .gte("created_at", ninetyDaysAgo.toISOString())
           .order("created_at", { ascending: false }),
       ]);
@@ -112,6 +113,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
       const noticeItems: AdminNotice[] = noticesData.map((n: any) => ({
         ...n,
         type: "notice" as const,
+        notificationType: n.type,
       }));
 
       const combined: FeedbackItem[] = [...feedbackItems, ...noticeItems].sort(
@@ -171,7 +173,9 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-base shrink-0">💬</span>
+                  <span className="text-base shrink-0">
+                    {item.notificationType === "academic_note" ? "📝" : "💬"}
+                  </span>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
@@ -189,6 +193,11 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                       )}
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">
+                      {item.notificationType === "academic_note" && (
+                        <span className="text-primary font-medium mr-1">
+                          Academic Note ·
+                        </span>
+                      )}
                       {new Date(item.created_at).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",
