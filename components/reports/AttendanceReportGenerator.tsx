@@ -35,7 +35,7 @@ export default function AttendanceReportGenerator({
   });
 
   const handleFilterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setFilters({
       ...filters,
@@ -61,7 +61,7 @@ export default function AttendanceReportGenerator({
             id,
             name
           )
-        `
+        `,
         )
         .order("date", { ascending: false });
 
@@ -316,6 +316,122 @@ export default function AttendanceReportGenerator({
             </button>
           </div>
 
+          {/* Per-student summary — shown when no specific student selected */}
+          {!filters.student_id &&
+            (() => {
+              const studentMap: Record<
+                string,
+                {
+                  name: string;
+                  number: string;
+                  present: number;
+                  absent: number;
+                  late: number;
+                  excused: number;
+                  total: number;
+                }
+              > = {};
+              reportData.records.forEach((r: any) => {
+                const id = r.student_id;
+                if (!studentMap[id]) {
+                  studentMap[id] = {
+                    name: `${r.students?.first_name} ${r.students?.last_name}`,
+                    number: r.students?.student_number || "",
+                    present: 0,
+                    absent: 0,
+                    late: 0,
+                    excused: 0,
+                    total: 0,
+                  };
+                }
+                studentMap[id][
+                  r.status as "present" | "absent" | "late" | "excused"
+                ]++;
+                studentMap[id].total++;
+              });
+              const rows = Object.values(studentMap).sort((a, b) =>
+                a.name.localeCompare(b.name),
+              );
+              return (
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="px-4 py-3 bg-muted/50 border-b">
+                    <h4 className="font-semibold text-sm">
+                      Student Attendance Summary
+                    </h4>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/30">
+                        <tr>
+                          <th className="px-4 py-2 text-left font-medium">
+                            Student
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-green-600">
+                            Present
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-red-600">
+                            Absent
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-orange-600">
+                            Late
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium text-blue-600">
+                            Excused
+                          </th>
+                          <th className="px-4 py-2 text-center font-medium">
+                            Rate
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {rows.map((row, i) => {
+                          const rate =
+                            row.total > 0
+                              ? Math.round((row.present / row.total) * 100)
+                              : 0;
+                          return (
+                            <tr key={i} className="hover:bg-muted/30">
+                              <td className="px-4 py-2">
+                                <p className="font-medium">{row.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {row.number}
+                                </p>
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {row.present}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {row.absent}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {row.late}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {row.excused}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    rate >= 80
+                                      ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                                      : rate >= 60
+                                        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                        : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                  }`}
+                                >
+                                  {rate}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
+
           {/* Preview Table */}
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <div className="px-4 py-3 border-b border-border bg-muted/50">
@@ -355,10 +471,10 @@ export default function AttendanceReportGenerator({
                             record.status === "present"
                               ? "bg-green-100 text-green-800"
                               : record.status === "absent"
-                              ? "bg-red-100 text-red-800"
-                              : record.status === "late"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-blue-100 text-blue-800"
+                                ? "bg-red-100 text-red-800"
+                                : record.status === "late"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-blue-100 text-blue-800"
                           }`}
                         >
                           {record.status}

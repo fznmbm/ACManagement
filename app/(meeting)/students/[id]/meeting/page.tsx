@@ -84,7 +84,7 @@ interface FeeInvoice {
   status: string;
   due_date: string;
   period_name: string | null;
-  fee_structures: { name: string } | null;
+  fee_structures: { name: string }[] | { name: string } | null;
 }
 
 export default function ParentMeetingPage() {
@@ -701,7 +701,11 @@ export default function ParentMeetingPage() {
                   className="flex items-center justify-between p-3 border border-border rounded-lg text-sm"
                 >
                   <div>
-                    <p className="font-medium">{fee.fee_structures?.name}</p>
+                    <p className="font-medium">
+                      {Array.isArray(fee.fee_structures)
+                        ? fee.fee_structures[0]?.name
+                        : fee.fee_structures?.name}
+                    </p>
                     {fee.period_name && (
                       <p className="text-xs text-muted-foreground">
                         {fee.period_name}

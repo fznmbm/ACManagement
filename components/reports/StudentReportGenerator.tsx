@@ -41,7 +41,7 @@ export default function StudentReportGenerator({
           `
           *,
           classes (name)
-        `
+        `,
         )
         .eq("id", selectedStudent)
         .single();
@@ -79,7 +79,7 @@ export default function StudentReportGenerator({
           `
           *,
           subjects (name)
-        `
+        `,
         )
         .eq("student_id", selectedStudent)
         .order("assessment_date", { ascending: false });
@@ -130,7 +130,7 @@ export default function StudentReportGenerator({
         memorizationWithItems = memorization.map((m: any) => ({
           ...m,
           memorization_items: items?.find(
-            (i: any) => i.id === m.memorization_item_id
+            (i: any) => i.id === m.memorization_item_id,
           ),
         }));
       }
@@ -142,37 +142,37 @@ export default function StudentReportGenerator({
         duas: {
           total:
             memorizationWithItems?.filter(
-              (m) => m.memorization_items?.item_type === "dua"
+              (m) => m.memorization_items?.item_type === "dua",
             ).length || 0,
           mastered:
             memorizationWithItems?.filter(
               (m) =>
                 m.memorization_items?.item_type === "dua" &&
-                m.status === "mastered"
+                m.status === "mastered",
             ).length || 0,
         },
         surahs: {
           total:
             memorizationWithItems?.filter(
-              (m) => m.memorization_items?.item_type === "surah"
+              (m) => m.memorization_items?.item_type === "surah",
             ).length || 0,
           mastered:
             memorizationWithItems?.filter(
               (m) =>
                 m.memorization_items?.item_type === "surah" &&
-                m.status === "mastered"
+                m.status === "mastered",
             ).length || 0,
         },
         hadiths: {
           total:
             memorizationWithItems?.filter(
-              (m) => m.memorization_items?.item_type === "hadith"
+              (m) => m.memorization_items?.item_type === "hadith",
             ).length || 0,
           mastered:
             memorizationWithItems?.filter(
               (m) =>
                 m.memorization_items?.item_type === "hadith" &&
-                m.status === "mastered"
+                m.status === "mastered",
             ).length || 0,
         },
       };
@@ -203,6 +203,11 @@ export default function StudentReportGenerator({
     } finally {
       setLoading(false);
     }
+  };
+
+  const openMeetingView = () => {
+    if (!selectedStudent) return;
+    window.open(`/students/${selectedStudent}/meeting`, "_blank");
   };
 
   const exportToPDF = () => {
@@ -276,7 +281,7 @@ export default function StudentReportGenerator({
           </select>
         </div>
 
-        <div className="flex items-end space-x-2">
+        <div className="flex items-end gap-2 flex-wrap">
           <button
             onClick={generateReport}
             disabled={loading || !selectedStudent}
@@ -296,10 +301,22 @@ export default function StudentReportGenerator({
           </button>
 
           {reportData && (
-            <button onClick={exportToPDF} className="btn-outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Export PDF
-            </button>
+            <>
+              <button
+                onClick={exportToPDF}
+                className="btn-outline flex items-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Export PDF
+              </button>
+              <button
+                onClick={openMeetingView}
+                className="btn-outline flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Meeting View
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -341,7 +358,7 @@ export default function StudentReportGenerator({
                 <p className="font-medium">
                   {reportData.student.date_of_birth
                     ? new Date(
-                        reportData.student.date_of_birth
+                        reportData.student.date_of_birth,
                       ).toLocaleDateString()
                     : "N/A"}
                 </p>
@@ -356,7 +373,7 @@ export default function StudentReportGenerator({
                 <p className="text-muted-foreground">Enrollment Date</p>
                 <p className="font-medium">
                   {new Date(
-                    reportData.student.enrollment_date
+                    reportData.student.enrollment_date,
                   ).toLocaleDateString()}
                 </p>
               </div>
@@ -435,14 +452,14 @@ export default function StudentReportGenerator({
                         <td className="px-3 py-2">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(
-                              record.status
+                              record.status,
                             )}`}
                           >
                             {record.status}
                           </span>
                         </td>
                       </tr>
-                    )
+                    ),
                   )}
                 </tbody>
               </table>
@@ -471,7 +488,7 @@ export default function StudentReportGenerator({
                           {data.count} assessment{data.count !== 1 ? "s" : ""}
                         </p>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
 
@@ -500,7 +517,7 @@ export default function StudentReportGenerator({
                           <tr key={index} className="border-t border-border">
                             <td className="px-3 py-2">
                               {new Date(
-                                record.assessment_date
+                                record.assessment_date,
                               ).toLocaleDateString()}
                             </td>
                             <td className="px-3 py-2">
@@ -521,7 +538,7 @@ export default function StudentReportGenerator({
                               </span>
                             </td>
                           </tr>
-                        )
+                        ),
                       )}
                     </tbody>
                   </table>
@@ -600,7 +617,7 @@ export default function StudentReportGenerator({
                         <td className="px-3 py-2">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getMemorizationStatusBadge(
-                              item.status
+                              item.status,
                             )}`}
                           >
                             {item.status.replace("_", " ")}

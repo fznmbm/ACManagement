@@ -39,7 +39,7 @@ export default function AcademicReportGenerator({
     *,
     students (first_name, last_name, student_number),
     subjects (name)
-  `
+  `,
         )
         .order("assessment_date", { ascending: false });
 
@@ -73,7 +73,7 @@ export default function AcademicReportGenerator({
     if (!reportData || reportData.length === 0) return 0;
     const total = reportData.reduce(
       (sum: number, item: any) => sum + (item.percentage || 0),
-      0
+      0,
     );
     return (total / reportData.length).toFixed(1);
   };
@@ -197,20 +197,42 @@ export default function AcademicReportGenerator({
         <div className="space-y-4">
           {/* Summary */}
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-            <h4 className="font-semibold mb-2">Summary</h4>
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <h4 className="font-semibold mb-3">Summary</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Total Assessments</p>
                 <p className="text-xl font-bold">{reportData.length}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Average Score</p>
-                <p className="text-xl font-bold">{calculateAverage()}%</p>
+                <p
+                  className={`text-xl font-bold ${
+                    Number(calculateAverage()) >= 80
+                      ? "text-green-600 dark:text-green-400"
+                      : Number(calculateAverage()) >= 60
+                        ? "text-yellow-600 dark:text-yellow-400"
+                        : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {calculateAverage()}%
+                </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Students</p>
-                <p className="text-xl font-bold">
-                  {new Set(reportData.map((r: any) => r.student_id)).size}
+                <p className="text-muted-foreground">Above 80%</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {
+                    reportData.filter((r: any) => (r.percentage || 0) >= 80)
+                      .length
+                  }
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Below 60%</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                  {
+                    reportData.filter((r: any) => (r.percentage || 0) < 60)
+                      .length
+                  }
                 </p>
               </div>
             </div>
@@ -262,10 +284,12 @@ export default function AcademicReportGenerator({
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`font-semibold ${
-                          item.percentage >= 60
-                            ? "text-green-600"
-                            : "text-red-600"
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          (item.percentage || 0) >= 80
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                            : (item.percentage || 0) >= 60
+                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                         }`}
                       >
                         {item.percentage}%

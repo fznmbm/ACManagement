@@ -5,12 +5,14 @@ import AcademicReportGenerator from "@/components/reports/AcademicReportGenerato
 import FeeCollectionReport from "@/components/reports/FeeCollectionReport";
 import StudentReportGenerator from "@/components/reports/StudentReportGenerator";
 import YearEndSummaryReport from "@/components/reports/YearEndSummaryReport";
+import PrayerComplianceReport from "@/components/reports/PrayerComplianceReport";
 
 const TABS = [
   { id: "attendance", label: "Attendance" },
   { id: "academic", label: "Academic Progress" },
   { id: "fees", label: "Fee Collection" },
   { id: "student", label: "Student Report" },
+  { id: "prayer", label: "Prayer Compliance" },
   { id: "yearend", label: "Year End Summary" },
 ] as const;
 
@@ -105,6 +107,12 @@ export default async function ReportsPage({
           <StudentReportGenerator
             students={students || []}
             classes={classes || []}
+          />
+        )}
+        {activeTab === "prayer" && (
+          <PrayerComplianceReport
+            classes={classes || []}
+            students={students || []}
           />
         )}
         {activeTab === "yearend" && <YearEndSummaryReport />}
