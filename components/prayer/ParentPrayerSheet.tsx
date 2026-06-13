@@ -277,6 +277,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
   const toggle = useCallback(
     async (day: Day, prayer: Prayer) => {
       if (status === "submitted" || status === "verified") return;
+      if (isPastWeek) return;
 
       // Block future days
       const today = new Date();
@@ -397,6 +398,9 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
 
   const isLocked = status === "submitted" || status === "verified";
 
+  // A past week that is not the current week — cells should be read-only
+  const isPastWeek = weekStart < getMondayOfWeek(new Date());
+
   const renderCell = (day: Day, prayer: Prayer) => {
     const val = grid[day][prayer];
 
@@ -415,8 +419,8 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     const nowMinutes = today.getHours() * 60 + today.getMinutes();
     const isFuturePrayer =
       isToday && nowMinutes < PRAYER_UNLOCK_MINUTES[prayer];
-    const cellLocked = isLocked || isFutureDay || isFuturePrayer;
-    const dimmed = isFutureDay || isFuturePrayer;
+    const cellLocked = isLocked || isFutureDay || isFuturePrayer || isPastWeek;
+    const dimmed = isFutureDay || isFuturePrayer || isPastWeek;
 
     if (val === true) {
       return (
