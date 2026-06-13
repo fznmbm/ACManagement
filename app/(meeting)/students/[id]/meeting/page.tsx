@@ -76,6 +76,17 @@ interface Fine {
   reason: string | null;
 }
 
+interface FeeInvoice {
+  id: string;
+  invoice_number: string;
+  amount_due: number;
+  amount_paid: number;
+  status: string;
+  due_date: string;
+  period_name: string | null;
+  fee_structures: { name: string } | null;
+}
+
 export default function ParentMeetingPage() {
   const params = useParams();
   const router = useRouter();
@@ -92,6 +103,7 @@ export default function ParentMeetingPage() {
     null,
   );
   const [fines, setFines] = useState<Fine[]>([]);
+  const [fees, setFees] = useState<FeeInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [meetingDate] = useState(
     new Date().toLocaleDateString("en-GB", {
@@ -237,6 +249,18 @@ export default function ParentMeetingPage() {
         .order("issued_date", { ascending: false });
 
       setFines(finesData || []);
+
+      // Fetch fee invoices
+      const { data: feesData } = await supabase
+        .from("fee_invoices")
+        .select(
+          "id, invoice_number, amount_due, amount_paid, status, due_date, period_name, fee_structures(name)",
+        )
+        .eq("student_id", studentId)
+        .neq("status", "cancelled")
+        .order("due_date", { ascending: false });
+
+      setFees(feesData || []);
     } catch (err) {
       console.error("Error fetching meeting data:", err);
     } finally {
@@ -352,7 +376,7 @@ export default function ParentMeetingPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {/* Attendance Rate */}
           <div
             className={`rounded-xl border p-4 text-center ${
@@ -437,6 +461,43 @@ export default function ParentMeetingPage() {
               {pendingFines.length} pending
             </p>
           </div>
+
+          {/* Outstanding Fees */}
+          {(() => {
+            const outstandingFees = fees.filter((f) =>
+              ["pending", "partial", "overdue"].includes(f.status),
+            );
+            const outstandingAmount = outstandingFees.reduce(
+              (sum, f) => sum + (f.amount_due - f.amount_paid),
+              0,
+            );
+            return (
+              <div
+                className={`rounded-xl border p-4 text-center ${
+                  outstandingAmount > 0
+                    ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
+                    : "bg-card border-border"
+                }`}
+              >
+                <p
+                  className={`text-3xl font-bold ${
+                    outstandingAmount > 0
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-foreground"
+                  }`}
+                >
+                  £{outstandingAmount.toFixed(0)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Outstanding Fees
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {outstandingFees.length} invoice
+                  {outstandingFees.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Prayer Breakdown */}
@@ -619,6 +680,58 @@ export default function ParentMeetingPage() {
                       }`}
                     >
                       {fine.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Fee Invoices */}
+        {fees.length > 0 && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              💳 Fee Invoices
+            </h3>
+            <div className="space-y-2">
+              {fees.map((fee) => (
+                <div
+                  key={fee.id}
+                  className="flex items-center justify-between p-3 border border-border rounded-lg text-sm"
+                >
+                  <div>
+                    <p className="font-medium">{fee.fee_structures?.name}</p>
+                    {fee.period_name && (
+                      <p className="text-xs text-muted-foreground">
+                        {fee.period_name}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Due: {formatDate(fee.due_date)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">
+                      £{fee.amount_due.toFixed(2)}
+                    </p>
+                    {fee.amount_paid > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Paid: £{fee.amount_paid.toFixed(2)}
+                      </p>
+                    )}
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        fee.status === "paid"
+                          ? "bg-green-100 text-green-700"
+                          : fee.status === "overdue"
+                            ? "bg-red-100 text-red-700"
+                            : fee.status === "partial"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {fee.status}
                     </span>
                   </div>
                 </div>

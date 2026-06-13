@@ -6,6 +6,11 @@ if (!process.env.RESEND_API_KEY) {
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
+// REPLACE WITH:
+// Note: If RESEND_API_KEY is missing, Resend will initialise with empty string
+// and fail gracefully when sending — rather than crashing the entire route at import time.
+//export const resend = new Resend(process.env.RESEND_API_KEY || "");
+
 // Email configuration
 export const emailConfig = {
   from: "Al Hikmah Institute Crawley <noreply@al-hikmah.org>", // Resend test domain
