@@ -326,8 +326,9 @@ export default function AdminPrayerSheets() {
     const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
     const notSubmitted = notSubmittedStudents;
     const className = classes.find((c) => c.id === selectedClass)?.name || "";
+    const submittedOnly = allSheets.filter((s) => s.status !== "draft");
     const msg = generateSubmissionListMessage(
-      sheets,
+      submittedOnly,
       notSubmitted,
       weekLabel,
       className,
@@ -341,8 +342,9 @@ export default function AdminPrayerSheets() {
   const handleAllIndividualWhatsApp = () => {
     const weekLabel = formatWeekLabel(weekStart.toISOString().split("T")[0]);
     const className = classes.find((c) => c.id === selectedClass)?.name || "";
+    const submittedOnly = allSheets.filter((s) => s.status !== "draft");
     const msg = generateAllIndividualMessage(
-      allSheets,
+      submittedOnly,
       notSubmittedStudents,
       weekLabel,
       className,
@@ -397,7 +399,9 @@ export default function AdminPrayerSheets() {
     weekStart.toISOString().split("T")[0] ===
     getMondayOfWeek(new Date()).toISOString().split("T")[0];
 
-  const submittedIds = new Set(allSheets.map((s) => s.student_id));
+  const submittedIds = new Set(
+    allSheets.filter((s) => s.status !== "draft").map((s) => s.student_id),
+  );
   const notSubmittedStudents = allStudents.filter(
     (s) => !submittedIds.has(s.id),
   );
@@ -525,7 +529,7 @@ export default function AdminPrayerSheets() {
       )}
       {/* Status Filter */}{" "}
       <div className="flex gap-2 flex-wrap">
-        {(["all", "submitted", "draft", "flagged"] as const).map((s) => (
+        {(["all", "submitted", "flagged", "draft"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -750,8 +754,8 @@ export default function AdminPrayerSheets() {
                 </div>
 
                 <div className="px-4 pb-3 text-xs text-muted-foreground">
-                  Submitted{" "}
-                  {new Date(sheet.submitted_at).toLocaleDateString("en-GB", {
+                  {sheet.status === "draft" ? "Draft saved " : "Submitted "}
+                  {new Date(sheet.updated_at).toLocaleDateString("en-GB", {
                     day: "numeric",
                     month: "short",
                     year: "numeric",

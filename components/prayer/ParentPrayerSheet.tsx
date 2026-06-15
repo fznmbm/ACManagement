@@ -358,7 +358,10 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
     setSubmitting(true);
 
     // On submit: null cells become false (missed)
-    const payload: Record<string, any> = { status: "submitted" };
+    const payload: Record<string, any> = {
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+    };
     DAYS.forEach((d) => {
       PRAYERS.forEach((p) => {
         payload[`${d}_${p}`] = grid[d][p] === true;
