@@ -28,7 +28,7 @@ interface Student {
     id: string;
     name: string;
   } | null;
-  portalStatus?: "active" | "pending" | "no_account";
+  portalStatus?: "active" | "link_clicked" | "not_clicked" | "no_account";
 }
 
 interface StudentsTableProps {
@@ -181,12 +181,17 @@ export default function StudentsTable({
               <div className="pl-12">
                 {student.portalStatus === "active" && (
                   <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-full">
-                    ✓ Portal Active
+                    ✓ Active
                   </span>
                 )}
-                {student.portalStatus === "pending" && (
+                {student.portalStatus === "link_clicked" && (
                   <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full">
-                    ⏳ Not Set Up
+                    🔗 Link Clicked
+                  </span>
+                )}
+                {student.portalStatus === "not_clicked" && (
+                  <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
+                    ⏳ Not Clicked
                   </span>
                 )}
                 {student.portalStatus === "no_account" && (
@@ -345,16 +350,21 @@ export default function StudentsTable({
                       ✓ Active
                     </span>
                   )}
-                  {student.portalStatus === "pending" && (
+                  {student.portalStatus === "link_clicked" && (
                     <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full font-medium whitespace-nowrap">
-                      ⏳ Not Set Up
+                      🔗 Link Clicked
+                    </span>
+                  )}
+                  {student.portalStatus === "not_clicked" && (
+                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 rounded-full font-medium whitespace-nowrap">
+                      ⏳ Not Clicked
                     </span>
                   )}
                   {student.portalStatus === "no_account" && (
                     <span className="text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded-full font-medium whitespace-nowrap">
                       ✕ No Account
                     </span>
-                  )}
+                  )}{" "}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   {/* <div className="flex items-center space-x-2">

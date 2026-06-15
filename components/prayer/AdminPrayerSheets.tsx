@@ -65,7 +65,7 @@ const generateSubmissionListMessage = (
       const streak = streaks[s.student_id] ?? 0;
       const streakText = streak > 0 ? ` 🔥${streak}` : "";
       //msg += `• ${s.students?.first_name} ${s.students?.last_name} — ${s.total_prayers ?? 0}/35 ${emoji}${streakText}\n`;
-      msg += `• ${`${s.students?.first_name} ${s.students?.last_name}`.trim()} — ${s.total_prayers ?? 0}/35 \n`;
+      msg += `• ${`${s.students?.first_name} ${s.students?.last_name}`.trim()} — ${s.total_prayers ?? 0}/35 ${emoji}\n`;
     });
   }
 

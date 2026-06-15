@@ -20,7 +20,7 @@ interface Student {
     id: string;
     name: string;
   } | null;
-  portalStatus?: "active" | "pending" | "no_account";
+  portalStatus?: "active" | "link_clicked" | "not_clicked" | "no_account";
 }
 
 interface Class {
@@ -102,15 +102,19 @@ export default function StudentsPage() {
         // Map portal status to each student
         const studentsWithStatus = studentsData.map((s: any) => {
           const link = links?.find((l: any) => l.student_id === s.id);
-          if (!link) return { ...s, portalStatus: "no_account" };
+          if (!link) return { ...s, portalStatus: "no_account" as const };
           const portal = portalData?.find(
             (p: any) => p.id === link.parent_user_id,
           );
-          if (!portal) return { ...s, portalStatus: "no_account" };
+          if (!portal) return { ...s, portalStatus: "no_account" as const };
           return {
             ...s,
             portalStatus:
-              portal.portal_status === "active" ? "active" : "pending",
+              portal.portal_status === "active"
+                ? "active"
+                : portal.portal_status === "link_clicked"
+                  ? "link_clicked"
+                  : "not_clicked",
           };
         });
 

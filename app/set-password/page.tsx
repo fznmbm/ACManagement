@@ -175,6 +175,11 @@ export default function SetPasswordPage() {
 
         if (profile?.role === "parent") {
           redirectPath = "/parent/login";
+          // Mark password as set — reliable indicator parent completed setup
+          await supabase
+            .from("profiles")
+            .update({ password_set: true })
+            .eq("id", currentUser.id);
         }
       }
 
