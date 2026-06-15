@@ -272,7 +272,7 @@ export default function AdminPrayerSheets() {
         `*, students(first_name, last_name, student_number, class_id, classes(name))`,
       )
       .eq("week_start_date", weekDate)
-      .in("status", ["submitted", "flagged"])
+      .in("status", ["submitted", "flagged", "draft"])
       .order("submitted_at", { ascending: false });
 
     if (selectedClass) {
@@ -407,6 +407,7 @@ export default function AdminPrayerSheets() {
     all: allSheets.length,
     submitted: allSheets.filter((s) => s.status === "submitted").length,
     flagged: allSheets.filter((s) => s.status === "flagged").length,
+    draft: allSheets.filter((s) => s.status === "draft").length,
   };
   return (
     <div className="space-y-6">
@@ -472,7 +473,7 @@ export default function AdminPrayerSheets() {
         </div>
       </div>
       {/* Submission Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-green-700 dark:text-green-400">
             {statusCounts.submitted}
@@ -497,6 +498,12 @@ export default function AdminPrayerSheets() {
             Flagged
           </p>
         </div>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+            {statusCounts.draft}
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-500">Draft</p>
+        </div>
       </div>
       {/* Not Submitted Students */}
       {notSubmittedStudents.length > 0 && (
@@ -518,7 +525,7 @@ export default function AdminPrayerSheets() {
       )}
       {/* Status Filter */}{" "}
       <div className="flex gap-2 flex-wrap">
-        {(["all", "submitted", "flagged"] as const).map((s) => (
+        {(["all", "submitted", "draft", "flagged"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -604,10 +611,16 @@ export default function AdminPrayerSheets() {
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                         sheet.status === "flagged"
                           ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                          : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : sheet.status === "draft"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                            : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                       }`}
                     >
-                      {sheet.status === "flagged" ? "Flagged" : "Submitted"}
+                      {sheet.status === "flagged"
+                        ? "Flagged"
+                        : sheet.status === "draft"
+                          ? "Draft"
+                          : "Submitted"}
                     </span>
 
                     {/* Copy individual sheet */}

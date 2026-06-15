@@ -398,8 +398,18 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
 
   const isLocked = status === "submitted" || status === "verified";
 
-  // A past week that is not the current week — cells should be read-only
-  const isPastWeek = weekStart < getMondayOfWeek(new Date());
+  // A week is locked only if its submission deadline has passed
+  const isPastWeek = (() => {
+    if (!weekStart || weekStart >= getMondayOfWeek(new Date())) return false;
+    // Calculate deadline for this week
+    const deadline = new Date(weekStart);
+    const [dHour, dMin] = prayerSettings.deadline_time.split(":").map(Number);
+    const daysUntilDeadline =
+      (prayerSettings.deadline_day - deadline.getDay() + 7) % 7 || 7;
+    deadline.setDate(deadline.getDate() + daysUntilDeadline);
+    deadline.setHours(dHour, dMin, 0, 0);
+    return new Date() > deadline;
+  })();
 
   const renderCell = (day: Day, prayer: Prayer) => {
     const val = grid[day][prayer];
