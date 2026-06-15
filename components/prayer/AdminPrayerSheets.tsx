@@ -59,7 +59,11 @@ const generateSubmissionListMessage = (
 
   if (submitted.length > 0) {
     msg += `✅ *Submitted (${submitted.length})*\n`;
-    submitted.forEach((s) => {
+    const sortedSubmitted = [...submitted].sort(
+      (a, b) =>
+        new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime(),
+    );
+    sortedSubmitted.forEach((s) => {
       const pct = Math.round(((s.total_prayers ?? 0) / 35) * 100);
       const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
       const streak = streaks[s.student_id] ?? 0;
@@ -141,7 +145,11 @@ const generateAllIndividualMessage = (
   let msg = `🕌 *Prayer Sheets — ${className}*\n`;
   msg += `📅 ${weekLabel}\n\n`;
 
-  sheets.forEach((sheet) => {
+  const sortedSheets = [...sheets].sort(
+    (a, b) =>
+      new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime(),
+  );
+  sortedSheets.forEach((sheet) => {
     const student = sheet.students;
     const total = sheet.total_prayers ?? 0;
     const pct = Math.round((total / 35) * 100);
