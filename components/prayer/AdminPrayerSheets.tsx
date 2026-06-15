@@ -64,14 +64,15 @@ const generateSubmissionListMessage = (
       const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
       const streak = streaks[s.student_id] ?? 0;
       const streakText = streak > 0 ? ` 🔥${streak}` : "";
-      msg += `• ${s.students?.first_name} ${s.students?.last_name} — ${s.total_prayers ?? 0}/35 ${emoji}${streakText}\n`;
+      //msg += `• ${s.students?.first_name} ${s.students?.last_name} — ${s.total_prayers ?? 0}/35 ${emoji}${streakText}\n`;
+      msg += `• ${`${s.students?.first_name} ${s.students?.last_name}`.trim()} — ${s.total_prayers ?? 0}/35 \n`;
     });
   }
 
   if (notSubmitted.length > 0) {
     msg += `\n❌ *Not Submitted (${notSubmitted.length})*\n`;
     notSubmitted.forEach((s) => {
-      msg += `• ${s.first_name} ${s.last_name}\n`;
+      msg += `• ${`${s.first_name} ${s.last_name}`.trim()}\n`;
     });
   }
 
@@ -104,7 +105,7 @@ const generateIndividualMessage = (
   // Day initials
   const DAY_INITIALS = " M  T  W  T  F  S  S";
 
-  let msg = `🕌 *${student?.first_name} ${student?.last_name}*\n`;
+  let msg = `🕌 *${`${student?.first_name} ${student?.last_name}`.trim()}*\n`;
   msg += `📅 ${weekLabel}\n`;
   if (student?.classes?.name) msg += `📚 ${student.classes.name}\n`;
   if (streak > 0) msg += `🔥 ${streak} week streak\n`;
@@ -147,7 +148,7 @@ const generateAllIndividualMessage = (
     const emoji = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
     const streak = streaks[sheet.student_id] ?? 0;
 
-    msg += `*${student?.first_name} ${student?.last_name}*`;
+    msg += `*${`${student?.first_name} ${student?.last_name}`.trim()}*`;
     if (streak > 0) msg += ` 🔥${streak}`;
     msg += `\n\`\`\`\n`;
     msg += `     ${DAY_INITIALS}\n`;
