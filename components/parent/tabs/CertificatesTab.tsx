@@ -158,7 +158,25 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
                     })}
                   </span>
                   <button
-                    onClick={() => alert("Certificate download coming soon")}
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(
+                          `/api/parent/certificate/${cert.id}/download`,
+                        );
+                        if (!res.ok) throw new Error("Download failed");
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `certificate-${cert.certificate_number}.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch (err) {
+                        alert(
+                          "Certificate download is not available yet. Please contact the school.",
+                        );
+                      }
+                    }}
                     className="flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors"
                   >
                     <Download className="h-3 w-3" />

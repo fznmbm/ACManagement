@@ -100,12 +100,11 @@ export default function ParentDashboard() {
               .map((s: any) => s.class_id),
           );
 
-        // Count unread admin notices
+        // Count ALL unread notifications for this parent
         const { count: noticeCount } = await supabase
           .from("parent_notifications")
           .select("*", { count: "exact", head: true })
           .eq("parent_user_id", user.id)
-          .eq("type", "announcement")
           .eq("is_read", false);
 
         setNewFeedbackCount((fbCount || 0) + (noticeCount || 0));

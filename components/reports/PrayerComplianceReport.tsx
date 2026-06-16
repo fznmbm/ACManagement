@@ -76,18 +76,30 @@ export default function PrayerComplianceReport({
       const result: StudentPrayerData[] = studentsData.map((student: any) => {
         const studentSheets =
           sheets?.filter((s) => s.student_id === student.id) || [];
-        const submitted = studentSheets.filter((s) => s.submitted).length;
+        //const submitted = studentSheets.filter((s) => s.submitted).length;
+        const submitted = studentSheets.filter(
+          (s) => s.status === "submitted" || s.status === "verified",
+        ).length;
         const total = studentSheets.length;
 
         const calcPrayer = (prayer: string) => {
           let prayed = 0;
           let totalDays = 0;
+          const days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+          ];
           studentSheets.forEach((sheet) => {
-            const days = sheet.prayers || {};
-            Object.values(days).forEach((day: any) => {
-              if (day[prayer] !== undefined) {
+            days.forEach((day) => {
+              const val = sheet[`${day}_${prayer}`];
+              if (val !== null && val !== undefined) {
                 totalDays++;
-                if (day[prayer] === true) prayed++;
+                if (val === true) prayed++;
               }
             });
           });
@@ -252,7 +264,10 @@ export default function PrayerComplianceReport({
               Generating...
             </>
           ) : (
-            "🙏 Generate Report"
+            <>
+              <Download className="h-4 w-4" />
+              Generate Report
+            </>
           )}
         </button>
         {reportData.length > 0 && (
@@ -482,9 +497,8 @@ export default function PrayerComplianceReport({
       )}
 
       {reportData.length === 0 && !loading && (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-4xl mb-3">🙏</p>
-          <p>
+        <div className="text-center py-12 text-muted-foreground border border-border rounded-lg">
+          <p className="text-sm">
             Select a class and click Generate Report to view prayer compliance
             data.
           </p>
