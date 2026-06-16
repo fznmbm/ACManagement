@@ -64,7 +64,6 @@ export async function GET(
   return new NextResponse(html, {
     headers: {
       "Content-Type": "text/html",
-      "Content-Disposition": `attachment; filename="certificate-${cert.certificate_number}.html"`,
     },
   });
 }

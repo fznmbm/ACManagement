@@ -78,6 +78,15 @@ export default function StudentDetailPage() {
           return;
         }
 
+        // Mark all notifications for this student as read
+        const studentId = params.id as string;
+        await supabase
+          .from("parent_notifications")
+          .update({ is_read: true, read_at: new Date().toISOString() })
+          .eq("parent_user_id", user.id)
+          .eq("student_id", studentId)
+          .eq("is_read", false);
+
         // Verify parent has access to this student
         const { data: link, error: linkError } = await supabase
           .from("parent_student_links")
