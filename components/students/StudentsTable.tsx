@@ -200,7 +200,7 @@ export default function StudentsTable({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 pl-12">
+              <div className="flex items-center gap-2 pl-12 flex-wrap">
                 <Link
                   href={`/students/${student.id}`}
                   className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -213,6 +213,19 @@ export default function StudentsTable({
                 >
                   <Edit className="h-3 w-3" /> Edit
                 </Link>
+                <FeeIndicator
+                  pendingInvoices={fees.pending_invoices}
+                  overdueInvoices={fees.overdue_invoices}
+                  outstandingAmount={fees.outstanding_amount}
+                  onClick={() => handleOpenFeeCollection(student)}
+                  size="sm"
+                />
+                <FineIndicator
+                  pendingFines={fines.pending_fines}
+                  pendingAmount={fines.pending_amount}
+                  onClick={() => handleOpenFineCollection(student)}
+                  size="sm"
+                />
               </div>
             </div>
           );
