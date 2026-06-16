@@ -65,6 +65,7 @@ export default function StudentDetailPage() {
     relationship: string;
     is_primary: boolean;
   } | null>(null);
+  const [tabUnread, setTabUnread] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -78,8 +79,29 @@ export default function StudentDetailPage() {
           return;
         }
 
-        // Mark all notifications for this student as read
+        // Fetch unread counts per type BEFORE marking as read
         const studentId = params.id as string;
+        const { data: unreadData } = await supabase
+          .from("parent_notifications")
+          .select("type")
+          .eq("parent_user_id", user.id)
+          .eq("student_id", studentId)
+          .eq("is_read", false);
+
+        // Map notification types to tabs
+        const tabCounts: Record<string, number> = {};
+        unreadData?.forEach((n) => {
+          if (["announcement", "academic_note", "feedback"].includes(n.type)) {
+            tabCounts["feedback"] = (tabCounts["feedback"] || 0) + 1;
+          } else if (["fee_alert", "fine"].includes(n.type)) {
+            tabCounts["finances"] = (tabCounts["finances"] || 0) + 1;
+          } else if (n.type === "certificate") {
+            tabCounts["certificates"] = (tabCounts["certificates"] || 0) + 1;
+          }
+        });
+        setTabUnread(tabCounts);
+
+        // Now mark all as read
         await supabase
           .from("parent_notifications")
           .update({ is_read: true, read_at: new Date().toISOString() })
@@ -346,8 +368,12 @@ export default function StudentDetailPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${
+                  onClick={() => {
+                    setActiveTab(tab.id as TabType);
+                    // Clear dot for this tab when clicked
+                    setTabUnread((prev) => ({ ...prev, [tab.id]: 0 }));
+                  }}
+                  className={`relative flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${
                     activeTab === tab.id
                       ? "border-primary text-primary"
                       : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -355,6 +381,11 @@ export default function StudentDetailPage() {
                 >
                   <Icon className="h-4 w-4" />
                   {tab.label}
+                  {(tabUnread[tab.id] || 0) > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {tabUnread[tab.id]}
+                    </span>
+                  )}
                 </button>
               );
             })}

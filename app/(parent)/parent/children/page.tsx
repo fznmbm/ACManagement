@@ -38,6 +38,9 @@ export default function MyChildrenPage() {
   const router = useRouter();
   const [children, setChildren] = useState<StudentLink[]>([]);
   const [stats, setStats] = useState<Map<string, StudentStats>>(new Map());
+  const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,6 +68,8 @@ export default function MyChildrenPage() {
 
       if (data && data.length > 0) {
         const statsMap = new Map<string, StudentStats>();
+        const unreadMap = new Map<string, number>();
+
         for (const link of data) {
           const s = await fetchStats(
             link.student_id,
@@ -73,8 +78,18 @@ export default function MyChildrenPage() {
             link.can_view_financial,
           );
           statsMap.set(link.student_id, s);
+
+          // Count unread notifications for this student
+          const { count } = await supabase
+            .from("parent_notifications")
+            .select("*", { count: "exact", head: true })
+            .eq("parent_user_id", user.id)
+            .eq("student_id", link.student_id)
+            .eq("is_read", false);
+          unreadMap.set(link.student_id, count || 0);
         }
         setStats(statsMap);
+        setUnreadCounts(unreadMap);
       }
     } catch (err) {
       console.error("Error:", err);
@@ -201,6 +216,11 @@ export default function MyChildrenPage() {
                     <span
                       className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-slate-800 ${getStatusDot(student.status)}`}
                     ></span>
+                    {(unreadCounts.get(link.student_id) || 0) > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
+                        {unreadCounts.get(link.student_id)}
+                      </span>
+                    )}
                   </div>
 
                   {/* Info */}
