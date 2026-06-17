@@ -97,6 +97,22 @@ export default function Header({ profile }: HeaderProps) {
   }, []);
 
   useEffect(() => {
+    const channel = supabase
+      .channel("student-events-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "student_events" },
+        () => {
+          fetchAlerts();
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
         dropdownRef.current &&

@@ -186,6 +186,36 @@ export default function StudentReportGenerator({
 
       if (certificatesError) throw certificatesError;
 
+      // 6. Get Feedback (last 5 class feedback sessions + individual notes)
+      const studentData = student;
+      const { data: feedbackSessions } = await supabase
+        .from("class_feedback_sessions")
+        .select("id, session_date, class_summary")
+        .eq("class_id", studentData.class_id)
+        .eq("status", "completed")
+        .order("session_date", { ascending: false })
+        .limit(5);
+
+      let feedbackWithNotes: any[] = [];
+      if (feedbackSessions && feedbackSessions.length > 0) {
+        const sessionIds = feedbackSessions.map((s) => s.id);
+        const { data: notes } = await supabase
+          .from("student_feedback")
+          .select("session_id, feedback_text")
+          .eq("student_id", selectedStudent)
+          .in("session_id", sessionIds);
+
+        const notesMap: Record<string, string> = {};
+        notes?.forEach((n) => {
+          notesMap[n.session_id] = n.feedback_text;
+        });
+
+        feedbackWithNotes = feedbackSessions.map((s) => ({
+          ...s,
+          studentNote: notesMap[s.id] || null,
+        }));
+      }
+
       // Combine all data
       setReportData({
         student,
@@ -193,9 +223,9 @@ export default function StudentReportGenerator({
         attendanceRecords: attendance?.slice(0, 10) || [], // Last 10 records
         academicProgress: academicProgress?.slice(0, 10) || [], // Last 10 assessments
         subjectAverages,
-        memorization: memorizationWithItems,
         memorizationStats,
         certificates,
+        feedback: feedbackWithNotes,
       });
     } catch (error) {
       console.error("Error generating report:", error);
@@ -579,68 +609,53 @@ export default function StudentReportGenerator({
                 <p className="text-sm text-muted-foreground">Hadiths</p>
               </div>
             </div>
-
-            {/* Memorization Details */}
-            {reportData.memorization && reportData.memorization.length > 0 ? (
-              <div className="border border-border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Item
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Type
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Status
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Proficiency
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.memorization.map((item: any, index: number) => (
-                      <tr key={index} className="border-t border-border">
-                        <td className="px-3 py-2">
-                          {item.memorization_items?.title}
-                          {item.memorization_items?.title_arabic && (
-                            <div className="text-xs text-muted-foreground rtl">
-                              {item.memorization_items.title_arabic}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 capitalize">
-                          {item.memorization_items?.item_type}
-                        </td>
-                        <td className="px-3 py-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getMemorizationStatusBadge(
-                              item.status,
-                            )}`}
-                          >
-                            {item.status.replace("_", " ")}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          {item.proficiency_rating
-                            ? `${item.proficiency_rating}/5`
-                            : "N/A"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          </div>
+          {/* 5. Feedback */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Recent Feedback</h3>
+            {reportData.feedback && reportData.feedback.length > 0 ? (
+              <div className="space-y-2">
+                {reportData.feedback.map((session: any) => (
+                  <div
+                    key={session.id}
+                    className="border border-border rounded-lg p-3"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-medium">
+                        {new Date(session.session_date).toLocaleDateString(
+                          "en-GB",
+                          {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          },
+                        )}
+                      </p>
+                      {session.studentNote && (
+                        <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
+                          Personal note
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {session.class_summary}
+                    </p>
+                    {session.studentNote && (
+                      <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
+                        💬 {session.studentNote}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-4">
-                No memorization items tracked yet
+                No feedback recorded yet
               </p>
             )}
           </div>
 
-          {/* 5. Certificates */}
+          {/* 6. Certificates */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Certificates Earned</h3>
             {reportData.certificates && reportData.certificates.length > 0 ? (

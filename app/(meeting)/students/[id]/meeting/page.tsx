@@ -76,6 +76,21 @@ interface Fine {
   reason: string | null;
 }
 
+interface AcademicRecord {
+  id: string;
+  subject_name: string;
+  assessment_type: string;
+  percentage: number;
+  assessment_date: string;
+}
+
+interface Certificate {
+  id: string;
+  certificate_type: string;
+  certificate_number: string;
+  issue_date: string;
+}
+
 interface FeeInvoice {
   id: string;
   invoice_number: string;
@@ -102,6 +117,8 @@ export default function ParentMeetingPage() {
   const [prayerSummary, setPrayerSummary] = useState<PrayerSummary | null>(
     null,
   );
+  const [academicRecords, setAcademicRecords] = useState<AcademicRecord[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [fines, setFines] = useState<Fine[]>([]);
   const [fees, setFees] = useState<FeeInvoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,6 +169,26 @@ export default function ParentMeetingPage() {
         };
         setAttendance(summary);
       }
+
+      // Fetch academic progress
+      const { data: academicData } = await supabase
+        .from("academic_progress")
+        .select(
+          "id, percentage, assessment_type, assessment_date, subjects(name)",
+        )
+        .eq("student_id", studentId)
+        .order("assessment_date", { ascending: false })
+        .limit(10);
+
+      setAcademicRecords(
+        (academicData || []).map((r: any) => ({
+          id: r.id,
+          subject_name: r.subjects?.name || "Unknown",
+          assessment_type: r.assessment_type,
+          percentage: r.percentage,
+          assessment_date: r.assessment_date,
+        })),
+      );
 
       // Fetch class feedback sessions with student notes
       const { data: classData } = await supabase
@@ -261,6 +298,15 @@ export default function ParentMeetingPage() {
         .order("due_date", { ascending: false });
 
       setFees(feesData || []);
+
+      // Fetch certificates
+      const { data: certsData } = await supabase
+        .from("certificates")
+        .select("id, certificate_type, certificate_number, issue_date")
+        .eq("student_id", studentId)
+        .order("issue_date", { ascending: false });
+
+      setCertificates(certsData || []);
     } catch (err) {
       console.error("Error fetching meeting data:", err);
     } finally {
@@ -302,29 +348,29 @@ export default function ParentMeetingPage() {
       <div className="space-y-6 print-area">
         {/* Header — hidden on print */}
         <div className="no-print flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/students/${student.id}`}
-              className="p-2 hover:bg-accent rounded-lg transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold">
-                Parent Meeting View
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {student.first_name} {student.last_name} · {meetingDate}
-              </p>
-            </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold">
+              Parent Meeting View
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {student.first_name} {student.last_name} · {meetingDate}
+            </p>
           </div>
-          <button
-            onClick={handlePrint}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">Print Report</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print Report</span>
+            </button>
+            <button
+              onClick={() => window.close()}
+              className="btn-outline flex items-center gap-2"
+            >
+              <span>Close Tab</span>
+            </button>
+          </div>
         </div>
 
         {/* Print header — only shown on print */}
@@ -545,6 +591,45 @@ export default function ParentMeetingPage() {
           </div>
         )}
 
+        {/* Academic Progress */}
+        {academicRecords.length > 0 && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              📊 Academic Progress
+              <span className="text-xs font-normal text-muted-foreground">
+                (last {academicRecords.length} assessments)
+              </span>
+            </h3>
+            <div className="space-y-2">
+              {academicRecords.map((record) => (
+                <div
+                  key={record.id}
+                  className="flex items-center justify-between p-3 border border-border rounded-lg text-sm"
+                >
+                  <div>
+                    <p className="font-medium">{record.subject_name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {record.assessment_type} ·{" "}
+                      {formatDate(record.assessment_date)}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      record.percentage >= 80
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                        : record.percentage >= 60
+                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                          : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                    }`}
+                  >
+                    {record.percentage}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Academic Notes */}
         {academicNotes.length > 0 && (
           <div className="bg-card border border-border rounded-xl p-5">
@@ -737,6 +822,35 @@ export default function ParentMeetingPage() {
                     >
                       {fee.status}
                     </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Certificates */}
+        {certificates.length > 0 && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              🎓 Certificates Earned
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {certificates.map((cert) => (
+                <div
+                  key={cert.id}
+                  className="flex items-center gap-3 p-3 border border-border rounded-lg"
+                >
+                  <div className="h-10 w-10 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center shrink-0">
+                    <span className="text-lg">🏆</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm capitalize">
+                      {cert.certificate_type.replace(/_/g, " ")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(cert.issue_date)} · {cert.certificate_number}
+                    </p>
                   </div>
                 </div>
               ))}

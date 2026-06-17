@@ -227,6 +227,24 @@ export default function AdminPrayerSheets() {
     fetchAllStudents();
   }, [weekStart, selectedClass]);
 
+  // Realtime — refresh when parents submit/update prayer sheets
+  useEffect(() => {
+    if (!selectedClass) return;
+    const channel = supabase
+      .channel("prayer-sheets-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "prayer_sheets" },
+        () => {
+          fetchSheets();
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedClass, weekStart]);
+
   const fetchClasses = async () => {
     const { data } = await supabase
       .from("classes")
