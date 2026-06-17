@@ -42,6 +42,7 @@ export default function ApplicationsTable({
     total: number;
   } | null>(null);
   const [bulkResult, setBulkResult] = useState<string | null>(null);
+  const [newAppToast, setNewAppToast] = useState<Application | null>(null);
   const supabase = createClient();
   const router = useRouter();
 
@@ -57,7 +58,18 @@ export default function ApplicationsTable({
         { event: "*", schema: "public", table: "applications" },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            setApplications((prev) => [payload.new as Application, ...prev]);
+            const newApp = payload.new as Application;
+            setApplications((prev) => [newApp, ...prev]);
+            setNewAppToast(newApp);
+            setTimeout(() => setNewAppToast(null), 6000);
+            if (
+              typeof Notification !== "undefined" &&
+              Notification.permission === "granted"
+            ) {
+              new Notification("New Application Received!", {
+                body: `${newApp.child_first_name} ${newApp.child_last_name} — ${newApp.application_number}`,
+              });
+            }
           } else if (payload.eventType === "UPDATE") {
             setApplications((prev) =>
               prev.map((a) =>
@@ -79,6 +91,16 @@ export default function ApplicationsTable({
       supabase.removeChannel(channel);
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -285,189 +307,215 @@ export default function ApplicationsTable({
     selectedIds.size === selectablePending.length;
 
   return (
-    <div className="space-y-3">
-      {/* Bulk Action Bar */}
-      {selectedIds.size > 0 && (
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <CheckSquare className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">
-                {selectedIds.size} selected
-              </span>
-            </div>
-            {bulkLoading && bulkProgress ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing {bulkProgress.done}/{bulkProgress.total}...
+    <>
+      {newAppToast && (
+        <div className="fixed top-4 right-4 z-50 bg-primary text-primary-foreground px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-sm">
+          <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+            <User className="h-4 w-4" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm">🎉 New Application!</p>
+            <p className="text-xs opacity-90">
+              {newAppToast.child_first_name} {newAppToast.child_last_name} —{" "}
+              {newAppToast.application_number}
+            </p>
+          </div>
+          <button
+            onClick={() => setNewAppToast(null)}
+            className="opacity-70 hover:opacity-100 text-lg leading-none shrink-0"
+          >
+            ×
+          </button>
+        </div>
+      )}
+      <div className="space-y-3">
+        {/* Bulk Action Bar */}
+        {selectedIds.size > 0 && (
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {selectedIds.size} selected
+                </span>
               </div>
-            ) : (
-              <>
-                {selectedApplications.some((a) =>
-                  ["pending", "under_review", "waitlist"].includes(a.status),
-                ) && (
-                  <>
+              {bulkLoading && bulkProgress ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing {bulkProgress.done}/{bulkProgress.total}...
+                </div>
+              ) : (
+                <>
+                  {selectedApplications.some((a) =>
+                    ["pending", "under_review", "waitlist"].includes(a.status),
+                  ) && (
+                    <>
+                      <button
+                        onClick={handleBulkAccept}
+                        disabled={bulkLoading}
+                        className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                      >
+                        ✓ Accept Selected
+                      </button>
+                      <button
+                        onClick={handleBulkReject}
+                        disabled={bulkLoading}
+                        className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                      >
+                        ✕ Reject Selected
+                      </button>
+                    </>
+                  )}
+                  {selectedApplications.some(
+                    (a) => a.status === "accepted",
+                  ) && (
                     <button
-                      onClick={handleBulkAccept}
+                      onClick={handleBulkSendLogin}
                       disabled={bulkLoading}
-                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                     >
-                      ✓ Accept Selected
+                      📧 Send Login Details
                     </button>
-                    <button
-                      onClick={handleBulkReject}
-                      disabled={bulkLoading}
-                      className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                  )}
+                </>
+              )}
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="ml-auto text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <X className="h-4 w-4" /> Clear
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Result message */}
+        {bulkResult && (
+          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-400">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            {bulkResult}
+          </div>
+        )}
+
+        <div className="bg-card border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50 border-b">
+                <tr>
+                  <th className="py-3 px-4 w-10">
+                    <input
+                      type="checkbox"
+                      checked={allSelectableSelected}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-input text-primary"
+                      title="Select all pending/review/waitlist"
+                    />
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Application #
+                  </th>{" "}
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Child Name
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Parent
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Academic Year
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Submitted
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Status
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {applications.map((application) => {
+                  const isSelectable = [
+                    "pending",
+                    "under_review",
+                    "waitlist",
+                    "accepted",
+                  ].includes(application.status);
+                  const isSelected = selectedIds.has(application.id);
+                  return (
+                    <tr
+                      key={application.id}
+                      className={`hover:bg-muted/50 transition-colors ${isSelected ? "bg-primary/5" : ""}`}
                     >
-                      ✕ Reject Selected
-                    </button>
-                  </>
-                )}
-                {selectedApplications.some((a) => a.status === "accepted") && (
-                  <button
-                    onClick={handleBulkSendLogin}
-                    disabled={bulkLoading}
-                    className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    📧 Send Login Details
-                  </button>
-                )}
-              </>
-            )}
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="ml-auto text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-            >
-              <X className="h-4 w-4" /> Clear
-            </button>
+                      <td className="py-3 px-4 w-10">
+                        {isSelectable && (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(application.id)}
+                            className="h-4 w-4 rounded border-input text-primary"
+                          />
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-mono text-sm">
+                          {application.application_number}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {application.child_first_name}{" "}
+                            {application.child_last_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {application.parent_name}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {application.parent_email}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="text-sm">
+                          {application.academic_year}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {format(
+                            new Date(application.submission_date),
+                            "MMM dd, yyyy",
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        {getStatusBadge(application.status)}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Link
+                          href={`/applications/${application.id}`}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
-
-      {/* Result message */}
-      {bulkResult && (
-        <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-400">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          {bulkResult}
-        </div>
-      )}
-
-      <div className="bg-card border rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th className="py-3 px-4 w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelectableSelected}
-                    onChange={toggleSelectAll}
-                    className="h-4 w-4 rounded border-input text-primary"
-                    title="Select all pending/review/waitlist"
-                  />
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Application #
-                </th>{" "}
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Child Name
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Parent
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Academic Year
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Submitted
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Status
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-sm">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {applications.map((application) => {
-                const isSelectable = [
-                  "pending",
-                  "under_review",
-                  "waitlist",
-                  "accepted",
-                ].includes(application.status);
-                const isSelected = selectedIds.has(application.id);
-                return (
-                  <tr
-                    key={application.id}
-                    className={`hover:bg-muted/50 transition-colors ${isSelected ? "bg-primary/5" : ""}`}
-                  >
-                    <td className="py-3 px-4 w-10">
-                      {isSelectable && (
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSelect(application.id)}
-                          className="h-4 w-4 rounded border-input text-primary"
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-mono text-sm">
-                        {application.application_number}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          {application.child_first_name}{" "}
-                          {application.child_last_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="text-sm">
-                        <div className="font-medium">
-                          {application.parent_name}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {application.parent_email}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="text-sm">{application.academic_year}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        {format(
-                          new Date(application.submission_date),
-                          "MMM dd, yyyy",
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(application.status)}
-                    </td>
-                    <td className="py-3 px-4">
-                      <Link
-                        href={`/applications/${application.id}`}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
       </div>
-    </div>
+    </>
   );
 }
