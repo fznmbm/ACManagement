@@ -69,7 +69,7 @@ export default async function AttendanceHistoryPage({
     `,
     )
     .order("date", { ascending: false })
-    .order("first_name", { foreignTable: "students", ascending: true })
+    .order("first_name", { referencedTable: "students", ascending: true })
     .order("created_at", { ascending: false });
 
   // Apply filters
