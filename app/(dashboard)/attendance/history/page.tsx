@@ -48,7 +48,7 @@ export default async function AttendanceHistoryPage({
     .from("students")
     .select("id, first_name, last_name, student_number")
     .eq("status", "active")
-    .order("last_name");
+    .order("first_name");
 
   // Build attendance query
   let query = supabase
@@ -66,9 +66,10 @@ export default async function AttendanceHistoryPage({
         id,
         name
       )
-    `
+    `,
     )
     .order("date", { ascending: false })
+    .order("first_name", { foreignTable: "students", ascending: true })
     .order("created_at", { ascending: false });
 
   // Apply filters

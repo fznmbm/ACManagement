@@ -60,7 +60,7 @@ export default async function AttendancePage({
       .select("id, first_name, last_name, student_number, photo_url")
       .eq("class_id", selectedClassId)
       .eq("status", "active")
-      .order("last_name");
+      .order("first_name");
 
     students = studentsData || [];
 
