@@ -229,7 +229,7 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <StudentsHeader classes={classes} />
+      <StudentsHeader classes={classes} students={students} />
 
       {/* Unassigned warning */}
       {getUnassignedCount() > 0 && (
