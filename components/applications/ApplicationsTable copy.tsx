@@ -112,9 +112,7 @@ export default function ApplicationsTable({
 
   const toggleSelectAll = () => {
     const selectable = applications
-      .filter((a) =>
-        ["pending", "under_review", "waitlist", "accepted"].includes(a.status),
-      )
+      .filter((a) => ["pending", "under_review", "waitlist"].includes(a.status))
       .map((a) => a.id);
     if (selectedIds.size === selectable.length && selectable.length > 0) {
       setSelectedIds(new Set());
@@ -127,7 +125,7 @@ export default function ApplicationsTable({
     selectedIds.has(a.id),
   );
   const selectablePending = applications.filter((a) =>
-    ["pending", "under_review", "waitlist", "accepted"].includes(a.status),
+    ["pending", "under_review", "waitlist"].includes(a.status),
   );
 
   const handleBulkAccept = async () => {
@@ -306,8 +304,7 @@ export default function ApplicationsTable({
 
   const allSelectableSelected =
     selectablePending.length > 0 &&
-    selectedIds.size === selectablePending.length &&
-    selectablePending.every((a) => selectedIds.has(a.id));
+    selectedIds.size === selectablePending.length;
 
   return (
     <>
@@ -409,15 +406,9 @@ export default function ApplicationsTable({
                     <input
                       type="checkbox"
                       checked={allSelectableSelected}
-                      ref={(el) => {
-                        if (el) {
-                          el.indeterminate =
-                            selectedIds.size > 0 && !allSelectableSelected;
-                        }
-                      }}
                       onChange={toggleSelectAll}
                       className="h-4 w-4 rounded border-input text-primary"
-                      title="Select all"
+                      title="Select all pending/review/waitlist"
                     />
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-sm">
