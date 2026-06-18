@@ -13,12 +13,18 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import * as XLSX from "xlsx";
+import { calculateAge } from "@/lib/utils/helpers";
 
 interface StudentsHeaderProps {
   classes: Array<{ id: string; name: string }>;
+  students: any[];
 }
 
-export default function StudentsHeader({ classes }: StudentsHeaderProps) {
+export default function StudentsHeader({
+  classes,
+  students,
+}: StudentsHeaderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -86,6 +92,29 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
     setSelectedClass("");
     setSelectedStatus("");
     router.push("/students");
+  };
+
+  const handleExport = () => {
+    if (!students || students.length === 0) {
+      alert("No students to export");
+      return;
+    }
+    const rows = students.map((s) => ({
+      "Student #": s.student_number,
+      "First Name": s.first_name,
+      "Last Name": s.last_name,
+      Age: s.date_of_birth ? calculateAge(s.date_of_birth) : "",
+      Gender: s.gender,
+      Class: s.classes?.name || "Unassigned",
+      "Parent Contact": s.parent_phone,
+      Status: s.status,
+      "Portal Status": s.portalStatus || "no_account",
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+    const dateStr = new Date().toISOString().split("T")[0];
+    XLSX.writeFile(workbook, `students-export-${dateStr}.xlsx`);
   };
 
   const hasActiveFilters = search || selectedClass || selectedStatus;
@@ -238,6 +267,7 @@ export default function StudentsHeader({ classes }: StudentsHeaderProps) {
 
             <button
               type="button"
+              onClick={handleExport}
               className="btn-outline ml-auto flex items-center gap-1 text-sm"
               title="Export to Excel"
             >

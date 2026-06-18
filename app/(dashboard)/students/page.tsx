@@ -219,7 +219,7 @@ export default function StudentsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <StudentsHeader classes={classes} />
+        <StudentsHeader classes={classes} students={students} />
         <div className="bg-card border border-border rounded-lg p-12 text-center">
           <p className="text-muted-foreground">Loading students...</p>
         </div>

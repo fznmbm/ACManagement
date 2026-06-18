@@ -145,13 +145,39 @@ export default function StudentsTable({
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Mobile card view */}
       <div className="md:hidden divide-y divide-border">
+        {onToggleSelectAll && students.length > 0 && (
+          <div className="p-3 flex items-center gap-2 bg-muted/30">
+            <input
+              type="checkbox"
+              checked={
+                selectedIds.size === students.length && students.length > 0
+              }
+              onChange={onToggleSelectAll}
+              className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
+            />
+            <span className="text-xs font-medium text-muted-foreground">
+              Select all
+            </span>
+          </div>
+        )}
         {students.map((student) => {
           const fees = getStudentFees(student.id);
           const fines = getStudentFines(student.id);
           return (
-            <div key={student.id} className="p-4 space-y-2">
+            <div
+              key={student.id}
+              className={`p-4 space-y-2 ${selectedIds.has(student.id) ? "bg-primary/5" : ""}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  {onToggleSelect && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(student.id)}
+                      onChange={() => onToggleSelect(student.id)}
+                      className="h-4 w-4 rounded border-input text-primary focus:ring-primary shrink-0"
+                    />
+                  )}
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="text-primary font-semibold text-xs">
                       {student.first_name[0]}
