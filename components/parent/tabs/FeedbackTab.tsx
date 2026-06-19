@@ -72,6 +72,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
           .from("parent_notifications")
           .select("id, title, message, priority, created_at, is_read")
           .eq("parent_user_id", user.id)
+          .eq("student_id", studentId)
           .in("type", ["announcement", "academic_note"])
           .gte("created_at", ninetyDaysAgo.toISOString())
           .order("created_at", { ascending: false }),
