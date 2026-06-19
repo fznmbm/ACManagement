@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { notification_id, mark_all } = body;
+    const { notification_id, mark_all, student_id } = body;
 
     if (mark_all) {
-      // Mark all as read
-      const { error } = await supabase
+      // Mark all as read (optionally scoped to one child)
+      let markAllQuery = supabase
         .from("parent_notifications")
         .update({
           is_read: true,
@@ -26,6 +26,12 @@ export async function POST(request: NextRequest) {
         })
         .eq("parent_user_id", user.id)
         .eq("is_read", false);
+
+      if (student_id) {
+        markAllQuery = markAllQuery.eq("student_id", student_id);
+      }
+
+      const { error } = await markAllQuery;
 
       if (error) throw error;
 
@@ -54,7 +60,7 @@ export async function POST(request: NextRequest) {
     console.error("Error marking notification as read:", error);
     return NextResponse.json(
       { error: "Failed to mark notification as read" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

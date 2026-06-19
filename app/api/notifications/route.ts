@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get("type"); // Filter by type
     const unreadOnly = searchParams.get("unread_only") === "true";
+    const studentId = searchParams.get("student_id"); // Optional: scope to one child
 
     // Build query
     let query = supabase
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
           last_name,
           student_number
         )
-      `
+      `,
       )
       .eq("parent_user_id", user.id)
       .order("created_at", { ascending: false })
@@ -50,6 +51,10 @@ export async function GET(request: NextRequest) {
       query = query.eq("type", type);
     }
 
+    if (studentId) {
+      query = query.eq("student_id", studentId);
+    }
+
     if (unreadOnly) {
       query = query.eq("is_read", false);
     }
@@ -58,12 +63,18 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // Get unread count
-    const { count: unreadCount } = await supabase
+    // Get unread count (scoped to the same student if provided)
+    let unreadCountQuery = supabase
       .from("parent_notifications")
       .select("*", { count: "exact", head: true })
       .eq("parent_user_id", user.id)
       .eq("is_read", false);
+
+    if (studentId) {
+      unreadCountQuery = unreadCountQuery.eq("student_id", studentId);
+    }
+
+    const { count: unreadCount } = await unreadCountQuery;
 
     return NextResponse.json({
       notifications: notifications || [],
@@ -73,7 +84,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching notifications:", error);
     return NextResponse.json(
       { error: "Failed to fetch notifications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
