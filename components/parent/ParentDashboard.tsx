@@ -84,21 +84,38 @@ export default function ParentDashboard() {
           .eq("parent_user_id", user.id);
         setTotalStudents(count || 0);
 
-        // Count new feedback (sessions completed in last 7 days) for linked students
+        // Count unseen class feedback sessions across all linked classes
         const studentIds = studentData.map((s: any) => s.id);
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const { count: fbCount } = await supabase
-          .from("class_feedback_sessions")
-          .select("id, classes!inner(id)", { count: "exact", head: true })
-          .eq("status", "completed")
-          .gte("created_at", sevenDaysAgo.toISOString())
-          .in(
-            "class_id",
-            withClasses
-              .filter((s: any) => s.class_id)
-              .map((s: any) => s.class_id),
-          );
+        const classIds = withClasses
+          .filter((s: any) => s.class_id)
+          .map((s: any) => s.class_id);
+
+        let unseenFeedbackCount = 0;
+        if (classIds.length > 0) {
+          const ninetyDaysAgo = new Date();
+          ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+          const { data: sessions } = await supabase
+            .from("class_feedback_sessions")
+            .select("id")
+            .eq("status", "completed")
+            .gte("session_date", ninetyDaysAgo.toISOString().split("T")[0])
+            .in("class_id", classIds);
+
+          if (sessions && sessions.length > 0) {
+            const sessionIds = sessions.map((s: any) => s.id);
+            const { data: views } = await supabase
+              .from("parent_feedback_session_views")
+              .select("session_id")
+              .eq("parent_user_id", user.id)
+              .in("session_id", sessionIds);
+            const viewedIds = new Set(
+              (views || []).map((v: any) => v.session_id),
+            );
+            unseenFeedbackCount = sessionIds.filter(
+              (id) => !viewedIds.has(id),
+            ).length;
+          }
+        }
 
         // Count ALL unread notifications for this parent
         const { count: noticeCount } = await supabase
@@ -107,7 +124,7 @@ export default function ParentDashboard() {
           .eq("parent_user_id", user.id)
           .eq("is_read", false);
 
-        setNewFeedbackCount((fbCount || 0) + (noticeCount || 0));
+        setNewFeedbackCount(unseenFeedbackCount + (noticeCount || 0));
 
         // Count pending fines
         const { count: finesCount } = await supabase

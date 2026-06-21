@@ -11,6 +11,7 @@ interface FeedbackSession {
   homework: string | null;
   created_at: string;
   studentNote?: string | null;
+  is_read: boolean;
   type: "feedback";
 }
 
@@ -82,6 +83,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
       const noticesData = noticesResult.data || [];
 
       let notesMap: Record<string, string> = {};
+      let viewedSessionIds = new Set<string>();
       if (feedbackData.length > 0) {
         const sessionIds = feedbackData.map((s: any) => s.id);
         const { data: studentNotes } = await supabase
@@ -92,11 +94,19 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
         studentNotes?.forEach((n: any) => {
           notesMap[n.session_id] = n.feedback_text;
         });
+
+        const { data: views } = await supabase
+          .from("parent_feedback_session_views")
+          .select("session_id")
+          .eq("parent_user_id", user.id)
+          .in("session_id", sessionIds);
+        views?.forEach((v: any) => viewedSessionIds.add(v.session_id));
       }
 
       const feedbackItems: FeedbackSession[] = feedbackData.map((s: any) => ({
         ...s,
         studentNote: notesMap[s.id] || null,
+        is_read: viewedSessionIds.has(s.id),
         type: "feedback" as const,
       }));
 
@@ -115,11 +125,21 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
       if (combined.length > 0) {
         const first = combined[0];
         setExpandedId(first.id);
-        if (first.type === "notice" && !first.is_read) {
-          await supabase
-            .from("parent_notifications")
-            .update({ is_read: true, read_at: new Date().toISOString() })
-            .eq("id", first.id);
+        if (!first.is_read) {
+          if (first.type === "notice") {
+            await supabase
+              .from("parent_notifications")
+              .update({ is_read: true, read_at: new Date().toISOString() })
+              .eq("id", first.id);
+          } else {
+            await supabase.from("parent_feedback_session_views").upsert(
+              { parent_user_id: user.id, session_id: first.id },
+              {
+                onConflict: "parent_user_id,session_id",
+                ignoreDuplicates: true,
+              },
+            );
+          }
           setItems((prev) =>
             prev.map((i) => (i.id === first.id ? { ...i, is_read: true } : i)),
           );
@@ -136,14 +156,29 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
     const willExpand = expandedId !== item.id;
     setExpandedId(willExpand ? item.id : null);
 
-    if (willExpand && item.type === "notice" && !item.is_read) {
+    if (willExpand && !item.is_read) {
       setItems((prev) =>
         prev.map((i) => (i.id === item.id ? { ...i, is_read: true } : i)),
       );
-      await supabase
-        .from("parent_notifications")
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq("id", item.id);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (item.type === "notice") {
+        await supabase
+          .from("parent_notifications")
+          .update({ is_read: true, read_at: new Date().toISOString() })
+          .eq("id", item.id);
+      } else {
+        await supabase
+          .from("parent_feedback_session_views")
+          .upsert(
+            { parent_user_id: user.id, session_id: item.id },
+            { onConflict: "parent_user_id,session_id", ignoreDuplicates: true },
+          );
+      }
     }
   };
 
@@ -173,7 +208,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
     <div className="space-y-3">
       {items.map((item, index) => {
         const isExpanded = expandedId === item.id;
-        const isNew = index === 0;
+        const isNew = !item.is_read;
 
         if (item.type === "notice") {
           return (
@@ -255,11 +290,11 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
             }`}
           >
             <button
-              onClick={() => setExpandedId(isExpanded ? null : item.id)}
+              onClick={() => handleExpand(item)}
               className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-primary shrink-0" />
+                <MessageSquare className="h-4 w-4 text-primary shrink-0" />{" "}
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-slate-900 dark:text-white">

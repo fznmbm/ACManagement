@@ -90,20 +90,83 @@ export default function MyChildrenPage() {
             .eq("parent_user_id", user.id)
             .eq("student_id", link.student_id)
             .eq("is_read", false);
-          unreadMap.set(link.student_id, count || 0);
 
-          // Get the single most recent unread item as a preview
-          if ((count || 0) > 0) {
-            const { data: latestUnread } = await supabase
-              .from("parent_notifications")
-              .select("title, type")
-              .eq("parent_user_id", user.id)
-              .eq("student_id", link.student_id)
-              .eq("is_read", false)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            if (latestUnread) previewMap.set(link.student_id, latestUnread);
+          // Count unseen class feedback sessions for this student's class
+          let unseenFeedbackCount = 0;
+          let latestUnseenSession: {
+            id: string;
+            class_summary: string;
+            created_at: string;
+          } | null = null;
+          const classId = link.students.class_id;
+          if (classId) {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            const { data: sessions } = await supabase
+              .from("class_feedback_sessions")
+              .select("id, class_summary, created_at")
+              .eq("class_id", classId)
+              .eq("status", "completed")
+              .gte("session_date", ninetyDaysAgo.toISOString().split("T")[0])
+              .order("created_at", { ascending: false });
+
+            if (sessions && sessions.length > 0) {
+              const sessionIds = sessions.map((s) => s.id);
+              const { data: views } = await supabase
+                .from("parent_feedback_session_views")
+                .select("session_id")
+                .eq("parent_user_id", user.id)
+                .in("session_id", sessionIds);
+              const viewedIds = new Set((views || []).map((v) => v.session_id));
+              const unseen = sessions.filter((s) => !viewedIds.has(s.id));
+              unseenFeedbackCount = unseen.length;
+              if (unseen.length > 0) latestUnseenSession = unseen[0];
+            }
+          }
+
+          unreadMap.set(link.student_id, (count || 0) + unseenFeedbackCount);
+
+          // Preview: whichever is more recent between a notification and a session
+          const { data: latestUnread } =
+            (count || 0) > 0
+              ? await supabase
+                  .from("parent_notifications")
+                  .select("title, type, created_at")
+                  .eq("parent_user_id", user.id)
+                  .eq("student_id", link.student_id)
+                  .eq("is_read", false)
+                  .order("created_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle()
+              : { data: null };
+
+          if (latestUnread && latestUnseenSession) {
+            const useNotification =
+              new Date(latestUnread.created_at) >=
+              new Date(latestUnseenSession.created_at);
+            previewMap.set(
+              link.student_id,
+              useNotification
+                ? { title: latestUnread.title, type: latestUnread.type }
+                : {
+                    title:
+                      latestUnseenSession.class_summary?.slice(0, 50) ||
+                      "New class feedback",
+                    type: "feedback",
+                  },
+            );
+          } else if (latestUnread) {
+            previewMap.set(link.student_id, {
+              title: latestUnread.title,
+              type: latestUnread.type,
+            });
+          } else if (latestUnseenSession) {
+            previewMap.set(link.student_id, {
+              title:
+                latestUnseenSession.class_summary?.slice(0, 50) ||
+                "New class feedback",
+              type: "feedback",
+            });
           }
         }
         setStats(statsMap);
@@ -264,7 +327,9 @@ export default function MyChildrenPage() {
                           {previews.get(link.student_id)?.type ===
                           "academic_note"
                             ? "📝"
-                            : "💬"}
+                            : previews.get(link.student_id)?.type === "feedback"
+                              ? "📚"
+                              : "💬"}
                         </span>
                         {previews.get(link.student_id)?.title}
                       </p>

@@ -101,13 +101,10 @@ export default function StudentDetailPage() {
         });
         setTabUnread(tabCounts);
 
-        // Now mark all as read
-        await supabase
-          .from("parent_notifications")
-          .update({ is_read: true, read_at: new Date().toISOString() })
-          .eq("parent_user_id", user.id)
-          .eq("student_id", studentId)
-          .eq("is_read", false);
+        // Notifications are now marked read inside FeedbackTab itself,
+        // only when the parent actually opens that specific item.
+        // The blanket update that used to live here was marking
+        // everything read on page load, before it was ever seen.
 
         // Verify parent has access to this student
         const { data: link, error: linkError } = await supabase
@@ -181,6 +178,37 @@ export default function StudentDetailPage() {
         }
 
         setStudent(student);
+
+        // Add unseen class feedback sessions into the Feedback tab badge
+        if (student.class_id) {
+          const ninetyDaysAgo = new Date();
+          ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+          const { data: sessions } = await supabase
+            .from("class_feedback_sessions")
+            .select("id")
+            .eq("class_id", student.class_id)
+            .eq("status", "completed")
+            .gte("session_date", ninetyDaysAgo.toISOString().split("T")[0]);
+
+          if (sessions && sessions.length > 0) {
+            const sessionIds = sessions.map((s) => s.id);
+            const { data: views } = await supabase
+              .from("parent_feedback_session_views")
+              .select("session_id")
+              .eq("parent_user_id", user.id)
+              .in("session_id", sessionIds);
+            const viewedIds = new Set((views || []).map((v) => v.session_id));
+            const unseenCount = sessionIds.filter(
+              (id) => !viewedIds.has(id),
+            ).length;
+            if (unseenCount > 0) {
+              setTabUnread((prev) => ({
+                ...prev,
+                feedback: (prev.feedback || 0) + unseenCount,
+              }));
+            }
+          }
+        }
       } catch (err) {
         console.error("Error fetching student:", err);
         setError("An error occurred");
