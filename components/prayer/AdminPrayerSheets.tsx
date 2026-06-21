@@ -299,6 +299,7 @@ export default function AdminPrayerSheets() {
       )
       .eq("week_start_date", weekDate)
       .in("status", ["submitted", "flagged", "draft"])
+      .order("status", { ascending: false })
       .order("submitted_at", { ascending: true });
 
     if (selectedClass) {
