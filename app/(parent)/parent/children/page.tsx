@@ -98,7 +98,7 @@ export default function MyChildrenPage() {
             class_summary: string;
             created_at: string;
           } | null = null;
-          const classId = link.students.class_id;
+          const classId = (link.students as any)?.class_id;
           if (classId) {
             const ninetyDaysAgo = new Date();
             ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
