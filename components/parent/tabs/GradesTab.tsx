@@ -52,11 +52,11 @@ export default function GradesTab({ studentId }: GradesTabProps) {
           id,
           assessment_type,
           score,
-          max_score,
+          total_marks:max_score,
           percentage,
           grade,
           assessment_date,
-          teacher_feedback,
+          remarks:teacher_feedback,
           subject_id,
           topic_id,
           curriculum_topics:topic_id (
@@ -66,7 +66,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
               name
             )
           )
-        `
+        `,
         )
         .eq("student_id", studentId)
         .order("assessment_date", { ascending: false });
@@ -93,15 +93,15 @@ export default function GradesTab({ studentId }: GradesTabProps) {
             subject,
             assessmentCount: percentages.length,
             averagePercentage: Math.round(
-              percentages.reduce((a, b) => a + b, 0) / percentages.length
+              percentages.reduce((a, b) => a + b, 0) / percentages.length,
             ),
             highestScore: Math.max(...percentages),
             lowestScore: Math.min(...percentages),
-          })
+          }),
         );
 
         setSubjectStats(
-          stats.sort((a, b) => b.averagePercentage - a.averagePercentage)
+          stats.sort((a, b) => b.averagePercentage - a.averagePercentage),
         );
       }
     } catch (err) {
@@ -148,14 +148,15 @@ export default function GradesTab({ studentId }: GradesTabProps) {
     selectedSubject === "all"
       ? assessments
       : assessments.filter(
-          (a) => a.curriculum_topics?.subject === selectedSubject
+          (a) =>
+            a.curriculum_topics?.[0]?.subjects?.[0]?.name === selectedSubject,
         );
 
   const overallAverage =
     assessments.length > 0
       ? Math.round(
           assessments.reduce((sum, a) => sum + a.percentage, 0) /
-            assessments.length
+            assessments.length,
         )
       : 0;
 
@@ -219,7 +220,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                   </div>
                   <span
                     className={`text-2xl font-bold ${getGradeColor(
-                      stat.averagePercentage
+                      stat.averagePercentage,
                     )}`}
                   >
                     {stat.averagePercentage}%
@@ -286,100 +287,163 @@ export default function GradesTab({ studentId }: GradesTabProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Subject
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Assessment
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Score
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Grade
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {filteredAssessments.map((assessment) => (
-                  <tr
-                    key={assessment.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
-                      {new Date(assessment.assessment_date).toLocaleDateString(
-                        "en-GB"
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                      {assessment.curriculum_topics?.[0]?.subjects?.[0]?.name ||
-                        "N/A"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-900 dark:text-white">
-                      <div>
-                        <p className="font-medium">
-                          {assessment.assessment_name}
-                        </p>
-                        {assessment.curriculum_topics?.topic_name && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            {assessment.curriculum_topics[0].topic_name}
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Subject
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Assessment
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Score
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Grade
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  {filteredAssessments.map((assessment) => (
+                    <tr
+                      key={assessment.id}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
+                        {new Date(
+                          assessment.assessment_date,
+                        ).toLocaleDateString("en-GB")}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                        {assessment.curriculum_topics?.[0]?.subjects?.[0]
+                          ?.name || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-900 dark:text-white">
+                        <div>
+                          <p className="font-medium">
+                            {assessment.assessment_name}
                           </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
-                        <span>
-                          {getAssessmentTypeIcon(assessment.assessment_type)}
+                          {assessment.curriculum_topics?.[0]?.topic_name && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {assessment.curriculum_topics[0].topic_name}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                          <span>
+                            {getAssessmentTypeIcon(assessment.assessment_type)}
+                          </span>
+                          <span className="capitalize">
+                            {assessment.assessment_type}
+                          </span>
                         </span>
-                        <span className="capitalize">
-                          {assessment.assessment_type}
-                        </span>
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
-                      {assessment.score}/{assessment.total_marks}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`px-3 py-1 rounded-full ${getGradeBgColor(
-                            assessment.percentage
-                          )}`}
-                        >
-                          <span
-                            className={`text-sm font-bold ${getGradeColor(
-                              assessment.percentage
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
+                        {assessment.score}/{assessment.total_marks}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`px-3 py-1 rounded-full ${getGradeBgColor(
+                              assessment.percentage,
                             )}`}
                           >
-                            {assessment.percentage}%
-                          </span>
-                        </div>
-                        {assessment.remarks && (
-                          <div className="group relative">
-                            <FileText className="h-4 w-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
-                            <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg z-10">
-                              {assessment.remarks}
-                            </div>
+                            <span
+                              className={`text-sm font-bold ${getGradeColor(
+                                assessment.percentage,
+                              )}`}
+                            >
+                              {assessment.percentage}%
+                            </span>
                           </div>
+                          {assessment.remarks && (
+                            <div className="group relative">
+                              <FileText className="h-4 w-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
+                              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg z-10">
+                                {assessment.remarks}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card view */}
+            <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-700">
+              {filteredAssessments.map((assessment) => (
+                <div key={assessment.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                        {assessment.assessment_name}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        {assessment.curriculum_topics?.[0]?.subjects?.[0]
+                          ?.name || "N/A"}
+                        {assessment.curriculum_topics?.[0]?.topic_name && (
+                          <>
+                            {" "}
+                            &middot;{" "}
+                            {assessment.curriculum_topics[0].topic_name}
+                          </>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </p>
+                    </div>
+                    <div
+                      className={`px-3 py-1 rounded-full shrink-0 ${getGradeBgColor(
+                        assessment.percentage,
+                      )}`}
+                    >
+                      <span
+                        className={`text-sm font-bold ${getGradeColor(
+                          assessment.percentage,
+                        )}`}
+                      >
+                        {assessment.percentage}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                      <span>
+                        {getAssessmentTypeIcon(assessment.assessment_type)}
+                      </span>
+                      <span className="capitalize">
+                        {assessment.assessment_type}
+                      </span>
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {new Date(assessment.assessment_date).toLocaleDateString(
+                        "en-GB",
+                      )}{" "}
+                      &middot; {assessment.score}/{assessment.total_marks}
+                    </span>
+                  </div>
+                  {assessment.remarks && (
+                    <p className="flex items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      {assessment.remarks}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

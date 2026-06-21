@@ -41,6 +41,9 @@ export default function MyChildrenPage() {
   const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(
     new Map(),
   );
+  const [previews, setPreviews] = useState<
+    Map<string, { title: string; type: string }>
+  >(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,6 +72,7 @@ export default function MyChildrenPage() {
       if (data && data.length > 0) {
         const statsMap = new Map<string, StudentStats>();
         const unreadMap = new Map<string, number>();
+        const previewMap = new Map<string, { title: string; type: string }>();
 
         for (const link of data) {
           const s = await fetchStats(
@@ -87,9 +91,24 @@ export default function MyChildrenPage() {
             .eq("student_id", link.student_id)
             .eq("is_read", false);
           unreadMap.set(link.student_id, count || 0);
+
+          // Get the single most recent unread item as a preview
+          if ((count || 0) > 0) {
+            const { data: latestUnread } = await supabase
+              .from("parent_notifications")
+              .select("title, type")
+              .eq("parent_user_id", user.id)
+              .eq("student_id", link.student_id)
+              .eq("is_read", false)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (latestUnread) previewMap.set(link.student_id, latestUnread);
+          }
         }
         setStats(statsMap);
         setUnreadCounts(unreadMap);
+        setPreviews(previewMap);
       }
     } catch (err) {
       console.error("Error:", err);
@@ -239,6 +258,17 @@ export default function MyChildrenPage() {
                       {student.student_number} ·{" "}
                       {student.classes?.name || "No class"} · {student.gender}
                     </p>
+                    {previews.get(link.student_id) && (
+                      <p className="text-xs text-primary truncate mt-0.5 flex items-center gap-1">
+                        <span>
+                          {previews.get(link.student_id)?.type ===
+                          "academic_note"
+                            ? "📝"
+                            : "💬"}
+                        </span>
+                        {previews.get(link.student_id)?.title}
+                      </p>
+                    )}
                   </div>
 
                   <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />

@@ -30,6 +30,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [unreadTotal, setUnreadTotal] = useState(0);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -65,6 +66,13 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
 
         setUser(profile);
         setLoading(false);
+
+        const { count } = await supabase
+          .from("parent_notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("parent_user_id", session.user.id)
+          .eq("is_read", false);
+        setUnreadTotal(count || 0);
       } catch (error) {
         console.error("Auth check error:", error);
         router.push("/parent/login");
@@ -125,7 +133,12 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
 
   const navigation = [
     { name: "Dashboard", href: "/parent/dashboard", icon: Home, badge: 0 },
-    { name: "My Children", href: "/parent/children", icon: Users, badge: 0 },
+    {
+      name: "My Children",
+      href: "/parent/children",
+      icon: Users,
+      badge: unreadTotal,
+    },
     { name: "Events", href: "/parent/events", icon: Calendar, badge: 0 },
     { name: "Finances", href: "/parent/finances", icon: CreditCard, badge: 0 },
     { name: "Profile", href: "/parent/profile", icon: User, badge: 0 },

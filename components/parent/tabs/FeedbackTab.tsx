@@ -94,17 +94,6 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
         });
       }
 
-      // Mark notices as read
-      const unreadIds = noticesData
-        .filter((n: any) => !n.is_read)
-        .map((n: any) => n.id);
-      if (unreadIds.length > 0) {
-        await supabase
-          .from("parent_notifications")
-          .update({ is_read: true, read_at: new Date().toISOString() })
-          .in("id", unreadIds);
-      }
-
       const feedbackItems: FeedbackSession[] = feedbackData.map((s: any) => ({
         ...s,
         studentNote: notesMap[s.id] || null,
@@ -123,11 +112,38 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
       );
 
       setItems(combined);
-      if (combined.length > 0) setExpandedId(combined[0].id);
+      if (combined.length > 0) {
+        const first = combined[0];
+        setExpandedId(first.id);
+        if (first.type === "notice" && !first.is_read) {
+          await supabase
+            .from("parent_notifications")
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .eq("id", first.id);
+          setItems((prev) =>
+            prev.map((i) => (i.id === first.id ? { ...i, is_read: true } : i)),
+          );
+        }
+      }
     } catch (err) {
       console.error("Error fetching feedback:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExpand = async (item: FeedbackItem) => {
+    const willExpand = expandedId !== item.id;
+    setExpandedId(willExpand ? item.id : null);
+
+    if (willExpand && item.type === "notice" && !item.is_read) {
+      setItems((prev) =>
+        prev.map((i) => (i.id === item.id ? { ...i, is_read: true } : i)),
+      );
+      await supabase
+        .from("parent_notifications")
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq("id", item.id);
     }
   };
 
@@ -170,7 +186,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
               }`}
             >
               <button
-                onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                onClick={() => handleExpand(item)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
