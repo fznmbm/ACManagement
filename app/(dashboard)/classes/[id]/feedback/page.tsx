@@ -119,7 +119,7 @@ export default function ClassFeedbackPage() {
       .select("id, first_name, last_name, student_number")
       .eq("class_id", classId)
       .eq("status", "active")
-      .order("last_name");
+      .order("first_name");
     setStudents(studentData || []);
 
     // Check for existing draft session for today

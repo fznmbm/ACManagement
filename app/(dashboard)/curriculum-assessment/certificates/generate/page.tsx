@@ -33,7 +33,7 @@ export default async function GenerateCertificatePage({
     .from("students")
     .select("id, first_name, last_name, student_number")
     .eq("status", "active")
-    .order("last_name");
+    .order("first_name");
 
   // Get subjects
   const { data: subjects } = await supabase

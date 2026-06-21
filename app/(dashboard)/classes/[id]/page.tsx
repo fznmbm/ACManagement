@@ -43,7 +43,7 @@ export default async function ClassDetailPage({
         email,
         phone
       )
-    `
+    `,
     )
     .eq("id", params.id)
     .single();
@@ -57,7 +57,7 @@ export default async function ClassDetailPage({
     .from("students")
     .select("id, first_name, last_name, student_number, status")
     .eq("class_id", params.id)
-    .order("last_name");
+    .order("first_name");
 
   const activeStudents = students?.filter((s) => s.status === "active") || [];
   const inactiveStudents = students?.filter((s) => s.status !== "active") || [];

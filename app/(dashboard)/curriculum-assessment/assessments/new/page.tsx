@@ -22,7 +22,7 @@ export default async function NewAssessmentPage({
     .from("students")
     .select("id, first_name, last_name, student_number, class_id")
     .eq("status", "active")
-    .order("last_name");
+    .order("first_name");
 
   // Get subjects for dropdown
   const { data: subjects } = await supabase

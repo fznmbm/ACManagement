@@ -72,7 +72,7 @@ export default function MessagesPage() {
       )
       .eq("class_id", classId)
       .eq("status", "active")
-      .order("last_name");
+      .order("first_name");
     setStudents(data || []);
     setLoading(false);
   };

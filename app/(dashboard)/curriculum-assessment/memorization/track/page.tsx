@@ -22,7 +22,7 @@ export default async function TrackMemorizationPage({
     .from("students")
     .select("id, first_name, last_name, student_number")
     .eq("status", "active")
-    .order("last_name");
+    .order("first_name");
 
   // Get all memorization items
   const { data: items } = await supabase

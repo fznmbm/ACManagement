@@ -59,7 +59,7 @@ export default function PrayerComplianceReport({
         studentsQuery = studentsQuery.eq("class_id", selectedClass);
       }
 
-      const { data: studentsData } = await studentsQuery.order("last_name");
+      const { data: studentsData } = await studentsQuery.order("first_name");
       if (!studentsData) {
         setLoading(false);
         return;

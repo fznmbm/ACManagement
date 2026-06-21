@@ -39,7 +39,7 @@ export default async function CertificatesPage({
         id,
         name
       )
-    `
+    `,
     )
     .order("issue_date", { ascending: false });
 
@@ -63,7 +63,7 @@ export default async function CertificatesPage({
     .from("students")
     .select("id, first_name, last_name, student_number")
     .eq("status", "active")
-    .order("last_name");
+    .order("first_name");
 
   // Get statistics
   const { count: totalCertificates } = await supabase
@@ -112,7 +112,7 @@ export default async function CertificatesPage({
             <p className="text-sm text-muted-foreground">Subject Completion</p>
             <p className="text-3xl font-bold mt-1 text-blue-600">
               {certificates?.filter(
-                (c) => c.certificate_type === "subject_completion"
+                (c) => c.certificate_type === "subject_completion",
               ).length || 0}
             </p>
           </div>
@@ -123,7 +123,7 @@ export default async function CertificatesPage({
             <p className="text-sm text-muted-foreground">Memorization</p>
             <p className="text-3xl font-bold mt-1 text-green-600">
               {certificates?.filter(
-                (c) => c.certificate_type === "memorization_completion"
+                (c) => c.certificate_type === "memorization_completion",
               ).length || 0}
             </p>
           </div>
@@ -134,7 +134,7 @@ export default async function CertificatesPage({
             <p className="text-sm text-muted-foreground">Excellence</p>
             <p className="text-3xl font-bold mt-1 text-purple-600">
               {certificates?.filter(
-                (c) => c.certificate_type === "academic_excellence"
+                (c) => c.certificate_type === "academic_excellence",
               ).length || 0}
             </p>
           </div>

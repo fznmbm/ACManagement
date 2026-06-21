@@ -45,7 +45,7 @@ export default async function AssessmentsPage({
         id,
         name
       )
-    `
+    `,
     )
     .order("assessment_date", { ascending: false });
 
@@ -81,7 +81,7 @@ export default async function AssessmentsPage({
     .from("students")
     .select("id, first_name, last_name, student_number")
     .eq("status", "active")
-    .order("last_name");
+    .order("first_name");
 
   // Get subjects for filter dropdown
   const { data: subjects } = await supabase
