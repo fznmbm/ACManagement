@@ -85,11 +85,11 @@ export async function POST(
     const { data: newStudent, error: studentError } = await supabase
       .from("students")
       .insert({
-        first_name: application.child_first_name,
-        last_name: application.child_last_name,
+        first_name: application.child_first_name?.trim(),
+        last_name: application.child_last_name?.trim(),
         date_of_birth: application.date_of_birth,
         gender: application.gender,
-        parent_name: application.parent_name,
+        parent_name: application.parent_name?.trim(),
         parent_email: parentEmail,
         parent_phone: application.parent_phone,
         parent_phone_secondary: application.parent_phone_alternate || null,

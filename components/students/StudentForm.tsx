@@ -117,6 +117,9 @@ export default function StudentForm({
 
   const processData = () => ({
     ...formData,
+    first_name: formData.first_name?.trim(),
+    last_name: formData.last_name?.trim(),
+    parent_name: formData.parent_name?.trim(),
     class_id: formData.class_id?.trim() || null,
     parent_email: formData.parent_email?.trim() || null,
     parent_phone_secondary: formData.parent_phone_secondary?.trim() || null,

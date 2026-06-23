@@ -115,11 +115,11 @@ export async function POST(request: NextRequest) {
     const { data: application, error: insertError } = await supabase
       .from("applications")
       .insert({
-        child_first_name: formData.child_first_name,
-        child_last_name: formData.child_last_name,
+        child_first_name: formData.child_first_name?.trim(),
+        child_last_name: formData.child_last_name?.trim(),
         date_of_birth: formData.date_of_birth,
         gender: formData.gender,
-        parent_name: formData.parent_name,
+        parent_name: formData.parent_name?.trim(),
         parent_relationship: formData.parent_relationship,
         parent_phone: formData.parent_phone,
         parent_phone_alternate: formData.parent_phone_alternate || null,
