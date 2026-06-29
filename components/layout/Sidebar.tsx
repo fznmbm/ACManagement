@@ -108,8 +108,8 @@ export default function Sidebar({ profile }: SidebarProps) {
       ],
     },
     {
-      name: "Messages",
-      href: "/messages",
+      name: "Send Update",
+      href: "/send-update",
       icon: MessageSquare,
       roles: ["super_admin", "admin", "teacher"],
     },

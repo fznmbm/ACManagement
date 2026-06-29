@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Calendar, Receipt, Shield } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  Receipt,
+  Shield,
+  MessageCircle,
+} from "lucide-react";
 import AcademicSettings from "./AcademicSettings";
 import ApplicationSettings from "./ApplicationSettings";
 import CentreSettings from "./CentreSettings";
+import CommunicationSettings from "./CommunicationSettings";
 import FeeSettings from "./FeeSettings";
 import FineSettings from "./FineSettings";
 import PasswordSettings from "./PasswordSettings";
@@ -18,7 +25,7 @@ interface SettingsTabsProps {
   currentUserId: string;
 }
 
-type TabId = "centre" | "academic" | "financial" | "security";
+type TabId = "centre" | "academic" | "communication" | "financial" | "security";
 
 export default function SettingsTabs({
   initialSettings,
@@ -30,10 +37,14 @@ export default function SettingsTabs({
   const tabs = [
     { id: "centre" as TabId, name: "Centre Info", icon: Building2 },
     { id: "academic" as TabId, name: "Academic", icon: Calendar },
+    {
+      id: "communication" as TabId,
+      name: "Communication",
+      icon: MessageCircle,
+    },
     { id: "financial" as TabId, name: "Financial", icon: Receipt },
     { id: "security" as TabId, name: "Security & Users", icon: Shield },
   ];
-
   return (
     <div
       suppressHydrationWarning
@@ -88,6 +99,8 @@ export default function SettingsTabs({
             </div>
           </div>
         )}
+
+        {activeTab === "communication" && <CommunicationSettings />}
 
         {activeTab === "financial" && (
           <div className="space-y-8">

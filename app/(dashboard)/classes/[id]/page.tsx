@@ -357,10 +357,10 @@ export default async function ClassDetailPage({
 
               {/* ADD THIS NEW BUTTON 👇 */}
               <Link
-                href={`/classes/${classData.id}/feedback`}
+                href={`/send-update?class=${classData.id}`}
                 className="block w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors text-center"
               >
-                📝 Send End of Class Feedback
+                📝 Send Update
               </Link>
 
               {/* View Attendance History Button */}
