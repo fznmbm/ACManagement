@@ -58,6 +58,14 @@ export default function ParentEventsPage() {
     if (!user) return;
     setParentUserId(user.id);
 
+    // Mark all event notifications as read for this parent
+    await supabase
+      .from("parent_notifications")
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq("parent_user_id", user.id)
+      .eq("type", "event")
+      .eq("is_read", false);
+
     // Get first linked student
     const { data: links } = await supabase
       .from("parent_student_links")

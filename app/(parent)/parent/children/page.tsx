@@ -83,13 +83,14 @@ export default function MyChildrenPage() {
           );
           statsMap.set(link.student_id, s);
 
-          // Count unread notifications for this student
+          // Count unread notifications for this student (exclude events — they're not per-child)
           const { count } = await supabase
             .from("parent_notifications")
             .select("*", { count: "exact", head: true })
             .eq("parent_user_id", user.id)
             .eq("student_id", link.student_id)
-            .eq("is_read", false);
+            .eq("is_read", false)
+            .neq("type", "event");
 
           // Count unseen class feedback sessions for this student's class
           let unseenFeedbackCount = 0;
@@ -135,6 +136,7 @@ export default function MyChildrenPage() {
                   .eq("parent_user_id", user.id)
                   .eq("student_id", link.student_id)
                   .eq("is_read", false)
+                  .neq("type", "event")
                   .order("created_at", { ascending: false })
                   .limit(1)
                   .maybeSingle()
