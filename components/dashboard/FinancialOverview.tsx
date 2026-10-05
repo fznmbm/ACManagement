@@ -49,25 +49,33 @@ export default async function FinancialOverview() {
   const collectionRate =
     totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 0;
 
-  // Get this month's revenue
-  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+  // Get this month's revenue. Month boundaries computed properly (the old
+  // code asked for the 31st of every month, which Postgres rejects), and fee
+  // income comes from fee_payments (the actual money-received table) because
+  // fee_invoices has no paid_date column.
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .slice(0, 10);
   const { data: monthInvoices } = await supabase
-    .from("fee_invoices")
-    .select("amount_paid, paid_date")
-    .not("paid_date", "is", null)
-    .gte("paid_date", `${currentMonth}-01`)
-    .lte("paid_date", `${currentMonth}-31`);
+    .from("fee_payments")
+    .select("amount, payment_date")
+    .gte("payment_date", monthStart)
+    .lte("payment_date", monthEnd);
 
   const { data: monthFines } = await supabase
     .from("fines")
     .select("amount, paid_date")
     .eq("status", "paid")
     .not("paid_date", "is", null)
-    .gte("paid_date", `${currentMonth}-01`)
-    .lte("paid_date", `${currentMonth}-31`);
+    .gte("paid_date", monthStart)
+    .lte("paid_date", monthEnd);
 
   const monthlyRevenue =
-    (monthInvoices?.reduce((sum, inv) => sum + inv.amount_paid, 0) || 0) +
+    (monthInvoices?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0) +
     (monthFines?.reduce((sum, f) => sum + f.amount, 0) || 0);
 
   return (

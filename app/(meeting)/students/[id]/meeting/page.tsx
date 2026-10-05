@@ -73,7 +73,7 @@ interface Fine {
   amount: number;
   status: string;
   issued_date: string;
-  reason: string | null;
+  notes: string | null;
 }
 
 interface AcademicRecord {
@@ -281,7 +281,7 @@ export default function ParentMeetingPage() {
       // Fetch fines
       const { data: finesData } = await supabase
         .from("fines")
-        .select("id, fine_type, amount, status, issued_date, reason")
+        .select("id, fine_type, amount, status, issued_date, notes")
         .eq("student_id", studentId)
         .order("issued_date", { ascending: false });
 
@@ -746,9 +746,9 @@ export default function ParentMeetingPage() {
                     <p className="font-medium capitalize">
                       {fine.fine_type.replace("_", " ")}
                     </p>
-                    {fine.reason && (
+                    {fine.notes && (
                       <p className="text-xs text-muted-foreground">
-                        {fine.reason}
+                        {fine.notes}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">

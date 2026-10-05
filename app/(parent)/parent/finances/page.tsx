@@ -149,7 +149,8 @@ export default function ParentFinancesPage() {
             invoice_date: inv.generated_date,
             due_date: inv.due_date,
             amount: inv.amount_due,
-            status: inv.status as "paid" | "pending" | "overdue",
+            amount_paid: inv.amount_paid ?? 0,
+            status: inv.status as "paid" | "pending" | "partial" | "overdue",
             paid_date: inv.status === "paid" ? inv.generated_date : null,
             payment_method: null,
             description: inv.period_name || inv.notes,
@@ -291,12 +292,17 @@ export default function ParentFinancesPage() {
 
   const calculateTotals = () => {
     const totalInvoices = invoices.reduce((sum, inv) => sum + inv.amount, 0);
-    const paidInvoices = invoices
-      .filter((inv) => inv.status === "paid")
-      .reduce((sum, inv) => sum + inv.amount, 0);
+    // Money actually received = sum of amount_paid across all invoices
+    // (includes part-payments, not just fully-paid invoices).
+    const paidInvoices = invoices.reduce(
+      (sum, inv) => sum + (inv.amount_paid || 0),
+      0,
+    );
+    // Money still owed = remaining balance on every unpaid/partial/overdue
+    // invoice (was: full amount of pending ones only, dropping partials).
     const pendingInvoices = invoices
-      .filter((inv) => inv.status === "pending" || inv.status === "overdue")
-      .reduce((sum, inv) => sum + inv.amount, 0);
+      .filter((inv) => inv.status !== "paid" && inv.status !== ("cancelled" as any))
+      .reduce((sum, inv) => sum + (inv.amount - (inv.amount_paid || 0)), 0);
 
     const totalFines = fines.reduce((sum, fine) => sum + fine.amount, 0);
     const paidFines = fines

@@ -252,23 +252,29 @@ export default function SendUpdatePage() {
     }
     setSending(true);
     try {
-      const { data: link } = await supabase
+      const { data: links, error: linkError } = await supabase
         .from("parent_student_links")
         .select("parent_user_id")
         .eq("student_id", selectedStudent)
-        .eq("is_primary", true)
-        .maybeSingle();
+        .neq("can_receive_notifications", false);
+      if (linkError) throw linkError;
 
-      if (link?.parent_user_id) {
-        const { error } = await supabase.from("parent_notifications").insert({
-          parent_user_id: link.parent_user_id,
-          student_id: selectedStudent,
-          type: "announcement",
-          priority,
-          title: title.trim(),
-          message: message.trim(),
-          is_read: false,
-        });
+      if (!links || links.length === 0) {
+        alert(
+          "No parent portal account is linked to this student, so nothing was posted to the portal. You can still copy the WhatsApp message.",
+        );
+      } else {
+        const { error } = await supabase.from("parent_notifications").insert(
+          links.map((link) => ({
+            parent_user_id: link.parent_user_id,
+            student_id: selectedStudent,
+            type: "announcement",
+            priority,
+            title: title.trim(),
+            message: message.trim(),
+            is_read: false,
+          })),
+        );
         if (error) throw error;
       }
 
@@ -296,14 +302,17 @@ export default function SendUpdatePage() {
 
       if (classStudents && classStudents.length > 0) {
         const studentIds = classStudents.map((s) => s.id);
-        const { data: links } = await supabase
+        const { data: links, error: linkError } = await supabase
           .from("parent_student_links")
           .select("parent_user_id, student_id")
           .in("student_id", studentIds)
-          .eq("is_primary", true);
+          .neq("can_receive_notifications", false);
+        if (linkError) throw linkError;
 
         if (links && links.length > 0) {
-          await supabase.from("parent_notifications").insert(
+          const { error: insertError } = await supabase
+            .from("parent_notifications")
+            .insert(
             links.map((link) => ({
               parent_user_id: link.parent_user_id,
               student_id: link.student_id,
@@ -314,6 +323,7 @@ export default function SendUpdatePage() {
               is_read: false,
             })),
           );
+          if (insertError) throw insertError;
         }
       }
 

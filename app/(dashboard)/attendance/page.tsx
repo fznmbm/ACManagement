@@ -4,6 +4,7 @@ import AttendanceMarkingInterface from "@/components/attendance/AttendanceMarkin
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BarChart3 } from "lucide-react";
+import { latestClassDay } from "@/lib/utils/classDay";
 
 export default async function AttendancePage({
   searchParams,
@@ -41,9 +42,8 @@ export default async function AttendancePage({
   // Get selected class (default to first class)
   const selectedClassId = searchParams.class || classes?.[0]?.id;
 
-  // Get selected date (default to today)
-  const selectedDate =
-    searchParams.date || new Date().toISOString().split("T")[0];
+  // Default to the most recent class day (Tuesday), in UK time
+  const selectedDate = searchParams.date || latestClassDay();
 
   // Get students for selected class
   let students: Array<{

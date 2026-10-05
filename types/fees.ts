@@ -68,7 +68,8 @@ export interface ParentInvoice {
   invoice_date: string;
   due_date: string;
   amount: number;
-  status: "paid" | "pending" | "overdue";
+  amount_paid?: number;
+  status: "paid" | "pending" | "partial" | "overdue";
   paid_date?: string | null;
   payment_method?: string | null;
   description?: string | null;

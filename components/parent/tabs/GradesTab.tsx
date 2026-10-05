@@ -51,6 +51,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
           `
           id,
           assessment_type,
+          assessment_name:assessment_type,
           score,
           total_marks:max_score,
           percentage,

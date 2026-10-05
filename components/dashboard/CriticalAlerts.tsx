@@ -25,47 +25,33 @@ export default async function CriticalAlerts() {
     .eq("status", "pending");
 
   // Low Attendance Students (below 80% in last 30 days)
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  // One query: students below 75% over their last 6 weekly sessions
+  const { data: lowAttendance } = await supabase.rpc(
+    "low_attendance_students" as any,
+    { p_sessions: 6, p_threshold: 0.75 } as any,
+  );
+  const lowAttendanceCount = Array.isArray(lowAttendance)
+    ? lowAttendance.length
+    : 0;
 
-  const { data: students } = await supabase
-    .from("students")
-    .select("id")
-    .eq("status", "active");
+  // Pending Applications — scope to the active academic year from settings
+  const { data: activeAppYear } = await supabase
+    .from("application_settings")
+    .select("academic_year")
+    .eq("is_active", true)
+    .maybeSingle();
 
-  let lowAttendanceCount = 0;
-
-  if (students) {
-    for (const student of students) {
-      const { count: totalClasses } = await supabase
-        .from("attendance")
-        .select("*", { count: "exact", head: true })
-        .eq("student_id", student.id)
-        .gte("date", thirtyDaysAgo.toISOString().split("T")[0]);
-
-      const { count: presentCount } = await supabase
-        .from("attendance")
-        .select("*", { count: "exact", head: true })
-        .eq("student_id", student.id)
-        .eq("status", "present")
-        .gte("date", thirtyDaysAgo.toISOString().split("T")[0]);
-
-      if (totalClasses && totalClasses > 0) {
-        const attendanceRate = (presentCount || 0) / totalClasses;
-        if (attendanceRate < 0.8) {
-          lowAttendanceCount++;
-        }
-      }
-    }
-  }
-
-  // Pending Applications
-  const currentYear = new Date().getFullYear();
-  const { count: pendingApplicationsCount } = await supabase
+  let pendingAppQuery = supabase
     .from("applications")
     .select("*", { count: "exact", head: true })
-    .eq("status", "pending")
-    .eq("academic_year", `${currentYear}/${currentYear + 1}`);
+    .eq("status", "pending");
+  if (activeAppYear?.academic_year) {
+    pendingAppQuery = pendingAppQuery.eq(
+      "academic_year",
+      activeAppYear.academic_year,
+    );
+  }
+  const { count: pendingApplicationsCount } = await pendingAppQuery;
 
   // Upcoming Events (next 7 days)
   const sevenDaysFromNow = new Date();

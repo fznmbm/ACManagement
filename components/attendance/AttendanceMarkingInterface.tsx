@@ -162,35 +162,32 @@ export default function AttendanceMarkingInterface({
   };
 
   const handleSave = async () => {
+    const unmarked = students.filter((s) => !attendanceMap.has(s.id));
+    if (
+      unmarked.length > 0 &&
+      !confirm(
+        `${unmarked.length} student(s) not marked:\n${unmarked
+          .map((s) => `• ${s.first_name} ${s.last_name}`)
+          .join("\n")}\n\nSave them as PRESENT?`,
+      )
+    )
+      return;
+
     setSaving(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      // Prepare attendance records
-      const attendanceRecords = students.map((student) => ({
+      // One atomic call: upserts each row, keeps paid fines, no duplicates
+      const records = students.map((student) => ({
         student_id: student.id,
-        class_id: selectedClassId,
-        date: selectedDate,
         status: attendanceMap.get(student.id) || "present",
-        session_type: "regular",
         notes: notesMap.get(student.id) || null,
-        marked_by: user?.id,
       }));
 
-      // Delete existing attendance for this class and date
-      await supabase
-        .from("attendance")
-        .delete()
-        .eq("class_id", selectedClassId)
-        .eq("date", selectedDate);
-
-      // Insert new attendance records
-      const { error } = await supabase
-        .from("attendance")
-        .insert(attendanceRecords);
+      const { error } = await supabase.rpc("save_class_attendance", {
+        p_class_id: selectedClassId,
+        p_date: selectedDate,
+        p_records: records,
+      } as any);
 
       if (error) throw error;
 
@@ -226,11 +223,26 @@ export default function AttendanceMarkingInterface({
       if (attendanceRecords && attendanceRecords.length > 0) {
         const attendanceIds = attendanceRecords.map((r) => r.id);
 
-        // Delete fines linked to these attendance records
+        // Never destroy payment history
+        const { count: settledFines } = await supabase
+          .from("fines")
+          .select("id", { count: "exact", head: true })
+          .in("attendance_record_id", attendanceIds)
+          .neq("status", "pending");
+
+        if (settledFines && settledFines > 0) {
+          alert(
+            `${settledFines} fine(s) for this day are already paid or waived. Change individual students' status instead of clearing the day.`,
+          );
+          return;
+        }
+
+        // Delete unpaid fines linked to these attendance records
         await supabase
           .from("fines")
           .delete()
-          .in("attendance_record_id", attendanceIds);
+          .in("attendance_record_id", attendanceIds)
+          .eq("status", "pending");
       }
 
       // Delete attendance records
@@ -315,8 +327,10 @@ export default function AttendanceMarkingInterface({
     absent: Array.from(attendanceMap.values()).filter((s) => s === "absent")
       .length,
     late: Array.from(attendanceMap.values()).filter((s) => s === "late").length,
-    excused: Array.from(attendanceMap.values()).filter((s) => s === "excused")
-      .length,
+    excused: Array.from(attendanceMap.values()).filter(
+      (s) => s === "excused" || s === "sick",
+    ).length,
+    unmarked: students.filter((s) => !attendanceMap.has(s.id)).length,
   };
 
   if (!selectedClassId || classes.length === 0) {
@@ -357,11 +371,11 @@ export default function AttendanceMarkingInterface({
               <button
                 onClick={() => {
                   const d = new Date(selectedDate);
-                  d.setDate(d.getDate() - 1);
+                  d.setDate(d.getDate() - 7);
                   handleDateChange(d.toISOString().split("T")[0]);
                 }}
                 className="btn-outline px-2 py-2"
-                title="Previous day"
+                title="Previous week"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -375,7 +389,7 @@ export default function AttendanceMarkingInterface({
               <button
                 onClick={() => {
                   const d = new Date(selectedDate);
-                  d.setDate(d.getDate() + 1);
+                  d.setDate(d.getDate() + 7);
                   const today = new Date().toISOString().split("T")[0];
                   const next = d.toISOString().split("T")[0];
                   if (next <= today) handleDateChange(next);
@@ -384,7 +398,7 @@ export default function AttendanceMarkingInterface({
                   selectedDate >= new Date().toISOString().split("T")[0]
                 }
                 className="btn-outline px-2 py-2 disabled:opacity-40"
-                title="Next day"
+                title="Next week"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -431,9 +445,17 @@ export default function AttendanceMarkingInterface({
           <p className="text-2xl font-bold text-orange-700">{stats.late}</p>
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-700">Excused</p>
+          <p className="text-sm text-blue-700">Excused / Sick</p>
           <p className="text-2xl font-bold text-blue-700">{stats.excused}</p>
         </div>
+        {stats.unmarked > 0 && (
+          <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">Not marked</p>
+            <p className="text-2xl font-bold text-yellow-800">
+              {stats.unmarked}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Students List */}

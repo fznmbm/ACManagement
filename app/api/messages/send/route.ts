@@ -1,17 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { toWhatsAppNumber } from "@/lib/utils/phone";
 export const dynamic = "force-dynamic";
 
-// Helper: Format UK phone for WhatsApp (07123456789 -> 447123456789)
+// Helper: Format phone for WhatsApp (07123456789 -> 447123456789, keeps +94… etc.)
 function formatPhoneForWhatsApp(phone: string): string {
-  const cleaned = phone.replace(/\D/g, "");
-  if (cleaned.startsWith("0")) {
-    return "44" + cleaned.slice(1);
-  }
-  if (!cleaned.startsWith("44")) {
-    return "44" + cleaned;
-  }
-  return cleaned;
+  return toWhatsAppNumber(phone) ?? phone.replace(/\D/g, "");
 }
 
 // Helper: Replace template variables

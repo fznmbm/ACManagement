@@ -75,7 +75,13 @@ export async function POST(request: Request) {
 
     if (checkError) {
       console.error("⚠️ Error checking other links:", checkError);
-      // Continue anyway, link is already deleted
+      // Link is deleted, but we could not confirm the parent has no other
+      // children — never delete an account on an unknown answer.
+      return NextResponse.json({
+        success: true,
+        message: "Student unlinked (parent account kept — could not verify other links)",
+        deleted_parent: false,
+      });
     }
 
     let deletedParentAccount = false;

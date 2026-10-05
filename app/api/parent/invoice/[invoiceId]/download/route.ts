@@ -35,7 +35,7 @@ export async function GET(
       .select(
         `
         *,
-        students (
+        students!inner (
           id,
           student_number,
           first_name,

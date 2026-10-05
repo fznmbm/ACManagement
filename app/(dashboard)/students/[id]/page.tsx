@@ -90,13 +90,11 @@ export default async function StudentDetailPage({
       id,
       percentage,
       score,
-      total_marks,
-      assessment_name,
+      max_score,
+      assessment_type,
       assessment_date,
-      curriculum_topic:curriculum_topics!inner (
-        topic_name,
-        subject_name
-      )
+      subject:subjects ( name ),
+      topic:curriculum_topics ( topic_name )
     `,
     )
     .eq("student_id", params.id)
@@ -108,13 +106,11 @@ export default async function StudentDetailPage({
     id: string;
     percentage: number;
     score: number;
-    total_marks: number;
-    assessment_name: string;
+    max_score: number;
+    assessment_type: string;
     assessment_date: string;
-    curriculum_topic: {
-      topic_name: string;
-      subject_name: string;
-    };
+    subject: { name: string } | null;
+    topic: { topic_name: string } | null;
   };
 
   // Calculate overall academic average with proper typing
@@ -135,12 +131,13 @@ export default async function StudentDetailPage({
     .select(
       `
       id,
-      progress_stage,
+      status,
       proficiency_rating,
       memorization_items!inner (
         id,
-        title,
-        category,
+        name,
+        item_type,
+        category_name,
         arabic_text
       )
     `,
@@ -150,12 +147,13 @@ export default async function StudentDetailPage({
   // Type definition
   type MemorizationRecord = {
     id: string;
-    progress_stage: string;
+    status: string;
     proficiency_rating: number | null;
     memorization_items: {
       id: string;
-      title: string;
-      category: string;
+      name: string;
+      item_type: string | null;
+      category_name: string | null;
       arabic_text: string;
     };
   };
@@ -163,55 +161,38 @@ export default async function StudentDetailPage({
   // Calculate memorization stats with proper typing
   const typedData = memorizationData as MemorizationRecord[] | null;
 
+  // item_type/category_name are free text; match the bucket case-insensitively
+  const catOf = (m: MemorizationRecord) =>
+    `${m.memorization_items.category_name || ""} ${m.memorization_items.item_type || ""}`.toLowerCase();
+  const inBucket = (m: MemorizationRecord, key: string) => catOf(m).includes(key);
+  const isMemorized = (m: MemorizationRecord) =>
+    m.status === "memorized" || m.status === "mastered";
+  const isMastered = (m: MemorizationRecord) => m.status === "mastered";
+
   const memorizationStats = typedData
     ? {
         duas: {
-          total: typedData.filter(
-            (m) => m.memorization_items.category === "dua",
-          ).length,
-          memorized: typedData.filter(
-            (m) =>
-              m.memorization_items.category === "dua" &&
-              (m.progress_stage === "memorized" ||
-                m.progress_stage === "mastered"),
-          ).length,
-          mastered: typedData.filter(
-            (m) =>
-              m.memorization_items.category === "dua" &&
-              m.progress_stage === "mastered",
-          ).length,
+          total: typedData.filter((m) => inBucket(m, "dua")).length,
+          memorized: typedData.filter((m) => inBucket(m, "dua") && isMemorized(m))
+            .length,
+          mastered: typedData.filter((m) => inBucket(m, "dua") && isMastered(m))
+            .length,
         },
         surahs: {
-          total: typedData.filter(
-            (m) => m.memorization_items.category === "surah",
-          ).length,
+          total: typedData.filter((m) => inBucket(m, "surah")).length,
           memorized: typedData.filter(
-            (m) =>
-              m.memorization_items.category === "surah" &&
-              (m.progress_stage === "memorized" ||
-                m.progress_stage === "mastered"),
+            (m) => inBucket(m, "surah") && isMemorized(m),
           ).length,
-          mastered: typedData.filter(
-            (m) =>
-              m.memorization_items.category === "surah" &&
-              m.progress_stage === "mastered",
-          ).length,
+          mastered: typedData.filter((m) => inBucket(m, "surah") && isMastered(m))
+            .length,
         },
         hadiths: {
-          total: typedData.filter(
-            (m) => m.memorization_items.category === "hadith",
-          ).length,
+          total: typedData.filter((m) => inBucket(m, "hadith")).length,
           memorized: typedData.filter(
-            (m) =>
-              m.memorization_items.category === "hadith" &&
-              (m.progress_stage === "memorized" ||
-                m.progress_stage === "mastered"),
+            (m) => inBucket(m, "hadith") && isMemorized(m),
           ).length,
-          mastered: typedData.filter(
-            (m) =>
-              m.memorization_items.category === "hadith" &&
-              m.progress_stage === "mastered",
-          ).length,
+          mastered: typedData.filter((m) => inBucket(m, "hadith") && isMastered(m))
+            .length,
         },
       }
     : null;
@@ -230,9 +211,9 @@ export default async function StudentDetailPage({
   // Get Certificates (NEW)
   const { data: certificates } = await supabase
     .from("certificates")
-    .select("id, certificate_type, certificate_number, issued_date")
+    .select("id, certificate_type, certificate_number, issue_date")
     .eq("student_id", params.id)
-    .order("issued_date", { ascending: false })
+    .order("issue_date", { ascending: false })
     .limit(5);
 
   // Get Active Fines (NEW)
@@ -460,11 +441,11 @@ export default async function StudentDetailPage({
                     >
                       <div>
                         <p className="font-medium">
-                          {assessment.curriculum_topic?.subject_name ||
+                          {assessment.subject?.name ||
                             "General"}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {assessment.assessment_name}
+                          {assessment.topic?.topic_name || assessment.assessment_type}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {formatDate(assessment.assessment_date, "short")}
@@ -483,7 +464,7 @@ export default async function StudentDetailPage({
                           {assessment.percentage}%
                         </span>
                         <p className="text-xs text-muted-foreground">
-                          {assessment.score}/{assessment.total_marks}
+                          {assessment.score}/{assessment.max_score}
                         </p>
                       </div>
                     </div>
@@ -760,7 +741,7 @@ export default async function StudentDetailPage({
                           {cert.certificate_number}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Issued: {formatDate(cert.issued_date, "short")}
+                          Issued: {formatDate(cert.issue_date, "short")}
                         </p>
                       </div>
                       <Award className="h-5 w-5 text-yellow-500 flex-shrink-0" />

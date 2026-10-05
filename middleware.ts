@@ -38,9 +38,12 @@ export async function middleware(request: NextRequest) {
     "/parent/finances",
     "/parent/profile",
     "/parent/student",
+    "/parent/events",
   ];
 
-  console.log("🌐 Middleware:", { hostname, pathname });
+  // Staff routes that teachers (incl. assistants) must not open
+  const adminOnlyRoutes = ["/users", "/settings"];
+
 
   // ==========================================
   // DEVELOPMENT MODE CHECK
@@ -239,6 +242,13 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/parent/dashboard", request.url));
       }
       return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    if (
+      userRole === "teacher" &&
+      adminOnlyRoutes.some((route) => pathname.startsWith(route))
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 

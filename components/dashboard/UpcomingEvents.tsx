@@ -38,7 +38,7 @@ export default async function UpcomingEvents() {
       .from("event_rsvps")
       .select("*", { count: "exact", head: true })
       .eq("event_id", event.id)
-      .eq("status", "attending");
+      .eq("rsvp_status", "attending");
 
     rsvpCounts[event.id] = count || 0;
   }

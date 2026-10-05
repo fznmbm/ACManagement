@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
+import { latestClassDay } from "@/lib/utils/classDay";
 import AlertsDashboard from "@/components/alerts/AlertsDashboard";
 
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
@@ -57,7 +58,7 @@ export default async function DashboardPage() {
     supabase
       .from("attendance")
       .select("*", { count: "exact", head: true })
-      .eq("date", new Date().toISOString().split("T")[0])
+      .eq("date", latestClassDay())
       .eq("status", "present"),
     supabase
       .from("students")
@@ -67,8 +68,9 @@ export default async function DashboardPage() {
       .limit(5),
   ]);
 
-  // Calculate attendance percentage for today
-  const todayDate = new Date().toISOString().split("T")[0];
+  // Attendance percentage for the most recent class day (classes meet weekly,
+  // so "today" is 0 six days a week; use the latest Tuesday instead).
+  const todayDate = latestClassDay();
   const { count: totalTodayRecords } = await supabase
     .from("attendance")
     .select("*", { count: "exact", head: true })
@@ -82,13 +84,26 @@ export default async function DashboardPage() {
   // NEW STATISTICS (Financial, Applications, Events, Fines)
   // ==================================================
 
-  // Pending Applications (current year)
-  const currentYear = new Date().getFullYear();
-  const { count: pendingApplications } = await supabase
+  // Pending Applications — scope to the active academic year from settings
+  // (the old code built the year from the calendar, so it read 0 outside
+  // Sept–Dec). Falls back to counting all pending if no setting is found.
+  const { data: activeAppYear } = await supabase
+    .from("application_settings")
+    .select("academic_year")
+    .eq("is_active", true)
+    .maybeSingle();
+
+  let pendingAppQuery = supabase
     .from("applications")
     .select("*", { count: "exact", head: true })
-    .eq("status", "pending")
-    .eq("academic_year", `${currentYear}/${currentYear + 1}`);
+    .eq("status", "pending");
+  if (activeAppYear?.academic_year) {
+    pendingAppQuery = pendingAppQuery.eq(
+      "academic_year",
+      activeAppYear.academic_year,
+    );
+  }
+  const { count: pendingApplications } = await pendingAppQuery;
 
   // Outstanding Fees
   const { data: outstandingInvoices } = await supabase
@@ -144,7 +159,7 @@ export default async function DashboardPage() {
       href: "/classes",
     },
     {
-      name: "Today Present",
+      name: "Present (last session)",
       value: todayAttendance || 0,
       icon: CheckCircle,
       color: "text-purple-600 dark:text-purple-400",
@@ -285,10 +300,10 @@ export default async function DashboardPage() {
                 <DollarSign className="h-5 w-5" />
               </Link>
               <Link
-                href="/messages"
+                href="/send-update"
                 className="flex items-center justify-between px-4 py-3 bg-background border-2 border-border rounded-lg font-medium hover:border-primary hover:bg-accent transition-colors"
               >
-                <span>Send Message</span>
+                <span>Send Update</span>
                 <MessageSquare className="h-5 w-5" />
               </Link>
               <Link

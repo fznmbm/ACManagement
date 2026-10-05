@@ -192,8 +192,10 @@ export default function Header({ profile }: HeaderProps) {
       fees: "Fee Management",
       fines: "Fine Management",
       messages: "Messages",
+      "send-update": "Send Update",
       events: "Events",
       applications: "Applications",
+      users: "User Management",
     };
     return titles[path] || "Dashboard";
   };

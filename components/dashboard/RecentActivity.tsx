@@ -95,11 +95,11 @@ export default async function RecentActivity() {
       `
       id,
       certificate_number,
-      issued_date,
+      issue_date,
       students (first_name, last_name)
     `
     )
-    .order("issued_date", { ascending: false })
+    .order("issue_date", { ascending: false })
     .limit(5);
 
   recentCertificates?.forEach((cert) => {
@@ -109,7 +109,7 @@ export default async function RecentActivity() {
       description: `Certificate ${cert.certificate_number} issued to ${
         cert.students?.[0]?.first_name || "Student"
       } ${cert.students?.[0]?.last_name || ""}`,
-      timestamp: new Date(cert.issued_date),
+      timestamp: new Date(cert.issue_date),
       icon: Award,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-100 dark:bg-yellow-900/30",
@@ -160,7 +160,7 @@ export default async function RecentActivity() {
   // Get recent accepted applications (last 5)
   const { data: recentApplications } = await supabase
     .from("applications")
-    .select("id, student_name, updated_at")
+    .select("id, child_first_name, child_last_name, updated_at")
     .eq("status", "accepted")
     .order("updated_at", { ascending: false })
     .limit(5);
@@ -169,7 +169,7 @@ export default async function RecentActivity() {
     activities.push({
       id: `app-${app.id}`,
       type: "application_accepted",
-      description: `Application accepted for ${app.student_name}`,
+      description: `Application accepted for ${app.child_first_name} ${app.child_last_name}`,
       timestamp: new Date(app.updated_at),
       icon: FileCheck,
       color: "text-indigo-600 dark:text-indigo-400",

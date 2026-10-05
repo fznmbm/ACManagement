@@ -91,13 +91,17 @@ export default function StudentsPage() {
         // Fetch portal status from view
         const parentIds =
           links?.map((l: any) => l.parent_user_id).filter(Boolean) || [];
-        const { data: portalData } =
-          parentIds.length > 0
-            ? await supabase
-                .from("parent_portal_status")
-                .select("id, portal_status")
-                .in("id", parentIds)
-            : { data: [] };
+        // parent_portal_status reads auth.users, so it is served by a
+        // staff-gated API route (service role), not read directly.
+        let portalData: { id: string; portal_status: string }[] = [];
+        if (parentIds.length > 0) {
+          const res = await fetch("/api/admin/portal-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ parentIds }),
+          });
+          if (res.ok) portalData = (await res.json()).data || [];
+        }
 
         // Map portal status to each student
         const studentsWithStatus = studentsData.map((s: any) => {

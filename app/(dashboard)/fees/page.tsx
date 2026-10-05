@@ -489,7 +489,10 @@ export default function FeesPage() {
         <div className="md:hidden divide-y divide-border">
           {filteredInvoices.map((invoice) => {
             const outstanding = invoice.amount_due - invoice.amount_paid;
-            const isOverdue = new Date(invoice.due_date) < new Date();
+            const isOverdue =
+              invoice.status !== "paid" &&
+              invoice.status !== "cancelled" &&
+              new Date(invoice.due_date) < new Date();
             return (
               <div key={invoice.id} className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
@@ -595,7 +598,10 @@ export default function FeesPage() {
             <tbody className="divide-y divide-border">
               {filteredInvoices.map((invoice) => {
                 const outstanding = invoice.amount_due - invoice.amount_paid;
-                const isOverdue = new Date(invoice.due_date) < new Date();
+                const isOverdue =
+              invoice.status !== "paid" &&
+              invoice.status !== "cancelled" &&
+              new Date(invoice.due_date) < new Date();
 
                 return (
                   <tr key={invoice.id} className="hover:bg-muted/30">
