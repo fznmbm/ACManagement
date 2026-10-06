@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ToastProvider } from "@/components/ui/toast";
 import Link from "next/link";
 import {
   Home,
   User,
   LogOut,
-  Menu,
-  X,
   Sun,
   Moon,
   Users,
@@ -28,7 +27,6 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [unreadEvents, setUnreadEvents] = useState(0);
@@ -173,6 +171,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   }
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Top Navigation Bar */}
       <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
@@ -180,18 +179,9 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-6 w-6 text-slate-600 dark:text-slate-400" />
-                ) : (
-                  <Menu className="h-6 w-6 text-slate-600 dark:text-slate-400" />
-                )}
-              </button>
-              <h1 className="ml-3 md:ml-0 text-xl font-bold text-slate-900 dark:text-white">
-                Al Hikmah <span className="text-primary">Parent Portal</span>
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                Al Hikmah{" "}
+                <span className="text-primary">Parent Portal</span>
               </h1>
             </div>
 
@@ -257,40 +247,38 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <nav className="px-4 py-3 space-y-1">
-            {navigation.map((item) => (
+      {/* Main Content */}
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl pb-24 md:pb-8">
+        {children}
+      </main>
+
+      {/* Mobile bottom tab bar */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 pb-[env(safe-area-inset-bottom)]">
+        <div className="grid grid-cols-5">
+          {navigation.map((item) => {
+            const active = isActive(item.href);
+            return (
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? "bg-primary text-white"
-                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                className={`relative flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors ${
+                  active
+                    ? "text-primary"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
               >
-                <div className="flex items-center">
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.name}
-                </div>
+                <item.icon className="h-5 w-5" />
+                <span className="leading-none">{item.name}</span>
                 {item.badge > 0 && (
-                  <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white">
+                  <span className="absolute top-1 right-[calc(50%-1.25rem)] min-w-[1.1rem] px-1 py-0.5 text-[10px] font-bold leading-none rounded-full bg-red-500 text-white text-center">
                     {item.badge}
                   </span>
                 )}
               </Link>
-            ))}
-          </nav>
+            );
+          })}
         </div>
-      )}
-
-      {/* Main Content */}
-      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-        {children}
-      </main>
+      </nav>
 
       {/* Footer */}
       <footer className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mt-12">
@@ -308,5 +296,6 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
         </div>
       </footer>
     </div>
+    </ToastProvider>
   );
 }

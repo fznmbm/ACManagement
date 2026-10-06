@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import { Check, X, HelpCircle, Loader2 } from "lucide-react";
 
 interface ParentEventRSVPProps {
@@ -40,6 +41,7 @@ export default function ParentEventRSVP({
   rsvpDeadline,
   maxCapacity,
 }: ParentEventRSVPProps) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [children, setChildren] = useState<any[]>([]);
@@ -166,7 +168,7 @@ export default function ParentEventRSVP({
     if (rsvpDeadline) {
       const deadline = new Date(rsvpDeadline);
       if (new Date() > deadline) {
-        alert("The RSVP deadline has passed.");
+        toast.error("The RSVP deadline has passed.");
         return;
       }
     }
@@ -231,12 +233,12 @@ export default function ParentEventRSVP({
         if (error) throw error;
       }
 
-      alert("RSVP submitted successfully! ✅");
+      toast.success("RSVP submitted successfully!");
       await loadData();
       setExpanded(false);
     } catch (error: any) {
       console.error("Error submitting RSVP:", error);
-      alert(error.message || "Failed to submit RSVP");
+      toast.error(error.message || "Failed to submit RSVP");
     } finally {
       setSaving(false);
     }

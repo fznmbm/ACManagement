@@ -10,8 +10,8 @@
 
 @layer base {
   :root {
-    /* Primary - Green (Islamic color) */
-    --primary: 142 70% 45%;
+    /* Primary - Green (Islamic color). #15803d = 5.0:1 on white (WCAG AA). */
+    --primary: 142 72% 29%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -45,7 +45,7 @@
     /* Border */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 142 70% 45%;
+    --ring: 142 72% 29%;
 
     /* Radius */
     --radius: 0.5rem;

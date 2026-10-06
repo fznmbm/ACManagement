@@ -318,6 +318,29 @@ export default function StudentDetailPage() {
   // ADD THIS NEW LINE RIGHT AFTER:
   const visibleTabs = tabs.filter((tab) => tab.alwaysShow || tab.permission);
 
+  // Persist "read" when a badged tab is opened, so the badge clears for good
+  // (previously only the in-memory dot was cleared, so it returned on reload).
+  // Feedback keeps its own per-item read tracking, so it is not blanket-marked.
+  const TAB_NOTIFICATION_TYPES: Record<string, string[]> = {
+    finances: ["fine", "fee_alert"],
+    certificates: ["certificate"],
+  };
+  const markTabNotificationsRead = async (tabId: string) => {
+    const types = TAB_NOTIFICATION_TYPES[tabId];
+    if (!types) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase
+      .from("parent_notifications")
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq("parent_user_id", user.id)
+      .eq("student_id", params.id)
+      .in("type", types)
+      .eq("is_read", false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
       {/* Header */}
@@ -398,8 +421,9 @@ export default function StudentDetailPage() {
                   key={tab.id}
                   onClick={() => {
                     setActiveTab(tab.id as TabType);
-                    // Clear dot for this tab when clicked
+                    // Clear the dot and persist read-state so it stays cleared
                     setTabUnread((prev) => ({ ...prev, [tab.id]: 0 }));
+                    markTabNotificationsRead(tab.id);
                   }}
                   className={`relative flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${
                     activeTab === tab.id

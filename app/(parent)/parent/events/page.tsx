@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import {
   Calendar,
   Clock,
@@ -40,6 +41,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 
 export default function ParentEventsPage() {
   const supabase = createClient();
+  const { toast } = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvpStates, setRsvpStates] = useState<RSVPState>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -113,7 +115,7 @@ export default function ParentEventsPage() {
     // Check deadline
     const event = events.find((e) => e.id === eventId);
     if (event?.rsvp_deadline && new Date() > new Date(event.rsvp_deadline)) {
-      alert("RSVP deadline has passed.");
+      toast.error("RSVP deadline has passed.");
       return;
     }
 
@@ -137,7 +139,7 @@ export default function ParentEventsPage() {
       if (error) throw error;
       setRsvpStates((prev) => ({ ...prev, [eventId]: status }));
     } catch (err: any) {
-      alert(err.message || "Failed to submit RSVP");
+      toast.error(err.message || "Failed to submit RSVP");
     } finally {
       setSaving(null);
     }

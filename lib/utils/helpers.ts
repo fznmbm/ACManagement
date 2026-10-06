@@ -35,6 +35,21 @@ export function formatDate(
 }
 
 /**
+ * Format a money amount as GBP, e.g. 1250 -> "£1,250.00".
+ * Accepts numbers or numeric strings; invalid input falls back to "£0.00".
+ */
+export function formatMoney(
+  amount: number | string | null | undefined
+): string {
+  const n = typeof amount === "string" ? parseFloat(amount) : amount ?? 0;
+  const safe = Number.isFinite(n as number) ? (n as number) : 0;
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+  }).format(safe);
+}
+
+/**
  * Format time to readable string
  */
 export function formatTime(time: string): string {

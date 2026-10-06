@@ -2,15 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import {
   Download,
   Receipt,
   FileText,
   CreditCard,
   Calendar,
+  Landmark,
+  Info,
 } from "lucide-react";
 import { ParentFine } from "@/types/fines";
 import { ParentInvoice } from "@/types/fees";
+
+// Bank details for the "How to pay" panel. Set these in Vercel env
+// (NEXT_PUBLIC_BANK_ACCOUNT_NAME / _SORT_CODE / _ACCOUNT_NUMBER). If unset,
+// the panel tells parents to contact the office instead of showing blanks.
+const BANK = {
+  accountName: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME || "",
+  sortCode: process.env.NEXT_PUBLIC_BANK_SORT_CODE || "",
+  accountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || "",
+};
 
 // interface Invoice {
 //   id: string;
@@ -64,6 +76,7 @@ interface FineDisplay extends ParentFine {
 
 export default function ParentFinancesPage() {
   const supabase = createClient();
+  const { toast } = useToast();
 
   const [invoices, setInvoices] = useState<InvoiceDisplay[]>([]);
   const [fines, setFines] = useState<FineDisplay[]>([]);
@@ -257,7 +270,7 @@ export default function ParentFinancesPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Error downloading invoice:", error);
-      alert("Failed to download invoice");
+      toast.error("Failed to download invoice");
     } finally {
       setDownloading(null);
     }
@@ -284,7 +297,7 @@ export default function ParentFinancesPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Error downloading receipt:", error);
-      alert("Failed to download receipt");
+      toast.error("Failed to download receipt");
     } finally {
       setDownloading(null);
     }
@@ -412,6 +425,91 @@ export default function ParentFinancesPage() {
             </div>
           </div>
         </div>
+
+        {/* How to pay */}
+        {totals.totalOwed > 0 && (
+          <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 dark:bg-primary/10 p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 rounded-full bg-primary/10 p-2">
+                <Landmark className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                  How to pay
+                </h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  Pay by bank transfer using the details below, then keep your
+                  confirmation. The office will mark your account as paid once
+                  the transfer is received.
+                </p>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Bank transfer to
+                    </p>
+                    {BANK.accountName || BANK.sortCode || BANK.accountNumber ? (
+                      <dl className="mt-2 space-y-1 text-sm">
+                        {BANK.accountName && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-slate-500 dark:text-slate-400">
+                              Account name
+                            </dt>
+                            <dd className="font-medium text-slate-900 dark:text-white text-right">
+                              {BANK.accountName}
+                            </dd>
+                          </div>
+                        )}
+                        {BANK.sortCode && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-slate-500 dark:text-slate-400">
+                              Sort code
+                            </dt>
+                            <dd className="font-mono font-medium text-slate-900 dark:text-white">
+                              {BANK.sortCode}
+                            </dd>
+                          </div>
+                        )}
+                        {BANK.accountNumber && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-slate-500 dark:text-slate-400">
+                              Account number
+                            </dt>
+                            <dd className="font-mono font-medium text-slate-900 dark:text-white">
+                              {BANK.accountNumber}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    ) : (
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        Please contact the school office for the bank account
+                        details.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Payment reference
+                    </p>
+                    <p className="mt-2 flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                      <Info className="h-4 w-4 flex-shrink-0 mt-0.5 text-primary" />
+                      <span>
+                        Use your{" "}
+                        <strong className="text-slate-900 dark:text-white">
+                          invoice number
+                        </strong>{" "}
+                        (shown on each invoice below) as the payment reference so
+                        we can match your payment to the right child.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow">
