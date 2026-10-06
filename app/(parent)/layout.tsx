@@ -9,6 +9,7 @@ import {
   Home,
   User,
   LogOut,
+  Bell,
   Sun,
   Moon,
   Users,
@@ -209,6 +210,20 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
 
               {/* Right Actions */}
               <div className="flex items-center space-x-3">
+                {/* Updates bell */}
+                <Link
+                  href="/parent/updates"
+                  className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                  aria-label="Updates"
+                >
+                  <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                  {unreadTotal > 0 && (
+                    <span className="absolute top-0.5 right-0.5 min-w-[1.05rem] h-[1.05rem] px-1 text-[10px] font-bold leading-none rounded-full bg-red-500 text-white flex items-center justify-center">
+                      {unreadTotal > 9 ? "9+" : unreadTotal}
+                    </span>
+                  )}
+                </Link>
+
                 {/* Theme Toggle */}
                 <button
                   onClick={toggleTheme}

@@ -189,7 +189,7 @@ export default function ParentDashboard() {
             </p>
           </div>
         </Link>
-        <Link href="/parent/children">
+        <Link href="/parent/updates">
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center hover:border-primary transition-colors relative">
             {newFeedbackCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center">

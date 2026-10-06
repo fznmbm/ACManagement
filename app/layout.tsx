@@ -7,9 +7,12 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Attendance & Curriculum System",
+  title: {
+    default: "Al Hikmah Institute Crawley",
+    template: "%s · Al Hikmah Institute Crawley",
+  },
   description:
-    "Comprehensive attendance and management system for Islamic educational centres",
+    "Al Hikmah Institute Crawley — student portal for parents and staff",
   keywords: [
     "madrasa",
     "attendance",

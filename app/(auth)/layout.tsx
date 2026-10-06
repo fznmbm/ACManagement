@@ -78,7 +78,8 @@ export default async function AuthLayout({
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © 2026 Attendance & Curriculum System System. All rights reserved.
+          © {new Date().getFullYear()} Al Hikmah Institute Crawley. All rights
+          reserved.
         </p>
       </div>
     </div>
