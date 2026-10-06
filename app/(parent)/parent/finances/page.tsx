@@ -83,7 +83,7 @@ export default function ParentFinancesPage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"invoices" | "fines" | "history">(
-    "invoices"
+    "invoices",
   );
 
   useEffect(() => {
@@ -120,6 +120,17 @@ export default function ParentFinancesPage() {
       const studentIds = links.map((l) => l.student_id);
       console.log("📋 Student IDs:", studentIds);
 
+      // Viewing the Finances page counts as reading the fine/fee notifications,
+      // so clear them here (the badge elsewhere then drops to reflect reality).
+      supabase
+        .from("parent_notifications")
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq("parent_user_id", user.id)
+        .in("student_id", studentIds)
+        .in("type", ["fine", "fee_alert"])
+        .eq("is_read", false)
+        .then(() => {});
+
       // Fetch students data
       const { data: studentsData } = await supabase
         .from("students")
@@ -141,7 +152,7 @@ export default function ParentFinancesPage() {
         period_name,
         notes,
         student_id
-      `
+      `,
         )
         .in("student_id", studentIds)
         .order("generated_date", { ascending: false });
@@ -194,7 +205,7 @@ export default function ParentFinancesPage() {
           date,
           status
         )
-      `
+      `,
         )
         .in("student_id", studentIds)
         .order("issued_date", { ascending: false });
@@ -314,7 +325,9 @@ export default function ParentFinancesPage() {
     // Money still owed = remaining balance on every unpaid/partial/overdue
     // invoice (was: full amount of pending ones only, dropping partials).
     const pendingInvoices = invoices
-      .filter((inv) => inv.status !== "paid" && inv.status !== ("cancelled" as any))
+      .filter(
+        (inv) => inv.status !== "paid" && inv.status !== ("cancelled" as any),
+      )
       .reduce((sum, inv) => sum + (inv.amount - (inv.amount_paid || 0)), 0);
 
     const totalFines = fines.reduce((sum, fine) => sum + fine.amount, 0);
@@ -500,8 +513,8 @@ export default function ParentFinancesPage() {
                         <strong className="text-slate-900 dark:text-white">
                           invoice number
                         </strong>{" "}
-                        (shown on each invoice below) as the payment reference so
-                        we can match your payment to the right child.
+                        (shown on each invoice below) as the payment reference
+                        so we can match your payment to the right child.
                       </span>
                     </p>
                   </div>
@@ -576,8 +589,8 @@ export default function ParentFinancesPage() {
                                 invoice.status === "paid"
                                   ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
                                   : invoice.status === "overdue"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                                  : "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                                    : "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
                               }`}
                             >
                               {invoice.status.toUpperCase()}
@@ -599,7 +612,7 @@ export default function ParentFinancesPage() {
                               </p>
                               <p className="font-medium text-slate-900 dark:text-white">
                                 {new Date(
-                                  invoice.invoice_date
+                                  invoice.invoice_date,
                                 ).toLocaleDateString("en-GB")}
                               </p>
                             </div>
@@ -609,7 +622,7 @@ export default function ParentFinancesPage() {
                               </p>
                               <p className="font-medium text-slate-900 dark:text-white">
                                 {new Date(invoice.due_date).toLocaleDateString(
-                                  "en-GB"
+                                  "en-GB",
                                 )}
                               </p>
                             </div>
@@ -626,7 +639,7 @@ export default function ParentFinancesPage() {
                             <div className="mt-2 text-sm text-green-600 dark:text-green-400">
                               Paid on{" "}
                               {new Date(invoice.paid_date).toLocaleDateString(
-                                "en-GB"
+                                "en-GB",
                               )}
                               {invoice.payment_method &&
                                 ` via ${invoice.payment_method}`}
@@ -683,8 +696,8 @@ export default function ParentFinancesPage() {
                                 fine.status === "paid"
                                   ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
                                   : fine.status === "waived"
-                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
-                                  : "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                                    : "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
                               }`}
                             >
                               {fine.status.toUpperCase()}
@@ -707,7 +720,7 @@ export default function ParentFinancesPage() {
                               <p className="font-medium text-slate-900 dark:text-white">
                                 {fine.attendance
                                   ? new Date(
-                                      fine.attendance.date
+                                      fine.attendance.date,
                                     ).toLocaleDateString("en-GB")
                                   : "N/A"}
                               </p>
@@ -735,7 +748,7 @@ export default function ParentFinancesPage() {
                             <div className="mt-2 text-sm text-green-600 dark:text-green-400">
                               Paid on{" "}
                               {new Date(fine.paid_date).toLocaleDateString(
-                                "en-GB"
+                                "en-GB",
                               )}
                               {fine.payment_method &&
                                 ` via ${fine.payment_method}`}
@@ -770,7 +783,7 @@ export default function ParentFinancesPage() {
                 ].sort(
                   (a, b) =>
                     new Date(b.paid_date || "").getTime() -
-                    new Date(a.paid_date || "").getTime()
+                    new Date(a.paid_date || "").getTime(),
                 ).length === 0 ? (
                   <div className="text-center py-12">
                     <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
@@ -786,7 +799,7 @@ export default function ParentFinancesPage() {
                     .sort(
                       (a, b) =>
                         new Date(b.paid_date || "").getTime() -
-                        new Date(a.paid_date || "").getTime()
+                        new Date(a.paid_date || "").getTime(),
                     )
                     .map((payment) => {
                       const isInvoice = "invoice_number" in payment;
@@ -824,7 +837,7 @@ export default function ParentFinancesPage() {
                                 <p className="text-sm text-green-600 dark:text-green-400">
                                   Paid on{" "}
                                   {new Date(
-                                    payment.paid_date || ""
+                                    payment.paid_date || "",
                                   ).toLocaleDateString("en-GB")}
                                   {payment.payment_method &&
                                     ` via ${payment.payment_method}`}
@@ -841,7 +854,7 @@ export default function ParentFinancesPage() {
                                     ? downloadInvoice(
                                         payment.id,
                                         (payment as InvoiceDisplay)
-                                          .invoice_number
+                                          .invoice_number,
                                       )
                                     : downloadFineReceipt(payment.id)
                                 }

@@ -2,14 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatMoney } from "@/lib/utils/helpers";
 import Link from "next/link";
-import {
-  Users,
-  CreditCard,
-  ChevronRight,
-  MessageSquare,
-  Calendar,
-} from "lucide-react";
+import { Users, ChevronRight } from "lucide-react";
 
 interface Student {
   id: string;
@@ -28,7 +23,7 @@ export default function ParentDashboard() {
   const [parentName, setParentName] = useState("");
   const [totalStudents, setTotalStudents] = useState(0);
   const [newFeedbackCount, setNewFeedbackCount] = useState(0);
-  const [pendingFines, setPendingFines] = useState(0);
+  const [amountOwed, setAmountOwed] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -126,13 +121,30 @@ export default function ParentDashboard() {
 
         setNewFeedbackCount(unseenFeedbackCount + (noticeCount || 0));
 
-        // Count pending fines
-        const { count: finesCount } = await supabase
+        // Amount owed = unpaid fines + outstanding invoice balances.
+        const { data: finesData } = await supabase
           .from("fines")
-          .select("*", { count: "exact", head: true })
+          .select("amount")
           .eq("status", "pending")
           .in("student_id", studentIds);
-        setPendingFines(finesCount || 0);
+        const finesOwed = (finesData || []).reduce(
+          (sum, f: any) => sum + Number(f.amount || 0),
+          0,
+        );
+
+        const { data: invData } = await supabase
+          .from("fee_invoices")
+          .select("amount_due, amount_paid")
+          .in("student_id", studentIds)
+          .in("status", ["pending", "partial", "overdue"]);
+        const invoicesOwed = (invData || []).reduce(
+          (sum, i: any) =>
+            sum +
+            Math.max(0, Number(i.amount_due || 0) - Number(i.amount_paid || 0)),
+          0,
+        );
+
+        setAmountOwed(finesOwed + invoicesOwed);
       }
     } catch (err) {
       console.error("Dashboard fetch error:", err);
@@ -195,56 +207,20 @@ export default function ParentDashboard() {
         <Link href="/parent/finances">
           <div
             className={`rounded-xl border p-4 text-center hover:border-primary transition-colors ${
-              pendingFines > 0
+              amountOwed > 0
                 ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
                 : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
             }`}
           >
             <p
-              className={`text-2xl font-bold ${pendingFines > 0 ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-white"}`}
+              className={`text-2xl font-bold ${amountOwed > 0 ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-white"}`}
             >
-              {pendingFines}
+              {amountOwed > 0 ? formatMoney(amountOwed) : "£0"}
             </p>
             <p
-              className={`text-xs mt-0.5 ${pendingFines > 0 ? "text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}
+              className={`text-xs mt-0.5 ${amountOwed > 0 ? "text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}
             >
-              Pending Fines
-            </p>
-          </div>
-        </Link>
-      </div>
-
-      {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/parent/events"
-          className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:border-primary transition-colors"
-        >
-          <div className="h-9 w-9 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-            <Calendar className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
-              Events
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              School activities
-            </p>
-          </div>
-        </Link>
-        <Link
-          href="/parent/finances"
-          className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:border-primary transition-colors"
-        >
-          <div className="h-9 w-9 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center shrink-0">
-            <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
-              Finances
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Invoices & fines
+              {amountOwed > 0 ? "Due" : "All paid"}
             </p>
           </div>
         </Link>
@@ -299,12 +275,7 @@ export default function ParentDashboard() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {student.status === "active" && (
-                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                  )}
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
-                </div>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
               </Link>
             ))}
           </div>
