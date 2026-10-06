@@ -1,5 +1,5 @@
 // app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -19,6 +19,20 @@ export const metadata: Metadata = {
     "islamic education",
     "student management",
   ],
+  applicationName: "Al Hikmah",
+  appleWebApp: {
+    capable: true,
+    title: "Al Hikmah",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#15803d",
 };
 
 export default function RootLayout({
@@ -69,6 +83,12 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="system" storageKey="madrasa-theme">
           {children}
         </ThemeProvider>
+        {/* Register the service worker so the app is installable on Android */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}`,
+          }}
+        />
       </body>
     </html>
   );

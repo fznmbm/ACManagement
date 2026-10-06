@@ -184,27 +184,27 @@ export default function GradesTab({ studentId }: GradesTabProps) {
   return (
     <div className="space-y-6">
       {/* Overall Performance */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               Overall Performance
             </h3>
           </div>
           <span
-            className={`text-3xl font-bold ${getGradeColor(overallAverage)}`}
+            className={`text-2xl font-bold ${getGradeColor(overallAverage)}`}
           >
             {overallAverage}%
           </span>
         </div>
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
           <div
-            className="bg-blue-500 h-3 rounded-full transition-all duration-500"
+            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${overallAverage}%` }}
           ></div>
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
           Based on {assessments.length} assessments across all subjects
         </p>
       </div>
