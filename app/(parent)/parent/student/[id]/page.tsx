@@ -411,9 +411,9 @@ export default function StudentDetailPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="max-w-7xl mx-auto px-4 relative">
-          <div className="flex gap-1 overflow-x-auto pr-6">
+        {/* Tabs — wrap as pills so every tab is visible, no horizontal scroll */}
+        <div className="max-w-7xl mx-auto px-4 pb-3">
+          <div className="flex flex-wrap gap-2">
             {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -425,16 +425,16 @@ export default function StudentDetailPage() {
                     setTabUnread((prev) => ({ ...prev, [tab.id]: 0 }));
                     markTabNotificationsRead(tab.id);
                   }}
-                  className={`relative flex items-center gap-2 px-3 sm:px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${
+                  className={`relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                     activeTab === tab.id
-                      ? "border-primary text-primary"
-                      : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                      ? "bg-primary text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
                   {tab.label}
                   {(tabUnread[tab.id] || 0) > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                       {tabUnread[tab.id]}
                     </span>
                   )}
@@ -442,8 +442,6 @@ export default function StudentDetailPage() {
               );
             })}
           </div>
-          {/* Right-edge fade: hints there are more tabs to scroll on mobile */}
-          <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-white dark:from-slate-800 to-transparent md:hidden" />
         </div>
       </div>
 
