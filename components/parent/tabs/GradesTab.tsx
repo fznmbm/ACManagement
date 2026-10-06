@@ -169,6 +169,18 @@ export default function GradesTab({ studentId }: GradesTabProps) {
     );
   }
 
+  // No data yet — show a clean empty state instead of a misleading red 0%.
+  if (assessments.length === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
+        <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          No assessments recorded yet
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Overall Performance */}
