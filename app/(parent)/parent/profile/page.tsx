@@ -202,8 +202,8 @@ export default function ProfilePage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <User className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <User className="h-7 w-7 text-primary" />
             My Profile
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">

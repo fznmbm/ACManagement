@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ParentFine } from "@/types/fines";
 import { ParentInvoice } from "@/types/fees";
+import { formatMoney } from "@/lib/utils/helpers";
 
 // Bank details for the "How to pay" panel. Set these in Vercel env
 // (NEXT_PUBLIC_BANK_ACCOUNT_NAME / _SORT_CODE / _ACCOUNT_NUMBER). If unset,
@@ -364,7 +365,7 @@ export default function ParentFinancesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             Financial Overview
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2">
@@ -381,7 +382,7 @@ export default function ParentFinancesPage() {
                   Total Outstanding
                 </p>
                 <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
-                  £{totals.totalOwed.toFixed(2)}
+                  {formatMoney(totals.totalOwed)}
                 </p>
               </div>
               <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
@@ -397,7 +398,7 @@ export default function ParentFinancesPage() {
                   Pending Invoices
                 </p>
                 <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
-                  £{totals.pendingInvoices.toFixed(2)}
+                  {formatMoney(totals.pendingInvoices)}
                 </p>
               </div>
               <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-full">
@@ -413,7 +414,7 @@ export default function ParentFinancesPage() {
                   Pending Fines
                 </p>
                 <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
-                  £{totals.pendingFines.toFixed(2)}
+                  {formatMoney(totals.pendingFines)}
                 </p>
               </div>
               <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
@@ -429,7 +430,7 @@ export default function ParentFinancesPage() {
                   Total Paid
                 </p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
-                  £{(totals.paidInvoices + totals.paidFines).toFixed(2)}
+                  {formatMoney(totals.paidInvoices + totals.paidFines)}
                 </p>
               </div>
               <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
@@ -631,7 +632,7 @@ export default function ParentFinancesPage() {
                                 Amount
                               </p>
                               <p className="font-bold text-lg text-slate-900 dark:text-white">
-                                £{invoice.amount.toFixed(2)}
+                                {formatMoney(invoice.amount)}
                               </p>
                             </div>
                           </div>
@@ -740,7 +741,7 @@ export default function ParentFinancesPage() {
                                 Amount
                               </p>
                               <p className="font-bold text-lg text-red-600 dark:text-red-400">
-                                £{fine.amount.toFixed(2)}
+                                {formatMoney(fine.amount)}
                               </p>
                             </div>
                           </div>
@@ -846,7 +847,7 @@ export default function ParentFinancesPage() {
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-lg text-slate-900 dark:text-white">
-                                £{payment.amount.toFixed(2)}
+                                {formatMoney(payment.amount)}
                               </p>
                               <button
                                 onClick={() =>

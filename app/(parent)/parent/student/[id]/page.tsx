@@ -356,7 +356,7 @@ export default function StudentDetailPage() {
 
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 {student.first_name} {student.last_name}
               </h1>
               {/* {student.arabic_name && (
@@ -367,7 +367,7 @@ export default function StudentDetailPage() {
                   {student.arabic_name}
                 </p>
               )} */}
-              <div className="flex items-center gap-4 mt-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
                 <span className="text-sm text-slate-600 dark:text-slate-400">
                   Student #:{" "}
                   <span className="font-medium text-slate-900 dark:text-white">
@@ -412,8 +412,8 @@ export default function StudentDetailPage() {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-4 relative">
+          <div className="flex gap-1 overflow-x-auto pr-6">
             {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -425,7 +425,7 @@ export default function StudentDetailPage() {
                     setTabUnread((prev) => ({ ...prev, [tab.id]: 0 }));
                     markTabNotificationsRead(tab.id);
                   }}
-                  className={`relative flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${
+                  className={`relative flex items-center gap-2 px-3 sm:px-4 py-3 font-medium text-sm whitespace-nowrap transition-colors border-b-2 ${
                     activeTab === tab.id
                       ? "border-primary text-primary"
                       : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -442,6 +442,8 @@ export default function StudentDetailPage() {
               );
             })}
           </div>
+          {/* Right-edge fade: hints there are more tabs to scroll on mobile */}
+          <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-white dark:from-slate-800 to-transparent md:hidden" />
         </div>
       </div>
 
