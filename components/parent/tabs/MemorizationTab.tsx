@@ -196,10 +196,10 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
         ].map(({ label, key, icon }) => (
           <div
             key={key}
-            className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-center"
+            className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-center"
           >
-            <span className="text-2xl">{icon}</span>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            <span className="text-lg">{icon}</span>
+            <p className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
               {memorization.filter((m) => m.status === key).length}
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-400">
