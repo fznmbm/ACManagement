@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatMoney } from "@/lib/utils/helpers";
 import {
-  User,
   Calendar,
   GraduationCap,
   BookOpen,
@@ -14,7 +13,6 @@ import {
   Award,
   ArrowLeft,
   MessageSquare,
-  ChevronRight,
   ScrollText,
 } from "lucide-react";
 import AttendanceTab from "@/components/parent/tabs/AttendanceTab";
@@ -40,14 +38,7 @@ interface Student {
   enrollment_date: string;
 }
 
-type TabType =
-  | "overview"
-  | "attendance"
-  | "progress"
-  | "finances"
-  | "feedback"
-  | "prayers";
-
+type TabType = "attendance" | "progress" | "finances" | "prayers" | "feedback";
 type ProgressView = "grades" | "memorization" | "certificates";
 
 interface Snapshot {
@@ -63,7 +54,7 @@ export default function StudentDetailPage() {
 
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [activeTab, setActiveTab] = useState<TabType>("attendance");
   const [progressView, setProgressView] = useState<ProgressView>("grades");
   const [error, setError] = useState("");
   const [snapshot, setSnapshot] = useState<Snapshot>({
@@ -100,7 +91,6 @@ export default function StudentDetailPage() {
           .eq("student_id", studentId)
           .eq("is_read", false);
 
-        // Map notification types to the (new) top tabs
         const tabCounts: Record<string, number> = {};
         unreadData?.forEach((n) => {
           if (["announcement", "academic_note", "feedback"].includes(n.type)) {
@@ -111,7 +101,6 @@ export default function StudentDetailPage() {
         });
         setTabUnread(tabCounts);
 
-        // Verify parent has access to this student
         const { data: link, error: linkError } = await supabase
           .from("parent_student_links")
           .select(
@@ -135,7 +124,6 @@ export default function StudentDetailPage() {
 
         setParentLink(link);
 
-        // Fetch student details
         const { data: studentData, error: studentError } = await supabase
           .from("students")
           .select(
@@ -160,10 +148,7 @@ export default function StudentDetailPage() {
           return;
         }
 
-        const student: Student = {
-          ...studentData,
-          classes: undefined,
-        };
+        const student: Student = { ...studentData, classes: undefined };
 
         if (student.class_id) {
           const { data: classData } = await supabase
@@ -178,7 +163,7 @@ export default function StudentDetailPage() {
 
         setStudent(student);
 
-        // Overview snapshot stats (respecting this parent's permissions)
+        // Always-visible snapshot stats (respecting this parent's permissions)
         const snap: Snapshot = { attendance: null, grade: null, balance: null };
         if (link.can_view_attendance) {
           const { data: att } = await supabase
@@ -335,7 +320,6 @@ export default function StudentDetailPage() {
   }
 
   const tabs = [
-    { id: "overview" as TabType, label: "Overview", icon: User, show: true },
     {
       id: "attendance" as TabType,
       label: "Attendance",
@@ -355,6 +339,12 @@ export default function StudentDetailPage() {
       show: !!parentLink?.can_view_financial,
     },
     {
+      id: "prayers" as TabType,
+      label: "Prayers",
+      icon: ScrollText,
+      show: true,
+    },
+    {
       id: "feedback" as TabType,
       label: "Feedback",
       icon: MessageSquare,
@@ -363,6 +353,10 @@ export default function StudentDetailPage() {
   ];
   const visibleTabs = tabs.filter((t) => t.show);
   const allTabsVisible = visibleTabs.length === tabs.length;
+  // Fall back to the first visible tab if the default isn't available.
+  const effectiveTab = visibleTabs.some((t) => t.id === activeTab)
+    ? activeTab
+    : visibleTabs[0]?.id;
 
   const progressTabs: { id: ProgressView; label: string; icon: any }[] = [
     { id: "grades", label: "Grades", icon: GraduationCap },
@@ -370,50 +364,44 @@ export default function StudentDetailPage() {
     { id: "certificates", label: "Certificates", icon: Award },
   ];
 
-  // Overview quick links (only to sections the parent can see)
-  const quickLinks = [
+  // Always-visible stat band (only the sections this parent can see)
+  const statItems = [
     parentLink?.can_view_attendance && {
-      id: "attendance" as TabType,
+      key: "att",
       label: "Attendance",
-      desc: "Register history",
-      icon: Calendar,
+      value: snapshot.attendance != null ? `${snapshot.attendance}%` : "—",
+      cls:
+        snapshot.attendance != null && snapshot.attendance < 75
+          ? "text-red-600 dark:text-red-400"
+          : "text-green-600 dark:text-green-400",
     },
     parentLink?.can_view_grades && {
-      id: "progress" as TabType,
-      label: "Progress",
-      desc: "Grades, memorization & certificates",
-      icon: GraduationCap,
+      key: "grade",
+      label: "Avg grade",
+      value: snapshot.grade != null ? `${snapshot.grade}%` : "—",
+      cls: "text-blue-600 dark:text-blue-400",
     },
     parentLink?.can_view_financial && {
-      id: "finances" as TabType,
-      label: "Finances",
-      desc: "Invoices & fines",
-      icon: DollarSign,
-    },
-    {
-      id: "feedback" as TabType,
-      label: "Feedback",
-      desc: "Notes & announcements",
-      icon: MessageSquare,
-    },
-    {
-      id: "prayers" as TabType,
-      label: "Prayer sheet",
-      desc: "Daily prayer tracker",
-      icon: ScrollText,
+      key: "bal",
+      label: "Balance",
+      value: snapshot.balance != null ? formatMoney(snapshot.balance) : "—",
+      cls:
+        snapshot.balance && snapshot.balance > 0
+          ? "text-red-600 dark:text-red-400"
+          : "text-slate-900 dark:text-white",
     },
   ].filter(Boolean) as {
-    id: TabType;
+    key: string;
     label: string;
-    desc: string;
-    icon: any;
+    value: string;
+    cls: string;
   }[];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
       {/* Header */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 pt-6">
           <button
             onClick={() => router.push("/parent/dashboard")}
             className="flex items-center text-slate-600 dark:text-slate-400 hover:text-primary mb-4"
@@ -422,76 +410,91 @@ export default function StudentDetailPage() {
             Back to Dashboard
           </button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {student.first_name} {student.last_name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  Student #:{" "}
-                  <span className="font-medium text-slate-900 dark:text-white">
-                    {student.student_number}
-                  </span>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {student.first_name} {student.last_name}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              Student #:{" "}
+              <span className="font-medium text-slate-900 dark:text-white">
+                {student.student_number}
+              </span>
+            </span>
+            {student.classes && (
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Class:{" "}
+                <span className="font-medium text-slate-900 dark:text-white">
+                  {student.classes.class_name}
                 </span>
-                {student.classes && (
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    Class:{" "}
-                    <span className="font-medium text-slate-900 dark:text-white">
-                      {student.classes.class_name}
-                    </span>
+              </span>
+            )}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                student.status === "active"
+                  ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                  : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+              }`}
+            >
+              {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+            </span>
+            {parentLink && (
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Relationship:{" "}
+                <span className="font-medium text-slate-900 dark:text-white capitalize">
+                  {parentLink.relationship}
+                </span>
+                {parentLink.is_primary && (
+                  <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded text-xs font-medium">
+                    Primary Contact
                   </span>
                 )}
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    student.status === "active"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                      : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                  }`}
-                >
-                  {student.status.charAt(0).toUpperCase() +
-                    student.status.slice(1)}
-                </span>
-                {parentLink && (
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    Relationship:{" "}
-                    <span className="font-medium text-slate-900 dark:text-white capitalize">
-                      {parentLink.relationship}
-                    </span>
-                    {parentLink.is_primary && (
-                      <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded text-xs font-medium">
-                        Primary Contact
-                      </span>
-                    )}
-                  </span>
-                )}
-              </div>
-            </div>
+              </span>
+            )}
           </div>
+
+          {/* Always-visible snapshot */}
+          {statItems.length > 0 && (
+            <div className="flex divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 mt-4 -mx-4">
+              {statItems.map((s) => (
+                <div key={s.key} className="flex-1 py-3 text-center">
+                  <p className={`text-xl font-bold ${s.cls}`}>{s.value}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Top tabs — 5 sections, fit without scrolling */}
-        <div className="max-w-7xl mx-auto px-4 pb-3">
-          <div className="flex flex-wrap gap-2">
+        {/* Section tabs — icon + label, all fit in one row, no scroll */}
+        <div className="max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-700">
+          <div className="flex">
             {visibleTabs.map((tab) => {
               const Icon = tab.icon;
+              const on = effectiveTab === tab.id;
+              const unread = tabUnread[tab.id] || 0;
               return (
                 <button
                   key={tab.id}
                   onClick={() => openTab(tab.id)}
-                  className={`relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-primary text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                  className={`flex-1 flex flex-col items-center gap-1 py-2.5 border-b-2 transition-colors ${
+                    on
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                  {(tabUnread[tab.id] || 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                      {tabUnread[tab.id]}
-                    </span>
-                  )}
+                  <span className="relative">
+                    <Icon className="h-5 w-5" />
+                    {unread > 0 && (
+                      <span className="absolute -top-1.5 -right-2 h-4 min-w-[1rem] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {unread}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[11px] font-medium leading-none whitespace-nowrap">
+                    {tab.label}
+                  </span>
                 </button>
               );
             })}
@@ -519,101 +522,11 @@ export default function StudentDetailPage() {
           </div>
         )}
 
-        {/* OVERVIEW */}
-        {activeTab === "overview" && (
-          <div className="space-y-5">
-            {/* Snapshot */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {parentLink?.can_view_attendance && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Attendance
-                  </p>
-                  <p
-                    className={`text-2xl font-bold mt-1 ${
-                      snapshot.attendance != null && snapshot.attendance < 75
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-green-600 dark:text-green-400"
-                    }`}
-                  >
-                    {snapshot.attendance != null
-                      ? `${snapshot.attendance}%`
-                      : "—"}
-                  </p>
-                </div>
-              )}
-              {parentLink?.can_view_grades && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Average grade
-                  </p>
-                  <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">
-                    {snapshot.grade != null ? `${snapshot.grade}%` : "—"}
-                  </p>
-                </div>
-              )}
-              {parentLink?.can_view_financial && (
-                <div
-                  className={`rounded-xl border p-4 ${
-                    snapshot.balance && snapshot.balance > 0
-                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                  }`}
-                >
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Balance due
-                  </p>
-                  <p
-                    className={`text-2xl font-bold mt-1 ${
-                      snapshot.balance && snapshot.balance > 0
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-slate-900 dark:text-white"
-                    }`}
-                  >
-                    {snapshot.balance != null
-                      ? formatMoney(snapshot.balance)
-                      : "—"}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Quick links */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {quickLinks.map((q) => {
-                const Icon = q.icon;
-                return (
-                  <button
-                    key={q.id}
-                    onClick={() => openTab(q.id)}
-                    className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:border-primary transition-colors text-left"
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {q.label}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {q.desc}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ATTENDANCE */}
-        {activeTab === "attendance" && (
+        {effectiveTab === "attendance" && (
           <AttendanceTab studentId={params.id as string} />
         )}
 
-        {/* PROGRESS = Grades + Memorization + Certificates */}
-        {activeTab === "progress" && (
+        {effectiveTab === "progress" && (
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
               {progressTabs.map((pt) => {
@@ -646,25 +559,22 @@ export default function StudentDetailPage() {
           </div>
         )}
 
-        {/* FINANCES (Fees + Fines inside) */}
-        {activeTab === "finances" && (
+        {effectiveTab === "finances" && (
           <FinancesTab studentId={params.id as string} />
         )}
 
-        {/* FEEDBACK */}
-        {activeTab === "feedback" && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
-            <FeedbackTab studentId={params.id as string} />
-          </div>
-        )}
-
-        {/* PRAYERS (reached from Overview) */}
-        {activeTab === "prayers" && student && (
+        {effectiveTab === "prayers" && student && (
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
             <ParentPrayerSheet
               studentId={params.id as string}
               studentName={`${student.first_name} ${student.last_name}`}
             />
+          </div>
+        )}
+
+        {effectiveTab === "feedback" && (
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+            <FeedbackTab studentId={params.id as string} />
           </div>
         )}
       </div>
