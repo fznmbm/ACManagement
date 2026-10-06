@@ -61,7 +61,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
   });
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<FeeInvoice | null>(
-    null
+    null,
   );
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
@@ -85,7 +85,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
         "🔍 Fetching fees for student:",
         studentId,
         "parent:",
-        user.id
+        user.id,
       );
 
       // CORRECTED: Using proper column names
@@ -112,7 +112,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
           payment_method,
           payment_reference
         )
-      `
+      `,
         )
         .eq("student_id", studentId)
         .order("generated_date", { ascending: false });
@@ -172,21 +172,21 @@ export default function FeesTab({ studentId }: FeesTabProps) {
       const totalInvoices = transformedInvoices.length;
       const totalAmount = transformedInvoices.reduce(
         (sum, inv) => sum + inv.amount,
-        0
+        0,
       );
       const totalPaid = transformedInvoices.reduce(
         (sum, inv) => sum + inv.paid_amount,
-        0
+        0,
       );
       const totalBalance = transformedInvoices.reduce(
         (sum, inv) => sum + inv.balance,
-        0
+        0,
       );
       const pendingCount = transformedInvoices.filter(
-        (inv) => inv.status === "pending" || inv.status === "partially_paid"
+        (inv) => inv.status === "pending" || inv.status === "partially_paid",
       ).length;
       const overdueCount = transformedInvoices.filter(
-        (inv) => inv.status === "overdue"
+        (inv) => inv.status === "overdue",
       ).length;
 
       setStats({
@@ -367,9 +367,9 @@ export default function FeesTab({ studentId }: FeesTabProps) {
         </h3>
 
         {invoices.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 text-center">
-            <FileText className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-600 dark:text-slate-400">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
+            <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
               No invoices generated yet
             </p>
           </div>
@@ -389,7 +389,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                         </h4>
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(
-                            invoice.status
+                            invoice.status,
                           )}`}
                         >
                           {getStatusIcon(invoice.status)}
@@ -399,7 +399,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                           <span className="text-xs text-red-600 dark:text-red-400 font-medium">
                             Due{" "}
                             {new Date(invoice.due_date).toLocaleDateString(
-                              "en-GB"
+                              "en-GB",
                             )}
                           </span>
                         )}
@@ -407,11 +407,11 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                       <p className="text-sm text-slate-600 dark:text-slate-400">
                         Billing Period:{" "}
                         {new Date(
-                          invoice.billing_period_start
+                          invoice.billing_period_start,
                         ).toLocaleDateString("en-GB")}{" "}
                         -{" "}
                         {new Date(
-                          invoice.billing_period_end
+                          invoice.billing_period_end,
                         ).toLocaleDateString("en-GB")}
                       </p>
                       {invoice.description && (
@@ -439,7 +439,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                       </p>
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
                         {new Date(invoice.issue_date).toLocaleDateString(
-                          "en-GB"
+                          "en-GB",
                         )}
                       </p>
                     </div>
@@ -498,7 +498,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                               <CheckCircle className="h-4 w-4 text-green-500" />
                               <span className="text-slate-600 dark:text-slate-400">
                                 {new Date(
-                                  payment.payment_date
+                                  payment.payment_date,
                                 ).toLocaleDateString("en-GB")}
                               </span>
                               <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">
@@ -569,7 +569,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                   </p>
                   <span
                     className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(
-                      selectedInvoice.status
+                      selectedInvoice.status,
                     )}`}
                   >
                     {selectedInvoice.status.replace("_", " ").toUpperCase()}
@@ -581,7 +581,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                   </p>
                   <p className="font-semibold text-slate-900 dark:text-white">
                     {new Date(selectedInvoice.issue_date).toLocaleDateString(
-                      "en-GB"
+                      "en-GB",
                     )}
                   </p>
                 </div>
@@ -591,7 +591,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                   </p>
                   <p className="font-semibold text-slate-900 dark:text-white">
                     {new Date(selectedInvoice.due_date).toLocaleDateString(
-                      "en-GB"
+                      "en-GB",
                     )}
                   </p>
                 </div>

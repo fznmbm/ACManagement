@@ -90,7 +90,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
           date,
           status
         )
-      `
+      `,
         )
         .eq("student_id", studentId)
         .order("issued_date", { ascending: false });
@@ -132,7 +132,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
         .filter((f) => f.status === "paid")
         .reduce((sum, f) => sum + f.amount, 0);
       const unpaidCount = finesData.filter(
-        (f) => f.status === "pending"
+        (f) => f.status === "pending",
       ).length;
       const unpaidAmount = finesData
         .filter((f) => f.status === "pending")
@@ -308,14 +308,14 @@ export default function FinesTab({ studentId }: FinesTabProps) {
 
       {/* Fines List */}
       {filteredFines.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 text-center">
-          <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-3" />
-          <p className="text-slate-600 dark:text-slate-400">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
+          <CheckCircle className="h-10 w-10 text-green-400 mx-auto mb-2" />
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             {filter === "all"
               ? "No fines issued"
               : filter === "paid"
-              ? "No paid fines"
-              : "No unpaid fines"}
+                ? "No paid fines"
+                : "No unpaid fines"}
           </p>
         </div>
       ) : (
@@ -344,7 +344,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
                         </h4>
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getFineTypeColor(
-                            fine.fine_type
+                            fine.fine_type,
                           )}`}
                         >
                           {fine.fine_type.toUpperCase()}
@@ -354,7 +354,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
                         <p className="text-xs text-slate-600 dark:text-slate-400">
                           Related to: {fine.attendance.status} on{" "}
                           {new Date(fine.attendance.date).toLocaleDateString(
-                            "en-GB"
+                            "en-GB",
                           )}
                         </p>
                       )}

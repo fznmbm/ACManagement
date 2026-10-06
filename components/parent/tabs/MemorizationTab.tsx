@@ -146,10 +146,10 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
 
   if (memorization.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <BookOpen className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-        <p className="text-slate-600 dark:text-slate-400">
-          No progress tracking items recorded yet
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
+        <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          No memorization items recorded yet
         </p>
       </div>
     );

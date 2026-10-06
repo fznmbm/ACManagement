@@ -291,9 +291,9 @@ export default function GradesTab({ studentId }: GradesTabProps) {
       {/* Assessments List */}
       <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
         {filteredAssessments.length === 0 ? (
-          <div className="text-center py-12">
-            <BookOpen className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-600 dark:text-slate-400">
+          <div className="text-center py-10">
+            <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
               {selectedSubject === "all"
                 ? "No assessments recorded yet"
                 : `No assessments for ${selectedSubject}`}
