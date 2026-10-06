@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 
 interface FeedbackSession {
   id: string;
@@ -184,8 +184,8 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }

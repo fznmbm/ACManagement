@@ -158,7 +158,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
   return (
     <div className="space-y-6">
       {/* Overall Progress */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800 p-4">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800 p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-green-600 dark:text-green-400" />

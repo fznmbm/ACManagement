@@ -184,7 +184,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
   return (
     <div className="space-y-6">
       {/* Overall Performance */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
