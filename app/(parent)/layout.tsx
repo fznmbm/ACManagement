@@ -262,7 +262,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl pb-24 md:pb-8">
+        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-8">
           {children}
         </main>
 

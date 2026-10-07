@@ -7,7 +7,6 @@ import {
   Download,
   Receipt,
   FileText,
-  CreditCard,
   Calendar,
   Landmark,
   Info,
@@ -373,70 +372,35 @@ export default function ParentFinancesPage() {
           </p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Total Outstanding
-                </p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
-                  {formatMoney(totals.totalOwed)}
-                </p>
-              </div>
-              <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
-                <CreditCard className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
+        {/* Summary tiles — compact 2x2 on mobile, 4-across on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Outstanding
+            </p>
+            <p className="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
+              {formatMoney(totals.totalOwed)}
+            </p>
           </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Pending Invoices
-                </p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
-                  {formatMoney(totals.pendingInvoices)}
-                </p>
-              </div>
-              <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-full">
-                <FileText className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Invoices
+            </p>
+            <p className="text-xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+              {formatMoney(totals.pendingInvoices)}
+            </p>
           </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Pending Fines
-                </p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
-                  {formatMoney(totals.pendingFines)}
-                </p>
-              </div>
-              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
-                <Receipt className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-            </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Fines</p>
+            <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+              {formatMoney(totals.pendingFines)}
+            </p>
           </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Total Paid
-                </p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
-                  {formatMoney(totals.paidInvoices + totals.paidFines)}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
-                <CreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Paid</p>
+            <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+              {formatMoney(totals.paidInvoices + totals.paidFines)}
+            </p>
           </div>
         </div>
 
@@ -567,9 +531,9 @@ export default function ParentFinancesPage() {
             {activeTab === "invoices" && (
               <div className="space-y-4">
                 {invoices.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">
+                  <div className="text-center py-10">
+                    <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       No invoices found
                     </p>
                   </div>
@@ -577,90 +541,66 @@ export default function ParentFinancesPage() {
                   invoices.map((invoice) => (
                     <div
                       key={invoice.id}
-                      className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                      className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
                               {invoice.invoice_number}
                             </h3>
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                                 invoice.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                                   : invoice.status === "overdue"
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                                    : "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                    ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
                               }`}
                             >
                               {invoice.status.toUpperCase()}
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Student
-                              </p>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {invoice.student.first_name}{" "}
-                                {invoice.student.last_name}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Invoice Date
-                              </p>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {new Date(
-                                  invoice.invoice_date,
-                                ).toLocaleDateString("en-GB")}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Due Date
-                              </p>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {new Date(invoice.due_date).toLocaleDateString(
-                                  "en-GB",
-                                )}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Amount
-                              </p>
-                              <p className="font-bold text-lg text-slate-900 dark:text-white">
-                                {formatMoney(invoice.amount)}
-                              </p>
-                            </div>
-                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                            {invoice.student.first_name}{" "}
+                            {invoice.student.last_name} · Due{" "}
+                            {new Date(invoice.due_date).toLocaleDateString(
+                              "en-GB",
+                            )}
+                          </p>
                           {invoice.paid_date && (
-                            <div className="mt-2 text-sm text-green-600 dark:text-green-400">
-                              Paid on{" "}
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                              Paid{" "}
                               {new Date(invoice.paid_date).toLocaleDateString(
                                 "en-GB",
                               )}
                               {invoice.payment_method &&
-                                ` via ${invoice.payment_method}`}
-                            </div>
+                                ` · ${invoice.payment_method}`}
+                            </p>
                           )}
                         </div>
-                        <button
-                          onClick={() =>
-                            downloadInvoice(invoice.id, invoice.invoice_number)
-                          }
-                          disabled={downloading === invoice.id}
-                          className="ml-4 p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50"
-                          title="Download Invoice"
-                        >
-                          {downloading === invoice.id ? (
-                            <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-                          ) : (
-                            <Download className="h-5 w-5" />
-                          )}
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p className="font-bold text-slate-900 dark:text-white">
+                            {formatMoney(invoice.amount)}
+                          </p>
+                          <button
+                            onClick={() =>
+                              downloadInvoice(
+                                invoice.id,
+                                invoice.invoice_number,
+                              )
+                            }
+                            disabled={downloading === invoice.id}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50"
+                            title="Download invoice"
+                          >
+                            {downloading === invoice.id ? (
+                              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                            ) : (
+                              <Download className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -672,9 +612,9 @@ export default function ParentFinancesPage() {
             {activeTab === "fines" && (
               <div className="space-y-4">
                 {fines.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Receipt className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">
+                  <div className="text-center py-10">
+                    <Receipt className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       No fines found
                     </p>
                   </div>
@@ -682,92 +622,69 @@ export default function ParentFinancesPage() {
                   fines.map((fine) => (
                     <div
                       key={fine.id}
-                      className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                      className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
                               {fine.fine_type === "late"
-                                ? "Late Arrival Fine"
-                                : "Absence Fine"}
+                                ? "Late arrival"
+                                : "Absence"}
                             </h3>
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
                                 fine.status === "paid"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                                   : fine.status === "waived"
-                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
-                                    : "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
                               }`}
                             >
                               {fine.status.toUpperCase()}
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Student
-                              </p>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {fine.student.first_name}{" "}
-                                {fine.student.last_name}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Date
-                              </p>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {fine.attendance
-                                  ? new Date(
-                                      fine.attendance.date,
-                                    ).toLocaleDateString("en-GB")
-                                  : "N/A"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Reason
-                              </p>
-                              <p className="font-medium text-slate-900 dark:text-white">
-                                {fine.fine_type === "late"
-                                  ? "Late Arrival"
-                                  : "Absence"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-slate-600 dark:text-slate-400">
-                                Amount
-                              </p>
-                              <p className="font-bold text-lg text-red-600 dark:text-red-400">
-                                {formatMoney(fine.amount)}
-                              </p>
-                            </div>
-                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                            {fine.student.first_name} {fine.student.last_name}
+                            {fine.attendance &&
+                              ` · ${new Date(
+                                fine.attendance.date,
+                              ).toLocaleDateString("en-GB")}`}
+                          </p>
                           {fine.paid_date && (
-                            <div className="mt-2 text-sm text-green-600 dark:text-green-400">
-                              Paid on{" "}
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                              Paid{" "}
                               {new Date(fine.paid_date).toLocaleDateString(
                                 "en-GB",
                               )}
                               {fine.payment_method &&
-                                ` via ${fine.payment_method}`}
-                            </div>
+                                ` · ${fine.payment_method}`}
+                            </p>
                           )}
                         </div>
-                        <button
-                          onClick={() => downloadFineReceipt(fine.id)}
-                          disabled={downloading === fine.id}
-                          className="ml-4 p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50"
-                          title="Download Receipt"
-                        >
-                          {downloading === fine.id ? (
-                            <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-                          ) : (
-                            <Download className="h-5 w-5" />
-                          )}
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p
+                            className={`font-bold ${
+                              fine.status === "pending"
+                                ? "text-red-600 dark:text-red-400"
+                                : "text-slate-900 dark:text-white"
+                            }`}
+                          >
+                            {formatMoney(fine.amount)}
+                          </p>
+                          <button
+                            onClick={() => downloadFineReceipt(fine.id)}
+                            disabled={downloading === fine.id}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50"
+                            title="Download receipt"
+                          >
+                            {downloading === fine.id ? (
+                              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                            ) : (
+                              <Download className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -786,9 +703,9 @@ export default function ParentFinancesPage() {
                     new Date(b.paid_date || "").getTime() -
                     new Date(a.paid_date || "").getTime(),
                 ).length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">
+                  <div className="text-center py-10">
+                    <Calendar className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       No payment history
                     </p>
                   </div>
@@ -807,46 +724,27 @@ export default function ParentFinancesPage() {
                       return (
                         <div
                           key={payment.id}
-                          className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                          className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div
-                                className={`p-3 rounded-full ${
-                                  isInvoice
-                                    ? "bg-blue-100 dark:bg-blue-900/20"
-                                    : "bg-red-100 dark:bg-red-900/20"
-                                }`}
-                              >
-                                {isInvoice ? (
-                                  <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                ) : (
-                                  <Receipt className="h-5 w-5 text-red-600 dark:text-red-400" />
-                                )}
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-slate-900 dark:text-white">
-                                  {isInvoice
-                                    ? //? (payment as Invoice).invoice_number
-                                      (payment as InvoiceDisplay).invoice_number
-                                    : "Attendance Fine"}
-                                </h3>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                  {payment.student.first_name}{" "}
-                                  {payment.student.last_name}
-                                </p>
-                                <p className="text-sm text-green-600 dark:text-green-400">
-                                  Paid on{" "}
-                                  {new Date(
-                                    payment.paid_date || "",
-                                  ).toLocaleDateString("en-GB")}
-                                  {payment.payment_method &&
-                                    ` via ${payment.payment_method}`}
-                                </p>
-                              </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                                {isInvoice
+                                  ? (payment as InvoiceDisplay).invoice_number
+                                  : "Attendance fine"}
+                              </h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                                {payment.student.first_name}{" "}
+                                {payment.student.last_name} · Paid{" "}
+                                {new Date(
+                                  payment.paid_date || "",
+                                ).toLocaleDateString("en-GB")}
+                                {payment.payment_method &&
+                                  ` · ${payment.payment_method}`}
+                              </p>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-2 shrink-0">
+                              <p className="font-bold text-green-600 dark:text-green-400">
                                 {formatMoney(payment.amount)}
                               </p>
                               <button
@@ -860,11 +758,14 @@ export default function ParentFinancesPage() {
                                     : downloadFineReceipt(payment.id)
                                 }
                                 disabled={downloading === payment.id}
-                                className="mt-2 text-sm text-primary hover:underline disabled:opacity-50"
+                                className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50"
+                                title="Download"
                               >
-                                {downloading === payment.id
-                                  ? "Downloading..."
-                                  : "Download"}
+                                {downloading === payment.id ? (
+                                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                                ) : (
+                                  <Download className="h-5 w-5" />
+                                )}
                               </button>
                             </div>
                           </div>
