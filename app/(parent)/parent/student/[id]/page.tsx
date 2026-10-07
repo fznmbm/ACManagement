@@ -8,7 +8,7 @@ import {
   Calendar,
   GraduationCap,
   BookOpen,
-  DollarSign,
+  PoundSterling,
   AlertCircle,
   Award,
   ArrowLeft,
@@ -335,7 +335,7 @@ export default function StudentDetailPage() {
     {
       id: "finances" as TabType,
       label: "Finances",
-      icon: DollarSign,
+      icon: PoundSterling,
       show: !!parentLink?.can_view_financial,
     },
     {

@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  XCircle,
   Calendar,
   Download,
 } from "lucide-react";
@@ -200,48 +199,33 @@ export default function FinesTab({ studentId }: FinesTabProps) {
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">
-              Total Fines
-            </span>
-            <AlertTriangle className="h-4 w-4 text-slate-400" />
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 sm:p-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400">Total</p>
+          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
             {stats.totalFines}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {formatCurrency(stats.totalAmount)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-green-600 dark:text-green-400">
-              Paid
-            </span>
-            <CheckCircle className="h-4 w-4 text-green-400" />
-          </div>
-          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-green-200 dark:border-green-800 p-3 sm:p-4">
+          <p className="text-xs text-green-600 dark:text-green-400">Paid</p>
+          <p className="mt-1 text-xl font-bold text-green-700 dark:text-green-400">
             {stats.paidCount}
           </p>
-          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+          <p className="text-xs text-green-600 dark:text-green-400">
             {formatCurrency(stats.paidAmount)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-red-600 dark:text-red-400">
-              Unpaid
-            </span>
-            <XCircle className="h-4 w-4 text-red-400" />
-          </div>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-red-200 dark:border-red-800 p-3 sm:p-4">
+          <p className="text-xs text-red-600 dark:text-red-400">Unpaid</p>
+          <p className="mt-1 text-xl font-bold text-red-700 dark:text-red-400">
             {stats.unpaidCount}
           </p>
-          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+          <p className="text-xs text-red-600 dark:text-red-400">
             {formatCurrency(stats.unpaidAmount)}
           </p>
         </div>

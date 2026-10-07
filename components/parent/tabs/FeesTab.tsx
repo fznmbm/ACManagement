@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  DollarSign,
   Download,
   FileText,
   CheckCircle,
@@ -263,51 +262,31 @@ export default function FeesTab({ studentId }: FeesTabProps) {
   return (
     <div className="space-y-6">
       {/* Financial Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">
-              Total Invoices
-            </span>
-            <FileText className="h-4 w-4 text-slate-400" />
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400">Invoices</p>
+          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
             {stats.totalInvoices}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-blue-600 dark:text-blue-400">
-              Total Amount
-            </span>
-            <DollarSign className="h-4 w-4 text-blue-400" />
-          </div>
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
+          <p className="text-xs text-blue-600 dark:text-blue-400">Total</p>
+          <p className="mt-1 text-xl font-bold text-blue-700 dark:text-blue-400">
             {formatCurrency(stats.totalAmount)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-green-600 dark:text-green-400">
-              Total Paid
-            </span>
-            <CheckCircle className="h-4 w-4 text-green-400" />
-          </div>
-          <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-green-200 dark:border-green-800 p-4">
+          <p className="text-xs text-green-600 dark:text-green-400">Paid</p>
+          <p className="mt-1 text-xl font-bold text-green-700 dark:text-green-400">
             {formatCurrency(stats.totalPaid)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-red-600 dark:text-red-400">
-              Balance Due
-            </span>
-            <AlertCircle className="h-4 w-4 text-red-400" />
-          </div>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-red-200 dark:border-red-800 p-4">
+          <p className="text-xs text-red-600 dark:text-red-400">Balance</p>
+          <p className="mt-1 text-xl font-bold text-red-700 dark:text-red-400">
             {formatCurrency(stats.totalBalance)}
           </p>
         </div>
@@ -432,7 +411,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 py-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-slate-200 dark:border-slate-700">
                     <div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
                         Issue Date

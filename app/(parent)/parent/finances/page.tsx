@@ -10,6 +10,8 @@ import {
   Calendar,
   Landmark,
   Info,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 import { ParentFine } from "@/types/fines";
 import { ParentInvoice } from "@/types/fees";
@@ -405,41 +407,87 @@ export default function ParentFinancesPage() {
         </div>
 
         {/* How to pay */}
-        {totals.totalOwed > 0 && (
-          <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 dark:bg-primary/10 p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 rounded-full bg-primary/10 p-2">
-                <Landmark className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                  How to pay
-                </h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                  Pay by bank transfer using the details below, then keep your
-                  confirmation. The office will mark your account as paid once
-                  the transfer is received.
-                </p>
+        {totals.totalOwed > 0 &&
+          (() => {
+            const bankReady =
+              !!BANK.accountName || !!BANK.sortCode || !!BANK.accountNumber;
+            return (
+              <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 dark:bg-primary/10 p-4 sm:p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <Landmark className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                    How to pay
+                  </h2>
+                </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      Bank transfer to
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {/* Cash — available now */}
+                  <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Banknote className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-slate-900 dark:text-white">
+                          Cash
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        Available
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      Pay at the school office during opening hours.
                     </p>
-                    {BANK.accountName || BANK.sortCode || BANK.accountNumber ? (
-                      <dl className="mt-2 space-y-1 text-sm">
+                  </div>
+
+                  {/* Bank transfer — shows details if configured, else coming soon */}
+                  <div
+                    className={`rounded-lg p-3 ${
+                      bankReady
+                        ? "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                        : "border border-dashed border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Landmark
+                          className={`h-4 w-4 ${
+                            bankReady ? "text-primary" : "text-slate-400"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-medium ${
+                            bankReady
+                              ? "text-slate-900 dark:text-white"
+                              : "text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
+                          Bank transfer
+                        </span>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                          bankReady
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                        }`}
+                      >
+                        {bankReady ? "Available" : "Soon"}
+                      </span>
+                    </div>
+                    {bankReady ? (
+                      <dl className="mt-1.5 space-y-0.5 text-xs">
                         {BANK.accountName && (
-                          <div className="flex justify-between gap-4">
+                          <div className="flex justify-between gap-3">
                             <dt className="text-slate-500 dark:text-slate-400">
-                              Account name
+                              Account
                             </dt>
-                            <dd className="font-medium text-slate-900 dark:text-white text-right">
+                            <dd className="text-right font-medium text-slate-900 dark:text-white">
                               {BANK.accountName}
                             </dd>
                           </div>
                         )}
                         {BANK.sortCode && (
-                          <div className="flex justify-between gap-4">
+                          <div className="flex justify-between gap-3">
                             <dt className="text-slate-500 dark:text-slate-400">
                               Sort code
                             </dt>
@@ -449,9 +497,9 @@ export default function ParentFinancesPage() {
                           </div>
                         )}
                         {BANK.accountNumber && (
-                          <div className="flex justify-between gap-4">
+                          <div className="flex justify-between gap-3">
                             <dt className="text-slate-500 dark:text-slate-400">
-                              Account number
+                              Account no.
                             </dt>
                             <dd className="font-mono font-medium text-slate-900 dark:text-white">
                               {BANK.accountNumber}
@@ -460,34 +508,44 @@ export default function ParentFinancesPage() {
                         )}
                       </dl>
                     ) : (
-                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        Please contact the school office for the bank account
-                        details.
+                      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        Direct bank payments coming soon.
                       </p>
                     )}
                   </div>
 
-                  <div className="rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      Payment reference
-                    </p>
-                    <p className="mt-2 flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                      <Info className="h-4 w-4 flex-shrink-0 mt-0.5 text-primary" />
-                      <span>
-                        Use your{" "}
-                        <strong className="text-slate-900 dark:text-white">
-                          invoice number
-                        </strong>{" "}
-                        (shown on each invoice below) as the payment reference
-                        so we can match your payment to the right child.
+                  {/* Online payment — coming soon */}
+                  <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                          Online payment
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                        Soon
                       </span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      Pay securely by card online, coming soon.
                     </p>
                   </div>
                 </div>
+
+                <p className="mt-3 flex items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <Info className="mt-px h-3.5 w-3.5 flex-shrink-0 text-primary" />
+                  <span>
+                    Quote your{" "}
+                    <strong className="font-medium text-slate-700 dark:text-slate-300">
+                      invoice number
+                    </strong>{" "}
+                    when you pay so we can match it to the right child.
+                  </span>
+                </p>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
 
         {/* Tabs */}
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow">
