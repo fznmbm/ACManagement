@@ -1,6 +1,7 @@
 // app/(dashboard)/attendance/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import AttendanceMarkingInterface from "@/components/attendance/AttendanceMarkingInterface";
+import RegistersBoard from "@/components/attendance/RegistersBoard";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BarChart3 } from "lucide-react";
@@ -92,6 +93,8 @@ export default async function AttendancePage({
           <span>View History</span>
         </Link>
       </div>
+
+      <RegistersBoard />
 
       <AttendanceMarkingInterface
         classes={classes || []}
