@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 import {
   Send,
   Users,
@@ -41,6 +42,7 @@ interface Template {
 export default function SendUpdatePage() {
   const supabase = createClient();
   const searchParams = useSearchParams();
+  const { toast, confirm } = useToast();
   const prefilledClassId = searchParams.get("class") || "";
 
   // Core state
@@ -61,6 +63,8 @@ export default function SendUpdatePage() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
+  const [isAcademicNote, setIsAcademicNote] = useState(false);
+  const [recipientCount, setRecipientCount] = useState(0);
 
   // Weekly class update fields
   const [classSummary, setClassSummary] = useState("");
@@ -247,7 +251,7 @@ export default function SendUpdatePage() {
 
   const handleSendIndividual = async () => {
     if (!selectedStudent || !title.trim() || !message.trim()) {
-      alert("Please select a student and fill in the title and message.");
+      toast.error("Pick a student and fill in the title and message.");
       return;
     }
     setSending(true);
@@ -260,15 +264,16 @@ export default function SendUpdatePage() {
       if (linkError) throw linkError;
 
       if (!links || links.length === 0) {
-        alert(
-          "No parent portal account is linked to this student, so nothing was posted to the portal. You can still copy the WhatsApp message.",
+        toast.info(
+          "No parent portal account is linked to this student — nothing posted to the portal. You can still copy the WhatsApp message.",
         );
+        setRecipientCount(0);
       } else {
         const { error } = await supabase.from("parent_notifications").insert(
           links.map((link) => ({
             parent_user_id: link.parent_user_id,
             student_id: selectedStudent,
-            type: "announcement",
+            type: isAcademicNote ? "academic_note" : "announcement",
             priority,
             title: title.trim(),
             message: message.trim(),
@@ -276,12 +281,13 @@ export default function SendUpdatePage() {
           })),
         );
         if (error) throw error;
+        setRecipientCount(links.length);
       }
 
       setWhatsAppMsg(generateWhatsAppMessage());
       setSent(true);
     } catch (err: any) {
-      alert(err.message || "Failed to send");
+      toast.error(err.message || "Couldn't send. Please try again.");
     } finally {
       setSending(false);
     }
@@ -289,11 +295,12 @@ export default function SendUpdatePage() {
 
   const handleSendClassNote = async () => {
     if (!selectedClass || !title.trim() || !message.trim()) {
-      alert("Please select a class and fill in the title and message.");
+      toast.error("Pick a class and fill in the title and message.");
       return;
     }
     setSending(true);
     try {
+      let recipients = 0;
       const { data: classStudents } = await supabase
         .from("students")
         .select("id")
@@ -324,13 +331,15 @@ export default function SendUpdatePage() {
             })),
           );
           if (insertError) throw insertError;
+          recipients = links.length;
         }
       }
 
+      setRecipientCount(recipients);
       setWhatsAppMsg(generateWhatsAppMessage());
       setSent(true);
     } catch (err: any) {
-      alert(err.message || "Failed to send");
+      toast.error(err.message || "Couldn't send. Please try again.");
     } finally {
       setSending(false);
     }
@@ -342,23 +351,21 @@ export default function SendUpdatePage() {
       return;
     }
     if (!classSummary.trim() && !homework.trim()) {
-      const notesCount = Object.values(studentNotes).filter((n) =>
-        n.trim(),
-      ).length;
-      if (notesCount === 0) {
-        alert(
-          "Please add a class summary, homework, or at least one student note.",
+      const count = Object.values(studentNotes).filter((n) => n.trim()).length;
+      if (count === 0) {
+        toast.error(
+          "Add a class summary, homework, or at least one student note.",
         );
         return;
       }
     }
 
-    if (
-      !confirm(
-        "Send this class update? It will be visible to parents immediately.",
-      )
-    )
-      return;
+    const ok = await confirm({
+      title: "Send class update?",
+      message: "It will be visible to parents immediately.",
+      confirmText: "Send update",
+    });
+    if (!ok) return;
 
     setSending(true);
     try {
@@ -397,8 +404,8 @@ export default function SendUpdatePage() {
         if (error) throw error;
         sessionId = newSession.id;
       } else {
-        alert(
-          "A class update has already been sent for today. You can only send one per class per day.",
+        toast.error(
+          "A class update has already been sent for today. Only one per class per day.",
         );
         setSending(false);
         return;
@@ -435,7 +442,7 @@ export default function SendUpdatePage() {
       setWhatsAppMsg(generateClassUpdateWhatsApp());
       setSent(true);
     } catch (err: any) {
-      alert(err.message || "Failed to send class update");
+      toast.error(err.message || "Couldn't send the class update.");
     } finally {
       setSending(false);
     }
@@ -462,6 +469,8 @@ export default function SendUpdatePage() {
     setTitle("");
     setMessage("");
     setPriority("normal");
+    setIsAcademicNote(false);
+    setRecipientCount(0);
     setClassSummary("");
     setHomework("");
     setStudentNotes({});
@@ -512,10 +521,12 @@ export default function SendUpdatePage() {
           </h2>
           <p className="text-sm text-green-700 dark:text-green-400">
             {audience === "student"
-              ? "Notification sent to parent portal"
+              ? recipientCount > 0
+                ? "Notification posted to the parent portal"
+                : "WhatsApp message ready — no linked portal account"
               : updateType === "log"
                 ? "Class update is now visible in the parent portal"
-                : `Notification sent to ${students.length} parents`}
+                : `Notification sent to ${recipientCount} parent${recipientCount === 1 ? "" : "s"}`}
           </p>
         </div>
 
@@ -727,6 +738,33 @@ export default function SendUpdatePage() {
                   className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
+
+              {/* Academic note — individual student only */}
+              {audience === "student" && (
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-3 transition-colors ${
+                    isAcademicNote
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isAcademicNote}
+                    onChange={() => setIsAcademicNote(!isAcademicNote)}
+                    className="mt-0.5 h-4 w-4 rounded border-input text-primary"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium">
+                      Mark as academic note
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      Shows in the parent&apos;s Feedback tab and the student&apos;s
+                      meeting report
+                    </span>
+                  </span>
+                </label>
+              )}
             </div>
           )}
 
