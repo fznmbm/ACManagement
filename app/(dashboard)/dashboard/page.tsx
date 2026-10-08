@@ -9,8 +9,7 @@ import {
   CreditCard,
   AlertCircle,
   Calendar,
-  DollarSign,
-  Award,
+  PoundSterling,
   MessageSquare,
   UserPlus,
 } from "lucide-react";
@@ -18,34 +17,43 @@ import Link from "next/link";
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { latestClassDay } from "@/lib/utils/classDay";
 import AlertsDashboard from "@/components/alerts/AlertsDashboard";
-
+import RegistersBoard from "@/components/attendance/RegistersBoard";
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ClassPerformance from "@/components/dashboard/ClassPerformance";
 
+const QUICK_ACTIONS = [
+  { label: "Mark attendance", href: "/attendance", icon: CheckCircle },
+  { label: "Add student", href: "/students/new", icon: UserPlus },
+  { label: "Collect fee", href: "/fees", icon: PoundSterling },
+  { label: "Send update", href: "/send-update", icon: MessageSquare },
+  { label: "Create event", href: "/events", icon: Calendar },
+  { label: "Reports", href: "/reports", icon: FileText },
+];
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user?.id)
     .single();
 
-  // ==================================================
-  // BASIC STATISTICS
-  // ==================================================
+  const todayDate = latestClassDay();
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  // Basic stats — one batch.
   const [
     { count: totalStudents },
     { count: totalClasses },
     { count: todayAttendance },
-    { data: recentStudents },
   ] = await Promise.all([
     supabase
       .from("students")
@@ -58,41 +66,40 @@ export default async function DashboardPage() {
     supabase
       .from("attendance")
       .select("*", { count: "exact", head: true })
-      .eq("date", latestClassDay())
+      .eq("date", todayDate)
       .eq("status", "present"),
-    supabase
-      .from("students")
-      .select("id, first_name, last_name, student_number, enrollment_date")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(5),
   ]);
 
-  // Attendance percentage for the most recent class day (classes meet weekly,
-  // so "today" is 0 six days a week; use the latest Tuesday instead).
-  const todayDate = latestClassDay();
-  const { count: totalTodayRecords } = await supabase
-    .from("attendance")
-    .select("*", { count: "exact", head: true })
-    .eq("date", todayDate);
+  // Financial / events / attendance totals + the active app year — one batch.
+  const [
+    { count: totalTodayRecords },
+    { data: outstandingInvoices },
+    { data: activeFines },
+    { count: upcomingEventsCount },
+    { data: activeAppYear },
+  ] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select("*", { count: "exact", head: true })
+      .eq("date", todayDate),
+    supabase
+      .from("fee_invoices")
+      .select("amount_due, amount_paid")
+      .in("status", ["pending", "partial", "overdue"]),
+    supabase.from("fines").select("amount").eq("status", "pending"),
+    supabase
+      .from("events")
+      .select("*", { count: "exact", head: true })
+      .gte("event_date", todayStr)
+      .lte("event_date", thirtyDaysFromNow.toISOString().split("T")[0]),
+    supabase
+      .from("application_settings")
+      .select("academic_year")
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
 
-  const attendancePercentage = totalTodayRecords
-    ? Math.round(((todayAttendance || 0) / totalTodayRecords) * 100)
-    : 0;
-
-  // ==================================================
-  // NEW STATISTICS (Financial, Applications, Events, Fines)
-  // ==================================================
-
-  // Pending Applications — scope to the active academic year from settings
-  // (the old code built the year from the calendar, so it read 0 outside
-  // Sept–Dec). Falls back to counting all pending if no setting is found.
-  const { data: activeAppYear } = await supabase
-    .from("application_settings")
-    .select("academic_year")
-    .eq("is_active", true)
-    .maybeSingle();
-
+  // Pending applications — depends on the active year, so it runs after.
   let pendingAppQuery = supabase
     .from("applications")
     .select("*", { count: "exact", head: true })
@@ -105,40 +112,17 @@ export default async function DashboardPage() {
   }
   const { count: pendingApplications } = await pendingAppQuery;
 
-  // Outstanding Fees
-  const { data: outstandingInvoices } = await supabase
-    .from("fee_invoices")
-    .select("amount_due, amount_paid")
-    .in("status", ["pending", "partial", "overdue"]);
-
+  const attendancePercentage = totalTodayRecords
+    ? Math.round(((todayAttendance || 0) / totalTodayRecords) * 100)
+    : 0;
   const outstandingFees =
     outstandingInvoices?.reduce(
       (sum, inv) => sum + (inv.amount_due - inv.amount_paid),
       0,
     ) || 0;
-
-  // Active (Uncollected) Fines
-  const { data: activeFines } = await supabase
-    .from("fines")
-    .select("amount")
-    .eq("status", "pending");
-
   const activeFinesAmount =
     activeFines?.reduce((sum, fine) => sum + fine.amount, 0) || 0;
 
-  // Upcoming Events (next 30 days)
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-  const { count: upcomingEventsCount } = await supabase
-    .from("events")
-    .select("*", { count: "exact", head: true })
-    .gte("event_date", new Date().toISOString().split("T")[0])
-    .lte("event_date", thirtyDaysFromNow.toISOString().split("T")[0]);
-
-  // ==================================================
-  // STATS CARDS CONFIGURATION
-  // ==================================================
   const stats = [
     {
       name: "Total Students",
@@ -188,7 +172,7 @@ export default async function DashboardPage() {
     {
       name: "Outstanding Fees",
       value: `£${outstandingFees.toFixed(2)}`,
-      icon: CreditCard,
+      icon: PoundSterling,
       color: "text-red-600 dark:text-red-400",
       bgColor: "bg-red-100 dark:bg-red-900/30",
       hoverBorderColor: "hover:border-red-600 dark:hover:border-red-400",
@@ -216,34 +200,54 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Message */}
+      {/* Welcome */}
       <div>
-        <h2 className="text-xl md:text-3xl font-bold text-foreground">
+        <h2 className="text-xl font-bold text-foreground md:text-3xl">
           Welcome back, {profile?.full_name}!
         </h2>
-        <p className="text-muted-foreground mt-1">
-          Here's what's happening with your centre today.
+        <p className="mt-1 text-muted-foreground">
+          Here&apos;s what&apos;s happening with your centre.
         </p>
       </div>
 
-      {/* Statistics Cards - 8 cards in 4 columns */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      {/* Quick actions — now at the top */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {QUICK_ACTIONS.map((a) => {
+          const Icon = a.icon;
+          return (
+            <Link
+              key={a.href}
+              href={a.href}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:border-primary hover:bg-accent"
+            >
+              <Icon className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate">{a.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Registers board — who still owes a register for the latest class day */}
+      <RegistersBoard />
+
+      {/* Statistics */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link
               key={stat.name}
               href={stat.href}
-              className={`bg-card border-2 border-border rounded-lg p-5 hover:shadow-lg transition-all duration-200 ${stat.hoverBorderColor}`}
+              className={`rounded-lg border-2 border-border bg-card p-5 transition-all duration-200 hover:shadow-lg ${stat.hoverBorderColor}`}
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     {stat.name}
                   </p>
-                  <p className="text-2xl font-bold mt-2">{stat.value}</p>
+                  <p className="mt-2 text-2xl font-bold">{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                <div className={`rounded-lg p-3 ${stat.bgColor}`}>
                   <Icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
               </div>
@@ -252,115 +256,16 @@ export default async function DashboardPage() {
         })}
       </div>
 
-      {/* Main Content Grid - 2 columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Financial Overview */}
+      {/* Main grid */}
+      <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
           <FinancialOverview />
-
-          {/* Upcoming Events */}
           <UpcomingEvents />
-
-          {/* Recent Activity */}
           <RecentActivity />
-
-          {/* Class Performance */}
           <ClassPerformance />
         </div>
-
-        {/* Right Column - 1/3 width - Sidebar */}
         <div className="space-y-6">
-          {/* Alert Centre */}
           <AlertsDashboard compact={true} />
-
-          {/* Quick Actions */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <Link
-                href="/attendance"
-                className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                <span>Mark Attendance</span>
-                <CheckCircle className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/students/new"
-                className="flex items-center justify-between px-4 py-3 bg-background border-2 border-border rounded-lg font-medium hover:border-primary hover:bg-accent transition-colors"
-              >
-                <span>Add New Student</span>
-                <UserPlus className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/fees"
-                className="flex items-center justify-between px-4 py-3 bg-background border-2 border-border rounded-lg font-medium hover:border-primary hover:bg-accent transition-colors"
-              >
-                <span>Collect Fee</span>
-                <DollarSign className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/send-update"
-                className="flex items-center justify-between px-4 py-3 bg-background border-2 border-border rounded-lg font-medium hover:border-primary hover:bg-accent transition-colors"
-              >
-                <span>Send Update</span>
-                <MessageSquare className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/events"
-                className="flex items-center justify-between px-4 py-3 bg-background border-2 border-border rounded-lg font-medium hover:border-primary hover:bg-accent transition-colors"
-              >
-                <span>Create Event</span>
-                <Calendar className="h-5 w-5" />
-              </Link>
-              <Link
-                href="/reports"
-                className="flex items-center justify-between px-4 py-3 bg-background border-2 border-border rounded-lg font-medium hover:border-primary hover:bg-accent transition-colors"
-              >
-                <span>Generate Report</span>
-                <FileText className="h-5 w-5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Recent Students */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Recent Students</h3>
-              <Link
-                href="/students"
-                className="text-sm text-primary hover:underline"
-              >
-                View all
-              </Link>
-            </div>
-
-            {recentStudents && recentStudents.length > 0 ? (
-              <div className="space-y-3">
-                {recentStudents.map((student) => (
-                  <Link
-                    key={student.id}
-                    href={`/students/${student.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <div>
-                      <p className="font-medium text-sm">
-                        {student.first_name} {student.last_name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        #{student.student_number}
-                      </p>
-                    </div>
-                    <Award className="h-4 w-4 text-primary" />
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No students found.
-              </p>
-            )}
-          </div>
         </div>
       </div>
     </div>
