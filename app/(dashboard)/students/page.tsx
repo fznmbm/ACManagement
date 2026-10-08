@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import StudentsTable from "@/components/students/StudentsTable";
 import StudentsHeader from "@/components/students/StudentsHeader";
-import { Users, X, CheckSquare } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { X, CheckSquare } from "lucide-react";
 
 interface Student {
   id: string;
@@ -39,6 +40,7 @@ export default function StudentsPage() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const { toast } = useToast();
 
   const search = searchParams.get("search") || "";
   const classFilter = searchParams.get("class") || "";
@@ -177,11 +179,11 @@ export default function StudentsPage() {
     if (!bulkAction) return;
 
     if (bulkAction === "assign_class" && !bulkClass) {
-      alert("Please select a class to assign");
+      toast.error("Please choose a class (or 'Remove from class')");
       return;
     }
     if (bulkAction === "change_status" && !bulkStatus) {
-      alert("Please select a status");
+      toast.error("Please choose a status");
       return;
     }
 
@@ -190,9 +192,10 @@ export default function StudentsPage() {
       const ids = Array.from(selectedIds);
 
       if (bulkAction === "assign_class") {
+        const target = bulkClass === "__unassign__" ? null : bulkClass;
         const { error } = await supabase
           .from("students")
-          .update({ class_id: bulkClass || null })
+          .update({ class_id: target })
           .in("id", ids);
         if (error) throw error;
       } else if (bulkAction === "change_status") {
@@ -207,11 +210,11 @@ export default function StudentsPage() {
       setBulkClass("");
       setBulkStatus("");
       handleStudentUpdated();
-      alert(
-        `✅ Updated ${ids.length} student${ids.length > 1 ? "s" : ""} successfully`,
+      toast.success(
+        `Updated ${ids.length} student${ids.length > 1 ? "s" : ""}`,
       );
     } catch (err: any) {
-      alert("Failed to apply bulk action: " + err.message);
+      toast.error("Couldn't apply the bulk action: " + err.message);
     } finally {
       setBulkLoading(false);
     }
@@ -286,8 +289,8 @@ export default function StudentsPage() {
                 onChange={(e) => setBulkClass(e.target.value)}
                 className="text-sm px-3 py-1.5 border border-input rounded-lg bg-background"
               >
-                <option value="">Select class...</option>
-                <option value="">Remove from class</option>
+                <option value="">Select class…</option>
+                <option value="__unassign__">Remove from class</option>
                 {classes.map((cls) => (
                   <option key={cls.id} value={cls.id}>
                     {cls.name}

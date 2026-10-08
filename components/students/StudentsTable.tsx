@@ -10,10 +10,42 @@ import { useFees } from "@/hooks/useFees";
 import { useFines } from "@/hooks/useFines";
 import FeePaymentModal from "@/components/fees/FeePaymentModal";
 import FineCollectionModal from "@/components/fines/FineCollectionModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MoreHorizontal, UserMinus, UserX, Eye, Edit } from "lucide-react";
+import { MoreHorizontal, UserMinus, Eye, Edit } from "lucide-react";
 import StudentStatusChangeModal from "./StudentStatusChangeModal";
+import { Pagination } from "@/components/ui/DataTable";
+
+const PAGE_SIZE = 25;
+
+function portalBadge(status?: string) {
+  const map: Record<string, { label: string; cls: string }> = {
+    active: {
+      label: "Active",
+      cls: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
+    },
+    link_clicked: {
+      label: "Invite opened",
+      cls: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400",
+    },
+    not_clicked: {
+      label: "Invite sent",
+      cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400",
+    },
+    no_account: {
+      label: "No account",
+      cls: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
+    },
+  };
+  const v = map[status || "no_account"] || map.no_account;
+  return (
+    <span
+      className={`whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ${v.cls}`}
+    >
+      {v.label}
+    </span>
+  );
+}
 
 interface Student {
   id: string;
@@ -64,6 +96,16 @@ export default function StudentsTable({
     useState<any>(null);
 
   const supabase = createClient();
+
+  // Client-side pagination of the already-filtered list. Selection, export and
+  // bulk actions still operate over the full list (owned by the page).
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    setPage(1);
+  }, [students]);
+  const pageCount = Math.max(1, Math.ceil(students.length / PAGE_SIZE));
+  const pageStart = (page - 1) * PAGE_SIZE;
+  const paged = students.slice(pageStart, pageStart + PAGE_SIZE);
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -160,7 +202,7 @@ export default function StudentsTable({
             </span>
           </div>
         )}
-        {students.map((student) => {
+        {paged.map((student) => {
           const fees = getStudentFees(student.id);
           const fines = getStudentFines(student.id);
           return (
@@ -204,28 +246,7 @@ export default function StudentsTable({
                 <span>·</span>
                 <span>{student.parent_phone}</span>
               </div>
-              <div className="pl-12">
-                {student.portalStatus === "active" && (
-                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-full">
-                    ✓ Active
-                  </span>
-                )}
-                {student.portalStatus === "link_clicked" && (
-                  <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full">
-                    🔗 Link Clicked
-                  </span>
-                )}
-                {student.portalStatus === "not_clicked" && (
-                  <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 rounded-full">
-                    ⏳ Not Clicked
-                  </span>
-                )}
-                {student.portalStatus === "no_account" && (
-                  <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded-full">
-                    ✕ No Account
-                  </span>
-                )}
-              </div>
+              <div className="pl-12">{portalBadge(student.portalStatus)}</div>
               <div className="flex items-center gap-2 pl-12 flex-wrap">
                 <Link
                   href={`/students/${student.id}`}
@@ -305,7 +326,7 @@ export default function StudentsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {students.map((student) => (
+            {paged.map((student) => (
               <tr
                 key={student.id}
                 className={`table-row-hover ${selectedIds.has(student.id) ? "bg-primary/5" : ""}`}
@@ -384,61 +405,9 @@ export default function StudentsTable({
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {student.portalStatus === "active" && (
-                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400 rounded-full font-medium whitespace-nowrap">
-                      ✓ Active
-                    </span>
-                  )}
-                  {student.portalStatus === "link_clicked" && (
-                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 rounded-full font-medium whitespace-nowrap">
-                      🔗 Link Clicked
-                    </span>
-                  )}
-                  {student.portalStatus === "not_clicked" && (
-                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 rounded-full font-medium whitespace-nowrap">
-                      ⏳ Not Clicked
-                    </span>
-                  )}
-                  {student.portalStatus === "no_account" && (
-                    <span className="text-xs px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 rounded-full font-medium whitespace-nowrap">
-                      ✕ No Account
-                    </span>
-                  )}{" "}
+                  {portalBadge(student.portalStatus)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {/* <div className="flex items-center space-x-2">
-                    <Link
-                      href={`/students/${student.id}`}
-                      className="p-1 hover:bg-accent rounded"
-                      title="View Details"
-                    >
-                      <Eye className="h-4 w-4 text-blue-600" />
-                    </Link>
-                    <Link
-                      href={`/students/${student.id}/edit`}
-                      className="p-1 hover:bg-accent rounded"
-                      title="Edit"
-                    >
-                      <Edit className="h-4 w-4 text-green-600" />
-                    </Link>
-                    <button
-                      className="p-1 hover:bg-accent rounded"
-                      title="Delete"
-                      onClick={() => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this student?"
-                          )
-                        ) {
-                          // TODO: Implement delete
-                          alert("Delete functionality coming soon!");
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </button>
-                  </div> */}
-
                   <div className="flex items-center space-x-2">
                     <a
                       href={`/students/${student.id}`}
@@ -491,12 +460,16 @@ export default function StudentsTable({
         </table>
       </div>
 
-      {/* Pagination Placeholder */}
-      <div className="px-6 py-4 border-t border-border flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Showing {students.length} student{students.length !== 1 ? "s" : ""}
-        </p>
-        {/* Add pagination controls here later */}
+      <div className="border-t border-border px-4 py-3">
+        <Pagination
+          page={page}
+          pageCount={pageCount}
+          total={students.length}
+          from={students.length === 0 ? 0 : pageStart + 1}
+          to={Math.min(pageStart + PAGE_SIZE, students.length)}
+          onPageChange={setPage}
+          className="mt-0"
+        />
       </div>
 
       {/* Fee Payment Modal */}

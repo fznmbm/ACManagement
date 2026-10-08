@@ -1,10 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Trash2 } from "lucide-react";
+import { Archive } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading";
+import { useToast } from "@/components/ui/toast";
+
+const BLANK_FORM = {
+  first_name: "",
+  last_name: "",
+  date_of_birth: "",
+  gender: "",
+  parent_name: "",
+  parent_email: "",
+  parent_phone: "",
+  parent_phone_secondary: "",
+  address: "",
+  city: "",
+  postal_code: "",
+  class_id: "",
+  medical_notes: "",
+  notes: "",
+  status: "active",
+};
 
 interface StudentFormProps {
   classes: Array<{ id: string; name: string }>;
@@ -19,6 +38,8 @@ export default function StudentForm({
 }: StudentFormProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { toast } = useToast();
+  const saveAndAddRef = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +53,7 @@ export default function StudentForm({
     first_name: student?.first_name || "",
     last_name: student?.last_name || "",
     date_of_birth: student?.date_of_birth || "",
-    gender: student?.gender || "male",
+    gender: student?.gender || "",
     parent_name: student?.parent_name || "",
     parent_email: student?.parent_email || "",
     parent_phone: student?.parent_phone || "",
@@ -105,11 +126,7 @@ export default function StudentForm({
       }
     }
 
-    if (!formData.address?.trim())
-      errors.street_address = "Street address is required";
-    if (!formData.city?.trim()) errors.city = "City is required";
-    if (!formData.postal_code?.trim())
-      errors.postal_code = "Postal code is required";
+    // Address is optional for a weekend-madrasa record.
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -132,6 +149,8 @@ export default function StudentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const addAnother = saveAndAddRef.current;
+    saveAndAddRef.current = false;
     setValidationErrors({});
 
     if (!validateForm()) {
@@ -148,6 +167,14 @@ export default function StudentForm({
           .from("students")
           .insert([processData()]);
         if (submitError) throw submitError;
+        if (addAnother) {
+          setFormData({ ...BLANK_FORM });
+          setLoading(false);
+          toast.success("Student added — form cleared for the next one");
+          if (typeof window !== "undefined")
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
         router.push("/students");
       } else {
         const { error: updateError } = await supabase
@@ -270,12 +297,20 @@ export default function StudentForm({
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="form-input"
+                className={fieldClass("gender")}
                 required
               >
+                <option value="" disabled>
+                  Select…
+                </option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
+              {validationErrors.gender && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.gender}
+                </p>
+              )}
             </div>
 
             <div>
@@ -407,7 +442,7 @@ export default function StudentForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label htmlFor="address" className="form-label">
-                Street Address *
+                Street Address
               </label>
               <input
                 type="text"
@@ -426,7 +461,7 @@ export default function StudentForm({
 
             <div>
               <label htmlFor="city" className="form-label">
-                City *
+                City
               </label>
               <input
                 type="text"
@@ -445,7 +480,7 @@ export default function StudentForm({
 
             <div>
               <label htmlFor="postal_code" className="form-label">
-                Postal Code *
+                Postal Code
               </label>
               <input
                 type="text"
@@ -508,8 +543,8 @@ export default function StudentForm({
               onClick={() => setShowDeleteConfirm(true)}
               className="btn-outline border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground flex items-center space-x-2"
             >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete Student</span>
+              <Archive className="h-4 w-4" />
+              <span>Archive student</span>
             </button>
           ) : (
             <div />
@@ -524,6 +559,18 @@ export default function StudentForm({
             >
               Cancel
             </button>
+            {mode === "create" && (
+              <button
+                type="submit"
+                onClick={() => {
+                  saveAndAddRef.current = true;
+                }}
+                className="btn-outline"
+                disabled={loading}
+              >
+                Save &amp; add another
+              </button>
+            )}
             <LoadingButton
               type="submit"
               isLoading={loading}

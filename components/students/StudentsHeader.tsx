@@ -1,18 +1,12 @@
 // components/students/StudentsHeader.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Search,
-  Filter,
-  Plus,
-  Download,
-  Link as LinkIcon,
-  AlertCircle,
-} from "lucide-react";
+import { Search, Filter, Plus, Download, Link as LinkIcon, X } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import * as XLSX from "xlsx";
 import { calculateAge } from "@/lib/utils/helpers";
 
@@ -27,76 +21,67 @@ export default function StudentsHeader({
 }: StudentsHeaderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [unlinkedCount, setUnlinkedCount] = useState<number>(0);
+  const { toast } = useToast();
   const supabase = createClient();
 
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [selectedClass, setSelectedClass] = useState(
     searchParams.get("class") || "",
   );
   const [selectedStatus, setSelectedStatus] = useState(
     searchParams.get("status") || "",
   );
+  const [unlinkedCount, setUnlinkedCount] = useState<number>(0);
 
+  // Count students with no parent link (for the Link Parents badge).
   useEffect(() => {
     const fetchUnlinkedCount = async () => {
       try {
-        // Get all active students with their parent links in one query
-        const { data: students } = await supabase
+        const { data } = await supabase
           .from("students")
-          .select(
-            `
-          id,
-          parent_student_links (
-            id
-          )
-        `,
-          )
+          .select(`id, parent_student_links ( id )`)
           .eq("status", "active");
-
-        if (!students) return;
-
-        // Count students with no parent links
-        const count = students.filter(
-          (student: any) =>
-            !student.parent_student_links ||
-            student.parent_student_links.length === 0,
-        ).length;
-
-        setUnlinkedCount(count);
+        if (!data) return;
+        setUnlinkedCount(
+          data.filter(
+            (s: any) =>
+              !s.parent_student_links || s.parent_student_links.length === 0,
+          ).length,
+        );
       } catch (error) {
         console.error("Error fetching unlinked count:", error);
       }
     };
-
     fetchUnlinkedCount();
-  }, []);
+  }, [supabase]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateFilters();
-  };
-
-  const updateFilters = () => {
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (selectedClass) params.set("class", selectedClass);
-    if (selectedStatus) params.set("status", selectedStatus);
-
-    router.push(`/students?${params.toString()}`);
-  };
+  // Live filters: push to the URL (debounced) whenever a filter changes.
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
+    const t = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (selectedClass) params.set("class", selectedClass);
+      if (selectedStatus) params.set("status", selectedStatus);
+      const qs = params.toString();
+      router.push(qs ? `/students?${qs}` : "/students");
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search, selectedClass, selectedStatus, router]);
 
   const clearFilters = () => {
     setSearch("");
     setSelectedClass("");
     setSelectedStatus("");
-    router.push("/students");
   };
 
   const handleExport = () => {
     if (!students || students.length === 0) {
-      alert("No students to export");
+      toast.error("No students to export");
       return;
     }
     const rows = students.map((s) => ({
@@ -113,50 +98,39 @@ export default function StudentsHeader({
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
-    const dateStr = new Date().toISOString().split("T")[0];
-    XLSX.writeFile(workbook, `students-export-${dateStr}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `students-export-${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
   };
 
   const hasActiveFilters = search || selectedClass || selectedStatus;
 
   return (
     <div className="space-y-4">
-      {/* Title and Add Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Title and actions */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold">All Students</h2>
-          <p className="text-muted-foreground text-sm">
+          <h2 className="text-xl font-bold md:text-2xl">All Students</h2>
+          <p className="text-sm text-muted-foreground">
             Manage and track all students in your centre
           </p>
         </div>
-        {/* <Link
-          href="/students/new"
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Student</span>
-        </Link> */}
 
-        <div className="flex gap-2 shrink-0">
-          {/* Link Parents Button with Badge */}
+        <div className="flex shrink-0 gap-2">
           <Link
             href="/students/link-parents"
-            className="relative flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-primary-foreground transition-colors shadow-sm"
+            className="relative flex items-center gap-2 rounded-lg border-2 border-primary px-4 py-2 font-medium text-primary shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
           >
             <LinkIcon className="h-4 w-4" />
             <span>Link Parents</span>
-
             {unlinkedCount > 0 && (
-              // <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full border-2 border-background">
-              //   {unlinkedCount}
-              // </span>
-              <span className="absolute -top-2 -right-2 flex items-center justify-center min-w-[24px] h-6 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full border-2 border-background animate-pulse">
+              <span className="absolute -right-2 -top-2 flex h-6 min-w-[24px] items-center justify-center rounded-full border-2 border-background bg-red-500 px-1.5 text-xs font-bold text-white">
                 {unlinkedCount}
               </span>
             )}
           </Link>
 
-          {/* Add Student Button */}
           <Link
             href="/students/new"
             className="btn-primary flex items-center space-x-2"
@@ -167,68 +141,29 @@ export default function StudentsHeader({
         </div>
       </div>
 
-      {/* test */}
-      {/* Alert Banner for Unlinked Students */}
-      {unlinkedCount > 0 && (
-        <div className="bg-yellow-500/10 dark:bg-yellow-500/20 border-l-4 border-yellow-500 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-yellow-900 dark:text-yellow-200">
-                {unlinkedCount} {unlinkedCount === 1 ? "student" : "students"}{" "}
-                without parent access
-              </h3>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                Parents need to be linked to access student information and
-                receive notifications.
-              </p>
-            </div>
-            <Link
-              href="/students/link-parents"
-              className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors text-sm whitespace-nowrap"
-            >
-              Link Now
-            </Link>
-          </div>
-        </div>
-      )}
-      {/* test */}
-
-      {/* Search and Filters */}
-      <div className="bg-card border border-border rounded-lg p-4">
-        <form onSubmit={handleSearch} className="space-y-4">
-          {/* Search Bar */}
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search by name or student number..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-            <button type="submit" className="btn-primary">
-              Search
-            </button>
+      {/* Search and filters — apply live, no buttons */}
+      <div className="rounded-lg border border-border bg-card p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative flex-1 sm:min-w-[220px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by name or student number…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-10 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </div>
 
-          {/* test */}
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-
-            {/* Class Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 shrink-0 text-muted-foreground" />
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="flex-1 min-w-[130px] px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground text-sm"
+              className="h-10 min-w-[130px] flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="">All Classes</option>
-              <option value="unassigned">🔍 Unassigned</option>
-              <option disabled>────────────</option>
+              <option value="">All classes</option>
+              <option value="unassigned">Unassigned</option>
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {cls.name}
@@ -236,48 +171,40 @@ export default function StudentsHeader({
               ))}
             </select>
 
-            {/* Status Filter */}
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="flex-1 min-w-[120px] px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground text-sm"
+              className="h-10 min-w-[120px] flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="">All Status</option>
+              <option value="">All statuses</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="graduated">Graduated</option>
               <option value="withdrawn">Withdrawn</option>
             </select>
-
-            <button
-              type="button"
-              onClick={updateFilters}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm"
-            >
-              Apply Filters
-            </button>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-sm text-destructive hover:underline"
-              >
-                Clear
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleExport}
-              className="btn-outline ml-auto flex items-center gap-1 text-sm"
-              title="Export to Excel"
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Export</span>
-            </button>
           </div>
-        </form>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex h-10 items-center gap-1 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+              Clear
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleExport}
+            className="btn-outline flex h-10 items-center gap-1 text-sm sm:ml-auto"
+            title="Export to Excel"
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+        </div>
       </div>
     </div>
   );
