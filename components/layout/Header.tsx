@@ -214,7 +214,7 @@ export default function Header({ profile }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
+    <header className="h-16 bg-card border-b border-border flex items-center justify-between pl-16 pr-4 md:px-6">
       {/* Page Title */}
       <div>
         <h1 className="text-lg md:text-2xl font-bold text-foreground">
