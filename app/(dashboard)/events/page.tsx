@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import {
   Calendar,
   Clock,
   MapPin,
   Plus,
   Trash2,
+  Pencil,
   MessageSquare,
   CheckCircle2,
   Users,
@@ -28,6 +30,7 @@ interface Event {
   event_type: "holiday" | "exam" | "meeting" | "celebration" | "general";
   priority: "normal" | "urgent" | "critical";
   show_to_all: boolean;
+  class_id?: string | null;
   visible_to_parents: boolean;
   rsvp_required: boolean;
   rsvp_deadline: string | null;
@@ -49,34 +52,41 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   general: "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300",
 };
 
+const BLANK = {
+  title: "",
+  description: "",
+  event_date: "",
+  event_time: "",
+  end_time: "",
+  location: "",
+  event_type: "general" as Event["event_type"],
+  priority: "normal" as Event["priority"],
+  show_to_all: true,
+  class_id: "",
+  visible_to_parents: true,
+  rsvp_required: false,
+  rsvp_deadline: "",
+  notify_parents: false,
+};
+
 export default function EventsPage() {
   const supabase = createClient();
+  const { toast, confirm } = useToast();
+
   const [events, setEvents] = useState<Event[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [userRole, setUserRole] = useState("");
+  const [showPast, setShowPast] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [showWhatsApp, setShowWhatsApp] = useState<string | null>(null);
   const [whatsAppMsg, setWhatsAppMsg] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    event_date: "",
-    event_time: "",
-    end_time: "",
-    location: "",
-    event_type: "general" as Event["event_type"],
-    priority: "normal" as Event["priority"],
-    show_to_all: true,
-    class_id: "",
-    visible_to_parents: true,
-    rsvp_required: false,
-    rsvp_deadline: "",
-  });
+  const [formData, setFormData] = useState({ ...BLANK });
 
   useEffect(() => {
     loadUserRole();
@@ -103,8 +113,7 @@ export default function EventsPage() {
     const { data } = await supabase
       .from("events")
       .select("*, classes(name)")
-      .order("event_date", { ascending: true })
-      .gte("event_date", new Date().toISOString().split("T")[0]);
+      .order("event_date", { ascending: true });
     setEvents(data || []);
     setLoading(false);
   }
@@ -118,6 +127,78 @@ export default function EventsPage() {
     setClasses(data || []);
   }
 
+  function openCreate() {
+    setEditingId(null);
+    setFormData({ ...BLANK });
+    setShowForm(true);
+  }
+
+  function openEdit(event: Event) {
+    setEditingId(event.id);
+    setFormData({
+      title: event.title,
+      description: event.description || "",
+      event_date: event.event_date,
+      event_time: event.event_time || "",
+      end_time: event.end_time || "",
+      location: event.location || "",
+      event_type: event.event_type,
+      priority: event.priority,
+      show_to_all: event.show_to_all,
+      class_id: event.class_id || "",
+      visible_to_parents: event.visible_to_parents,
+      rsvp_required: event.rsvp_required,
+      rsvp_deadline: event.rsvp_deadline || "",
+      notify_parents: false,
+    });
+    setShowForm(true);
+    if (typeof window !== "undefined")
+      window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Post an "event" notice to linked parents (school-wide or the event's class).
+  async function notifyParentsOfEvent(event: Event): Promise<number> {
+    let q = supabase.from("students").select("id").eq("status", "active");
+    if (!event.show_to_all && event.class_id)
+      q = q.eq("class_id", event.class_id);
+    const { data: studs } = await q;
+    if (!studs || studs.length === 0) return 0;
+
+    const { data: links } = await supabase
+      .from("parent_student_links")
+      .select("parent_user_id, student_id")
+      .in(
+        "student_id",
+        studs.map((s) => s.id),
+      )
+      .neq("can_receive_notifications", false);
+    if (!links || links.length === 0) return 0;
+
+    const dateStr = new Date(event.event_date).toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+    const message =
+      `${dateStr}` +
+      (event.event_time ? ` at ${event.event_time}` : "") +
+      (event.location ? ` · ${event.location}` : "") +
+      (event.description ? `\n${event.description}` : "");
+
+    await supabase.from("parent_notifications").insert(
+      links.map((l) => ({
+        parent_user_id: l.parent_user_id,
+        student_id: l.student_id,
+        type: "event",
+        priority: event.priority === "normal" ? "normal" : "urgent",
+        title: event.title,
+        message,
+        is_read: false,
+      })),
+    );
+    return links.length;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.title || !formData.event_date) return;
@@ -126,6 +207,7 @@ export default function EventsPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       const payload: any = {
         title: formData.title,
         description: formData.description || null,
@@ -137,54 +219,81 @@ export default function EventsPage() {
         priority: formData.priority,
         show_to_all: formData.show_to_all,
         visible_to_parents: formData.visible_to_parents,
-        created_by: user?.id,
         rsvp_required: formData.rsvp_required,
         rsvp_deadline:
           formData.rsvp_required && formData.rsvp_deadline
             ? formData.rsvp_deadline
             : null,
         rsvp_type: "family",
+        class_id:
+          !formData.show_to_all && formData.class_id
+            ? formData.class_id
+            : null,
       };
-      if (!formData.show_to_all && formData.class_id) {
-        payload.class_id = formData.class_id;
+
+      let saved: Event;
+      if (editingId) {
+        const { data, error } = await supabase
+          .from("events")
+          .update(payload)
+          .eq("id", editingId)
+          .select()
+          .single();
+        if (error) throw error;
+        saved = data;
+      } else {
+        payload.created_by = user?.id;
+        const { data, error } = await supabase
+          .from("events")
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        saved = data;
       }
-      const { data: newEvent, error } = await supabase
-        .from("events")
-        .insert(payload)
-        .select()
-        .single();
-      if (error) throw error;
+
+      let notified = 0;
+      if (formData.notify_parents && formData.visible_to_parents) {
+        notified = await notifyParentsOfEvent(saved);
+      }
+
       setShowForm(false);
-      setFormData({
-        title: "",
-        description: "",
-        event_date: "",
-        event_time: "",
-        end_time: "",
-        location: "",
-        event_type: "general",
-        priority: "normal",
-        show_to_all: true,
-        class_id: "",
-        visible_to_parents: true,
-        rsvp_required: false,
-        rsvp_deadline: "",
-      });
-      loadEvents();
-      // Auto-show WhatsApp
-      generateWhatsAppMessage(newEvent);
-      setShowWhatsApp(newEvent.id);
+      setEditingId(null);
+      setFormData({ ...BLANK });
+      await loadEvents();
+
+      toast.success(
+        editingId
+          ? `Event updated${notified ? ` · ${notified} parent${notified === 1 ? "" : "s"} notified` : ""}`
+          : `Event created${notified ? ` · ${notified} parent${notified === 1 ? "" : "s"} notified` : ""}`,
+      );
+
+      // Offer the WhatsApp copy for the saved event.
+      generateWhatsAppMessage(saved);
+      setShowWhatsApp(saved.id);
+      setCopied(false);
     } catch (err: any) {
-      alert(err.message || "Failed to create event");
+      toast.error(err.message || "Couldn't save the event.");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this event?")) return;
-    await supabase.from("events").delete().eq("id", id);
+    const ok = await confirm({
+      title: "Delete this event?",
+      message: "This removes the event for everyone. It can't be undone.",
+      destructive: true,
+      confirmText: "Delete event",
+    });
+    if (!ok) return;
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (error) {
+      toast.error("Couldn't delete the event.");
+      return;
+    }
     setEvents((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Event deleted");
   }
 
   function generateWhatsAppMessage(event: Event) {
@@ -211,11 +320,7 @@ export default function EventsPage() {
       if (event.rsvp_deadline) {
         const deadline = new Date(event.rsvp_deadline).toLocaleDateString(
           "en-GB",
-          {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          },
+          { day: "numeric", month: "short", year: "numeric" },
         );
         msg += ` by ${deadline}`;
       }
@@ -235,6 +340,160 @@ export default function EventsPage() {
   }
 
   const canManage = ["super_admin", "admin", "teacher"].includes(userRole);
+  const todayStr = new Date().toISOString().split("T")[0];
+  const upcoming = events.filter((e) => e.event_date >= todayStr);
+  const past = events.filter((e) => e.event_date < todayStr).reverse();
+
+  const renderEvent = (event: Event) => (
+    <div
+      key={event.id}
+      className="overflow-hidden rounded-lg border border-border bg-card"
+    >
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${EVENT_TYPE_COLORS[event.event_type]}`}
+              >
+                {event.event_type.charAt(0).toUpperCase() +
+                  event.event_type.slice(1)}
+              </span>
+              {event.priority !== "normal" && (
+                <span className="text-xs font-medium text-orange-600">
+                  {event.priority === "urgent" ? "⚠️ Urgent" : "🚨 Critical"}
+                </span>
+              )}
+              {event.rsvp_required && (
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  RSVP required
+                </span>
+              )}
+              {!event.show_to_all && event.classes && (
+                <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                  {event.classes.name}
+                </span>
+              )}
+            </div>
+            <h3 className="text-base font-semibold">{event.title}</h3>
+            <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                {formatDate(event.event_date)}
+              </span>
+              {event.event_time && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  {event.event_time}
+                  {event.end_time ? ` – ${event.end_time}` : ""}
+                </span>
+              )}
+              {event.location && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {event.location}
+                </span>
+              )}
+            </div>
+            {event.description && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {event.description}
+              </p>
+            )}
+          </div>
+
+          {canManage && (
+            <div className="flex shrink-0 items-center gap-1">
+              {event.rsvp_required && (
+                <button
+                  onClick={() =>
+                    setSelectedEventId(
+                      selectedEventId === event.id ? null : event.id,
+                    )
+                  }
+                  className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1.5 text-xs text-white hover:bg-blue-700"
+                >
+                  <Users className="h-3 w-3" />
+                  RSVPs
+                  {selectedEventId === event.id ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  generateWhatsAppMessage(event);
+                  setShowWhatsApp(showWhatsApp === event.id ? null : event.id);
+                  setCopied(false);
+                }}
+                className="flex items-center gap-1 rounded-lg bg-green-600 px-2 py-1.5 text-xs text-white hover:bg-green-700"
+              >
+                <MessageSquare className="h-3 w-3" />
+                WhatsApp
+              </button>
+              <button
+                onClick={() => openEdit(event)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                title="Edit event"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => handleDelete(event.id)}
+                className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                title="Delete event"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showWhatsApp === event.id && (
+        <div className="border-t border-border px-4 pb-4 pt-3">
+          <p className="mb-2 text-xs text-muted-foreground">
+            Copy and paste into the WhatsApp group:
+          </p>
+          <textarea
+            value={whatsAppMsg}
+            onChange={(e) => setWhatsAppMsg(e.target.value)}
+            rows={8}
+            className="w-full resize-none rounded-lg border border-border bg-muted p-3 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <div className="mt-2 flex justify-end">
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(whatsAppMsg);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 3000);
+              }}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                copied
+                  ? "bg-green-600 text-white"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              {copied ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <MessageSquare className="h-4 w-4" />
+              )}
+              {copied ? "Copied!" : "Copy to clipboard"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {selectedEventId === event.id && (
+        <div className="border-t border-border">
+          <EventRSVPManagement eventId={event.id} eventTitle={event.title} />
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -243,26 +502,28 @@ export default function EventsPage() {
         <div>
           <h2 className="text-2xl font-bold">Events</h2>
           <p className="text-muted-foreground">
-            Upcoming school events and activities
+            School events and activities
           </p>
         </div>
         {canManage && (
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => (showForm ? setShowForm(false) : openCreate())}
             className="btn-primary flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Create Event
+            Create event
           </button>
         )}
       </div>
 
-      {/* Create Event Form */}
+      {/* Create / Edit form */}
       {showForm && (
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">New Event</h3>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <h3 className="mb-4 text-lg font-semibold">
+            {editingId ? "Edit event" : "New event"}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="form-label">Title *</label>
                 <input
@@ -291,7 +552,7 @@ export default function EventsPage() {
               </div>
 
               <div>
-                <label className="form-label">Event Type</label>
+                <label className="form-label">Event type</label>
                 <select
                   value={formData.event_type}
                   onChange={(e) =>
@@ -311,7 +572,7 @@ export default function EventsPage() {
               </div>
 
               <div>
-                <label className="form-label">Start Time</label>
+                <label className="form-label">Start time</label>
                 <input
                   type="time"
                   value={formData.event_time}
@@ -323,7 +584,7 @@ export default function EventsPage() {
               </div>
 
               <div>
-                <label className="form-label">End Time</label>
+                <label className="form-label">End time</label>
                 <input
                   type="time"
                   value={formData.end_time}
@@ -356,7 +617,7 @@ export default function EventsPage() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   className="form-input"
-                  placeholder="Event details..."
+                  placeholder="Event details…"
                 />
               </div>
 
@@ -365,10 +626,7 @@ export default function EventsPage() {
                 <select
                   value={formData.priority}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      priority: e.target.value as any,
-                    })
+                    setFormData({ ...formData, priority: e.target.value as any })
                   }
                   className="form-input"
                 >
@@ -378,16 +636,13 @@ export default function EventsPage() {
                 </select>
               </div>
 
-              <div className="flex flex-col gap-3 justify-end pb-1">
+              <div className="flex flex-col justify-end gap-3 pb-1">
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={formData.show_to_all}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        show_to_all: e.target.checked,
-                      })
+                      setFormData({ ...formData, show_to_all: e.target.checked })
                     }
                     className="rounded border-input text-primary"
                   />
@@ -429,9 +684,45 @@ export default function EventsPage() {
                 </div>
               )}
 
+              {/* Notify parents */}
+              <div className="md:col-span-2">
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-3 transition-colors ${
+                    formData.notify_parents && formData.visible_to_parents
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  } ${!formData.visible_to_parents ? "opacity-50" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    disabled={!formData.visible_to_parents}
+                    checked={formData.notify_parents}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        notify_parents: e.target.checked,
+                      })
+                    }
+                    className="mt-0.5 h-4 w-4 rounded border-input text-primary"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium">
+                      Also notify parents now
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      Posts this event to the portal for{" "}
+                      {formData.show_to_all
+                        ? "all parents"
+                        : "the selected class's parents"}
+                      . Requires “Visible to parents”.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
               {/* RSVP */}
-              <div className="md:col-span-2 border-t pt-4">
-                <label className="flex items-center gap-2 text-sm font-medium mb-3">
+              <div className="border-t pt-4 md:col-span-2">
+                <label className="mb-3 flex items-center gap-2 text-sm font-medium">
                   <input
                     type="checkbox"
                     checked={formData.rsvp_required}
@@ -447,7 +738,7 @@ export default function EventsPage() {
                 </label>
                 {formData.rsvp_required && (
                   <div>
-                    <label className="form-label">RSVP Deadline</label>
+                    <label className="form-label">RSVP deadline</label>
                     <input
                       type="date"
                       value={formData.rsvp_deadline}
@@ -464,7 +755,7 @@ export default function EventsPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2 border-t">
+            <div className="flex gap-3 border-t pt-2">
               <button
                 type="submit"
                 disabled={saving}
@@ -475,11 +766,18 @@ export default function EventsPage() {
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-                {saving ? "Creating..." : "Create Event"}
+                {saving
+                  ? "Saving…"
+                  : editingId
+                    ? "Save changes"
+                    : "Create event"}
               </button>
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                }}
                 className="btn-outline"
               >
                 Cancel
@@ -489,170 +787,37 @@ export default function EventsPage() {
         </div>
       )}
 
-      {/* Events List */}
+      {/* Events list */}
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      ) : events.length === 0 ? (
-        <div className="bg-card border border-border rounded-lg p-12 text-center">
-          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+      ) : upcoming.length === 0 ? (
+        <div className="rounded-lg border border-border bg-card p-12 text-center">
+          <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
           <p className="text-muted-foreground">No upcoming events</p>
         </div>
       ) : (
+        <div className="space-y-3">{upcoming.map(renderEvent)}</div>
+      )}
+
+      {/* Past events */}
+      {past.length > 0 && (
         <div className="space-y-3">
-          {events.map((event) => (
-            <div
-              key={event.id}
-              className="bg-card border border-border rounded-lg overflow-hidden"
-            >
-              {/* Event Row */}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span
-                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${EVENT_TYPE_COLORS[event.event_type]}`}
-                      >
-                        {event.event_type.charAt(0).toUpperCase() +
-                          event.event_type.slice(1)}
-                      </span>
-                      {event.priority !== "normal" && (
-                        <span className="text-xs font-medium text-orange-600">
-                          {event.priority === "urgent"
-                            ? "⚠️ Urgent"
-                            : "🚨 Critical"}
-                        </span>
-                      )}
-                      {event.rsvp_required && (
-                        <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
-                          RSVP Required
-                        </span>
-                      )}
-                      {!event.show_to_all && event.classes && (
-                        <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">
-                          {event.classes.name}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-base">{event.title}</h3>
-                    <div className="flex flex-wrap gap-3 mt-1 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {formatDate(event.event_date)}
-                      </span>
-                      {event.event_time && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {event.event_time}
-                          {event.end_time ? ` – ${event.end_time}` : ""}
-                        </span>
-                      )}
-                      {event.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {event.location}
-                        </span>
-                      )}
-                    </div>
-                    {event.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {event.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {canManage && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      {event.rsvp_required && (
-                        <button
-                          onClick={() =>
-                            setSelectedEventId(
-                              selectedEventId === event.id ? null : event.id,
-                            )
-                          }
-                          className="flex items-center gap-1 px-2 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                        >
-                          <Users className="h-3 w-3" />
-                          RSVPs
-                          {selectedEventId === event.id ? (
-                            <ChevronUp className="h-3 w-3" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          generateWhatsAppMessage(event);
-                          setShowWhatsApp(
-                            showWhatsApp === event.id ? null : event.id,
-                          );
-                          setCopied(false);
-                        }}
-                        className="flex items-center gap-1 px-2 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      >
-                        <MessageSquare className="h-3 w-3" />
-                        WhatsApp
-                      </button>
-                      <button
-                        onClick={() => handleDelete(event.id)}
-                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* WhatsApp Panel */}
-              {showWhatsApp === event.id && (
-                <div className="px-4 pb-4 border-t border-border pt-3">
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Copy and paste into WhatsApp group:
-                  </p>
-                  <textarea
-                    value={whatsAppMsg}
-                    onChange={(e) => setWhatsAppMsg(e.target.value)}
-                    rows={8}
-                    className="w-full p-3 text-xs font-mono bg-muted rounded-lg border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <div className="flex justify-end mt-2">
-                    <button
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(whatsAppMsg);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 3000);
-                      }}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        copied
-                          ? "bg-green-600 text-white"
-                          : "bg-primary text-primary-foreground hover:bg-primary/90"
-                      }`}
-                    >
-                      {copied ? (
-                        <CheckCircle2 className="h-4 w-4" />
-                      ) : (
-                        <MessageSquare className="h-4 w-4" />
-                      )}
-                      {copied ? "Copied!" : "Copy to Clipboard"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* RSVP Management Panel */}
-              {selectedEventId === event.id && (
-                <div className="border-t border-border">
-                  <EventRSVPManagement
-                    eventId={event.id}
-                    eventTitle={event.title}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
+          <button
+            onClick={() => setShowPast(!showPast)}
+            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            {showPast ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+            {showPast ? "Hide" : "Show"} past events ({past.length})
+          </button>
+          {showPast && (
+            <div className="space-y-3 opacity-80">{past.map(renderEvent)}</div>
+          )}
         </div>
       )}
     </div>
