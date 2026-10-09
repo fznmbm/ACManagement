@@ -6,6 +6,16 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentAcademicYear } from "@/lib/utils/helpers";
 
+const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 interface ClassFormProps {
   teachers: Array<{ id: string; full_name: string; email: string }>;
   classData?: any;
@@ -26,7 +36,7 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
     teacher_id: classData?.teacher_id || "",
     capacity: classData?.capacity || 30,
     academic_year: classData?.academic_year || getCurrentAcademicYear(),
-    schedule_days: classData?.schedule?.days?.join(", ") || "",
+    schedule_days: (classData?.schedule?.days as string[]) || [],
     schedule_time: classData?.schedule?.time || "",
     schedule_room: classData?.schedule?.room || "",
     is_active: classData?.is_active !== undefined ? classData.is_active : true,
@@ -52,6 +62,15 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
     });
   };
 
+  const toggleDay = (day: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      schedule_days: prev.schedule_days.includes(day)
+        ? prev.schedule_days.filter((d: string) => d !== day)
+        : [...prev.schedule_days, day],
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -60,10 +79,7 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
     try {
       // Prepare schedule JSON
       const schedule = {
-        days: formData.schedule_days
-          .split(",")
-          .map((d: string) => d.trim())
-          .filter(Boolean),
+        days: formData.schedule_days,
         time: formData.schedule_time,
         room: formData.schedule_room,
       };
@@ -230,22 +246,29 @@ export default function ClassForm({ teachers, classData }: ClassFormProps) {
       <div>
         <h3 className="text-lg font-semibold mb-4">Schedule</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="schedule_days" className="form-label">
-              Days (comma-separated)
-            </label>
-            <input
-              type="text"
-              id="schedule_days"
-              name="schedule_days"
-              value={formData.schedule_days}
-              onChange={handleChange}
-              //className="form-input"
-              className="form-input bg-background text-foreground border-border"
-              placeholder="Monday, Wednesday, Friday"
-            />
+          <div className="md:col-span-2">
+            <label className="form-label">Days</label>
+            <div className="flex flex-wrap gap-2">
+              {WEEKDAYS.map((day) => {
+                const on = formData.schedule_days.includes(day);
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      on
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    {day.slice(0, 3)}
+                  </button>
+                );
+              })}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Example: Monday, Wednesday, Friday
+              Tap the days this class meets.
             </p>
           </div>
 

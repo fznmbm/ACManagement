@@ -12,6 +12,7 @@ import {
   MapPin,
   User,
 } from "lucide-react";
+import EnrolStudentsButton from "@/components/classes/EnrolStudentsButton";
 
 export default async function ClassDetailPage({
   params,
@@ -231,12 +232,15 @@ export default async function ClassDetailPage({
               <h3 className="text-lg font-semibold">
                 Students ({activeStudents.length})
               </h3>
-              <Link
-                href={`/students?class=${classData.id}`}
-                className="text-sm text-primary hover:underline"
-              >
-                View all →
-              </Link>
+              <div className="flex items-center gap-3">
+                {canEdit && <EnrolStudentsButton classId={classData.id} />}
+                <Link
+                  href={`/students?class=${classData.id}`}
+                  className="text-sm text-primary hover:underline"
+                >
+                  View all →
+                </Link>
+              </div>
             </div>
 
             {activeStudents.length > 0 ? (
@@ -355,15 +359,13 @@ export default async function ClassDetailPage({
                 Mark Attendance
               </Link>
 
-              {/* ADD THIS NEW BUTTON 👇 */}
               <Link
                 href={`/send-update?class=${classData.id}`}
-                className="block w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors text-center"
+                className="btn-outline w-full"
               >
-                📝 Send Update
+                Send update
               </Link>
 
-              {/* View Attendance History Button */}
               <Link
                 href={`/attendance/history?class=${classData.id}`}
                 className="btn-outline w-full"
