@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Filter, X, Download } from "lucide-react";
+import { Filter, X } from "lucide-react";
 
 interface AttendanceFiltersProps {
   classes: Array<{ id: string; name: string }>;
@@ -143,16 +143,9 @@ export default function AttendanceFilters({
         </div>
       </div>
 
-      <div className="flex items-center justify-end space-x-2 mt-4">
+      <div className="flex items-center justify-end mt-4">
         <button onClick={applyFilters} className="btn-primary text-sm">
-          Apply Filters
-        </button>
-        <button
-          className="btn-outline text-sm flex items-center space-x-1"
-          title="Export (Coming Soon)"
-        >
-          <Download className="h-3 w-3" />
-          <span>Export</span>
+          Apply filters
         </button>
       </div>
     </div>

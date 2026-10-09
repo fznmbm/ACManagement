@@ -4,7 +4,9 @@ import AttendanceHistoryTable from "@/components/attendance/AttendanceHistoryTab
 import AttendanceFilters from "@/components/attendance/AttendanceFilters";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, ChevronLeft, ChevronRight } from "lucide-react";
+
+const PAGE_SIZE = 50;
 
 export default async function AttendanceHistoryPage({
   searchParams,
@@ -15,6 +17,7 @@ export default async function AttendanceHistoryPage({
     from?: string;
     to?: string;
     status?: string;
+    page?: string;
   };
 }) {
   const supabase = await createClient();
@@ -50,11 +53,46 @@ export default async function AttendanceHistoryPage({
     .eq("status", "active")
     .order("first_name");
 
-  // Build attendance query
-  let query = supabase
-    .from("attendance")
-    .select(
-      `
+  // Shared filter application so stats and the page of rows stay in sync.
+  const applyFilters = (q: any) => {
+    if (searchParams.class) q = q.eq("class_id", searchParams.class);
+    if (searchParams.student) q = q.eq("student_id", searchParams.student);
+    if (searchParams.from) q = q.gte("date", searchParams.from);
+    if (searchParams.to) q = q.lte("date", searchParams.to);
+    if (searchParams.status) q = q.eq("status", searchParams.status);
+    return q;
+  };
+
+  // Stats over the WHOLE filtered set (one lightweight column), so the
+  // headline numbers aren't capped by the page size.
+  const { data: statusRows } = await applyFilters(
+    supabase.from("attendance").select("status"),
+  );
+
+  const rows: Array<{ status: string }> = statusRows || [];
+  const total = rows.length;
+  const present = rows.filter((a) => a.status === "present").length;
+  const absent = rows.filter((a) => a.status === "absent").length;
+  const late = rows.filter((a) => a.status === "late").length;
+  const excused = rows.filter((a) => a.status === "excused").length;
+  const sick = rows.filter((a) => a.status === "sick").length;
+
+  const stats = { total, present, absent, late, excused, sick };
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(
+    Math.max(1, parseInt(searchParams.page || "1", 10) || 1),
+    totalPages,
+  );
+  const fromRow = (page - 1) * PAGE_SIZE;
+
+  // Page of full records
+  const { data: attendanceRecords } = await applyFilters(
+    supabase
+      .from("attendance")
+      .select(
+        `
       *,
       students (
         id,
@@ -67,49 +105,27 @@ export default async function AttendanceHistoryPage({
         name
       )
     `,
-    )
-    .order("date", { ascending: false })
-    .order("first_name", { referencedTable: "students", ascending: true })
-    .order("created_at", { ascending: false });
+      )
+      .order("date", { ascending: false })
+      .order("first_name", { referencedTable: "students", ascending: true })
+      .order("created_at", { ascending: false }),
+  ).range(fromRow, fromRow + PAGE_SIZE - 1);
 
-  // Apply filters
-  if (searchParams.class) {
-    query = query.eq("class_id", searchParams.class);
-  }
+  // Build a page link that preserves the active filters.
+  const buildHref = (p: number) => {
+    const params = new URLSearchParams();
+    if (searchParams.class) params.set("class", searchParams.class);
+    if (searchParams.student) params.set("student", searchParams.student);
+    if (searchParams.from) params.set("from", searchParams.from);
+    if (searchParams.to) params.set("to", searchParams.to);
+    if (searchParams.status) params.set("status", searchParams.status);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return `/attendance/history${qs ? `?${qs}` : ""}`;
+  };
 
-  if (searchParams.student) {
-    query = query.eq("student_id", searchParams.student);
-  }
-
-  if (searchParams.from) {
-    query = query.gte("date", searchParams.from);
-  }
-
-  if (searchParams.to) {
-    query = query.lte("date", searchParams.to);
-  }
-
-  if (searchParams.status) {
-    query = query.eq("status", searchParams.status);
-  }
-
-  // Limit results
-  query = query.limit(100);
-
-  const { data: attendanceRecords } = await query;
-
-  // Calculate statistics
-  const total = attendanceRecords?.length || 0;
-  const present =
-    attendanceRecords?.filter((a) => a.status === "present").length || 0;
-  const absent =
-    attendanceRecords?.filter((a) => a.status === "absent").length || 0;
-  const late =
-    attendanceRecords?.filter((a) => a.status === "late").length || 0;
-  const excused =
-    attendanceRecords?.filter((a) => a.status === "excused").length || 0;
-
-  const stats = { total, present, absent, late, excused };
+  const showingFrom = total === 0 ? 0 : fromRow + 1;
+  const showingTo = Math.min(fromRow + PAGE_SIZE, total);
 
   return (
     <div className="space-y-6">
@@ -166,7 +182,53 @@ export default async function AttendanceHistoryPage({
         </div>
       </div>
 
-      <AttendanceHistoryTable records={attendanceRecords || []} />
+      <AttendanceHistoryTable
+        records={attendanceRecords || []}
+        showingFrom={showingFrom}
+        showingTo={showingTo}
+        total={total}
+      />
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            {page > 1 ? (
+              <Link
+                href={buildHref(page - 1)}
+                scroll={false}
+                className="btn-outline flex items-center gap-1 text-sm"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Link>
+            ) : (
+              <span className="btn-outline flex cursor-not-allowed items-center gap-1 text-sm opacity-50">
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </span>
+            )}
+            {page < totalPages ? (
+              <Link
+                href={buildHref(page + 1)}
+                scroll={false}
+                className="btn-outline flex items-center gap-1 text-sm"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <span className="btn-outline flex cursor-not-allowed items-center gap-1 text-sm opacity-50">
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

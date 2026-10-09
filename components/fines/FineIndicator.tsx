@@ -34,8 +34,9 @@ export default function FineIndicator({
     <button
       onClick={onClick}
       className={`
-        inline-flex items-center justify-center rounded-full bg-red-500 text-white font-bold
+        relative inline-flex items-center justify-center rounded-full bg-red-500 text-white font-bold
         hover:bg-red-600 transition-colors cursor-pointer shadow-sm
+        touch-manipulation after:absolute after:-inset-3 after:content-['']
         ${sizeClasses[size]}
       `}
       title={`${pendingFines} pending fine${

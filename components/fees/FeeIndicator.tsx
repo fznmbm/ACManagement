@@ -43,8 +43,9 @@ export default function FeeIndicator({
     <button
       onClick={onClick}
       className={`
-        inline-flex items-center justify-center rounded-full text-white font-bold
+        relative inline-flex items-center justify-center rounded-full text-white font-bold
         transition-colors cursor-pointer shadow-sm ${bgColor}
+        touch-manipulation after:absolute after:-inset-3 after:content-['']
         ${sizeClasses[size]}
       `}
       title={`${totalOutstanding} outstanding invoice${
