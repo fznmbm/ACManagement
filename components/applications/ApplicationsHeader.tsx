@@ -10,11 +10,22 @@ export default function ApplicationsHeader() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [status, setStatus] = useState(searchParams.get("status") || "all");
 
-  const updateFilters = () => {
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (status !== "all") params.set("status", status);
+  // Preserve any other params already in the URL (notably the selected
+  // academic year) instead of wiping them when filtering.
+  const pushWith = (nextSearch: string, nextStatus: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextSearch) params.set("search", nextSearch);
+    else params.delete("search");
+    if (nextStatus && nextStatus !== "all") params.set("status", nextStatus);
+    else params.delete("status");
     router.push(`/applications?${params.toString()}`);
+  };
+
+  const updateFilters = () => pushWith(search, status);
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+    pushWith(search, value);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -42,7 +53,7 @@ export default function ApplicationsHeader() {
         {/* Status Filter */}
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => handleStatusChange(e.target.value)}
           className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
         >
           <option value="all">All Status</option>

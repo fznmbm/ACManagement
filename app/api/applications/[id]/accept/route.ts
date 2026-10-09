@@ -7,18 +7,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } },
 ) {
-  // 🔍 DIAGNOSTIC: Check if service key exists
-  console.log(
-    "🔑 Service Role Key exists:",
-    !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-  );
-  console.log(
-    "🔑 Service Role Key length:",
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
-  );
-
   try {
     const supabase = await createClient();
+
+    // Optional class to enrol the new student into (admin's pick on accept).
+    const body = await request.json().catch(() => ({}) as any);
+    const requestedClassId: string | null = body?.class_id || null;
 
     // Check authentication
     const {
@@ -55,6 +49,10 @@ export async function POST(
 
     // Normalise email to lowercase to avoid case mismatch
     const parentEmail = application.parent_email?.toLowerCase() || null;
+
+    // Class: admin's pick wins, else the applicant's preferred class, else none.
+    const classId =
+      requestedClassId || application.preferred_class_id || null;
 
     // Check if already accepted
     if (application.status === "accepted") {
@@ -99,6 +97,7 @@ export async function POST(
         medical_notes: application.medical_conditions || null,
         notes: application.special_requirements || null,
         status: "active",
+        class_id: classId,
         enrollment_date: new Date().toISOString().split("T")[0],
         application_id: application.id,
       })

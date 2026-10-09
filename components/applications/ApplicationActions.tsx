@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, XCircle, Clock, List, Loader2 } from "lucide-react";
+import Link from "next/link";
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  List,
+  Loader2,
+  GraduationCap,
+  ArrowRight,
+} from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 interface Application {
   id: string;
@@ -16,22 +26,32 @@ interface Application {
 
 interface ApplicationActionsProps {
   application: Application;
+  classes?: Array<{ id: string; name: string }>;
+  preferredClassId?: string | null;
 }
 
 export default function ApplicationActions({
   application,
+  classes = [],
+  preferredClassId = null,
 }: ApplicationActionsProps) {
   const router = useRouter();
+  const { toast, confirm } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [error, setError] = useState("");
+  const [selectedClassId, setSelectedClassId] = useState(
+    preferredClassId || ""
+  );
 
   const handleAccept = async () => {
     if (
-      !confirm(
-        `Accept this application and create a student record for ${application.child_first_name} ${application.child_last_name}?`
-      )
+      !(await confirm({
+        title: "Accept application",
+        message: `Create a student record for ${application.child_first_name} ${application.child_last_name}?`,
+        confirmText: "Accept & create student",
+      }))
     ) {
       return;
     }
@@ -44,16 +64,17 @@ export default function ApplicationActions({
         `/api/applications/${application.id}/accept`,
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ class_id: selectedClassId || null }),
         }
       );
 
       const data = await response.json();
 
       if (response.ok) {
-        alert(
-          `Application accepted! Student record created: ${data.student_number}`
+        toast.success(
+          `Accepted — student ${data.student_number} created.`
         );
-        router.push("/applications?t=" + Date.now());
         router.refresh();
       } else {
         setError(data.error || "Failed to accept application");
@@ -87,7 +108,7 @@ export default function ApplicationActions({
       const data = await response.json();
 
       if (response.ok) {
-        alert("Application rejected successfully");
+        toast.success("Application rejected.");
         setShowRejectModal(false);
         router.refresh();
       } else {
@@ -102,7 +123,9 @@ export default function ApplicationActions({
 
   const handleStatusChange = async (newStatus: string) => {
     if (
-      !confirm(`Change application status to "${newStatus.replace("_", " ")}"?`)
+      !(await confirm(
+        `Change application status to "${newStatus.replace("_", " ")}"?`
+      ))
     ) {
       return;
     }
@@ -123,7 +146,7 @@ export default function ApplicationActions({
       const data = await response.json();
 
       if (response.ok) {
-        alert("Status updated successfully");
+        toast.success("Status updated.");
         router.refresh();
       } else {
         setError(data.error || "Failed to update status");
@@ -150,25 +173,49 @@ export default function ApplicationActions({
         {application.status === "pending" ||
         application.status === "under_review" ||
         application.status === "waitlist" ? (
-          <button
-            onClick={handleAccept}
-            disabled={isProcessing}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-5 w-5" />
-                {application.status === "waitlist"
-                  ? "Accept from Waitlist"
-                  : "Accept & Create Student"}
-              </>
-            )}
-          </button>
+          <>
+            {/* Assign to a class on accept (optional) */}
+            <div>
+              <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                <GraduationCap className="h-4 w-4" />
+                Enrol in class
+              </label>
+              <select
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                disabled={isProcessing}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">No class yet — assign later</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.id === preferredClassId ? " (requested)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={handleAccept}
+              disabled={isProcessing}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-5 w-5" />
+                  {application.status === "waitlist"
+                    ? "Accept from Waitlist"
+                    : "Accept & Create Student"}
+                </>
+              )}
+            </button>
+          </>
         ) : // <LoadingButton
         //   onClick={handleAccept}
         //   isLoading={isProcessing}
@@ -198,6 +245,17 @@ export default function ApplicationActions({
                 Application Accepted
               </p>
             </div>
+
+            {/* Jump to the new student record */}
+            {application.converted_to_student_id && (
+              <Link
+                href={`/students/${application.converted_to_student_id}`}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border rounded-lg font-medium hover:bg-accent transition-colors"
+              >
+                View student record
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
 
             {/* Send Parent Login Details Button */}
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -233,7 +291,7 @@ export default function ApplicationActions({
                     const data = await response.json();
 
                     if (data.success) {
-                      alert("✅ Login details sent to parent!");
+                      toast.success("Login details sent to parent.");
                     } else {
                       setError(data.error || "Failed to send login details");
                     }
@@ -252,7 +310,7 @@ export default function ApplicationActions({
                     Sending...
                   </>
                 ) : (
-                  "📧 Send Parent Login Details"
+                  "Send Parent Login Details"
                 )}
               </button>
             </div>

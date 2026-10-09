@@ -33,6 +33,19 @@ export default async function ApplicationDetailPage({
     notFound();
   }
 
+  // Active classes for the "assign class on accept" picker
+  const { data: classes } = await supabase
+    .from("classes")
+    .select("id, name")
+    .eq("is_active", true)
+    .order("name");
+
+  // Real consent values (these used to always render green)
+  const photoGranted =
+    !!application.photo_consent && application.photo_consent !== "none";
+  const termsAccepted = application.terms_accepted === true;
+  const declarationAccepted = application.parent_declaration_accepted === true;
+
   // Calculate age
   const birthDate = new Date(application.date_of_birth);
   const today = new Date();
@@ -308,13 +321,19 @@ export default async function ApplicationDetailPage({
 
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                {photoGranted ? (
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                )}
                 <div>
                   <p className="font-medium">Photo/Video Consent</p>
                   <p className="text-sm text-muted-foreground capitalize">
-                    {application.photo_consent.replace("_", " ")}
+                    {photoGranted
+                      ? application.photo_consent.replace("_", " ")
+                      : "No consent given"}
                   </p>
-                  {application.photo_consent_granted_date && (
+                  {photoGranted && application.photo_consent_granted_date && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Granted on{" "}
                       {format(
@@ -327,13 +346,23 @@ export default async function ApplicationDetailPage({
               </div>
 
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                {termsAccepted ? (
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                )}
                 <div>
                   <p className="font-medium">Terms & Conditions</p>
                   <p className="text-sm text-muted-foreground">
-                    Accepted (Version: {application.terms_version})
+                    {termsAccepted
+                      ? `Accepted${
+                          application.terms_version
+                            ? ` (Version: ${application.terms_version})`
+                            : ""
+                        }`
+                      : "Not accepted"}
                   </p>
-                  {application.terms_accepted_date && (
+                  {termsAccepted && application.terms_accepted_date && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Accepted on{" "}
                       {format(
@@ -346,11 +375,17 @@ export default async function ApplicationDetailPage({
               </div>
 
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                {declarationAccepted ? (
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                )}
                 <div>
                   <p className="font-medium">Parent Declaration</p>
-                  <p className="text-sm text-muted-foreground">Accepted</p>
-                  {application.parent_declaration_date && (
+                  <p className="text-sm text-muted-foreground">
+                    {declarationAccepted ? "Accepted" : "Not accepted"}
+                  </p>
+                  {declarationAccepted && application.parent_declaration_date && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Signed on{" "}
                       {format(
@@ -367,7 +402,11 @@ export default async function ApplicationDetailPage({
 
         {/* Sidebar - Actions */}
         <div className="space-y-6">
-          <ApplicationActions application={application} />
+          <ApplicationActions
+            application={application}
+            classes={classes || []}
+            preferredClassId={application.preferred_class_id || null}
+          />
 
           {/* Additional Info */}
           {(application.rejection_reason || application.review_notes) && (
