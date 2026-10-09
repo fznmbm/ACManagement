@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Building2,
   Calendar,
   Receipt,
   Shield,
   MessageCircle,
+  Users,
+  ArrowRight,
 } from "lucide-react";
 import AcademicSettings from "./AcademicSettings";
 import ApplicationSettings from "./ApplicationSettings";
@@ -15,23 +18,16 @@ import CommunicationSettings from "./CommunicationSettings";
 import FeeSettings from "./FeeSettings";
 import FineSettings from "./FineSettings";
 import PasswordSettings from "./PasswordSettings";
-import UserManagement from "./UserManagement";
 import OrphanedAuthCleanup from "@/components/admin/OrphanedAuthCleanup";
 import MessageLogCleanup from "@/components/admin/MessageLogCleanup";
 
 interface SettingsTabsProps {
   initialSettings: Record<string, any>;
-  users: any[];
-  currentUserId: string;
 }
 
 type TabId = "centre" | "academic" | "communication" | "financial" | "security";
 
-export default function SettingsTabs({
-  initialSettings,
-  users,
-  currentUserId,
-}: SettingsTabsProps) {
+export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("centre");
 
   const tabs = [
@@ -43,7 +39,7 @@ export default function SettingsTabs({
       icon: MessageCircle,
     },
     { id: "financial" as TabId, name: "Financial", icon: Receipt },
-    { id: "security" as TabId, name: "Security & Users", icon: Shield },
+    { id: "security" as TabId, name: "Security", icon: Shield },
   ];
   return (
     <div
@@ -129,12 +125,24 @@ export default function SettingsTabs({
               <PasswordSettings />
             </div>
             <div className="border-t pt-8">
-              <UserManagement users={users} currentUserId={currentUserId} />
+              <h3 className="text-lg font-semibold mb-1">Staff accounts</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Add, edit or remove staff logins on the Users page.
+              </p>
+              <Link
+                href="/users"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-accent"
+              >
+                <Users className="h-4 w-4" />
+                Manage staff accounts
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
             <div className="border-t pt-8">
               <h3 className="text-lg font-semibold mb-1">Maintenance</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                System cleanup and maintenance tools
+                Occasional cleanup tools — removing unused logins and clearing
+                old message logs.
               </p>
               <div className="space-y-6">
                 <OrphanedAuthCleanup />

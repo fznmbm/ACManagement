@@ -49,55 +49,36 @@ export default function UsersPage() {
 
   // Check if current user is super_admin
   const checkUserRole = async () => {
-    console.log("🔍 Starting role check...");
     setRoleLoading(true);
-
     try {
       const {
         data: { user },
-        error: authError,
       } = await supabase.auth.getUser();
 
-      console.log("👤 Auth User:", user);
-      console.log("❌ Auth Error:", authError);
-
       if (!user) {
-        console.log("⚠️ No user found in auth");
         setRoleLoading(false);
         return;
       }
 
-      console.log("🆔 User ID:", user.id);
-      console.log("📧 User Email:", user.email);
-
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
 
-      console.log("👔 Profile Data:", profile);
-      console.log("❌ Profile Error:", profileError);
-
       if (profile) {
-        console.log("✅ Role found:", profile.role);
         setCurrentUserRole(profile.role);
         setRoleLoading(false);
-
         if (profile.role !== "super_admin") {
-          console.log("🚫 Not super_admin, redirecting...");
           setTimeout(() => {
             window.location.href = "/dashboard";
           }, 1000);
-        } else {
-          console.log("✅ Access granted! User is super_admin");
         }
       } else {
-        console.log("⚠️ No profile found for user");
         setRoleLoading(false);
       }
     } catch (error) {
-      console.error("💥 Error in checkUserRole:", error);
+      console.error("Error checking user role:", error);
       setRoleLoading(false);
     }
   };

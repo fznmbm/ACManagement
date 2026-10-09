@@ -34,13 +34,6 @@ export default async function SettingsPage() {
     settingsMap[setting.setting_key] = setting.setting_value;
   });
 
-  // Get all users for user management (exclude parents)
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("*")
-    .in("role", ["super_admin", "admin", "teacher"])
-    .order("created_at", { ascending: false });
-
   return (
     <div className="space-y-6">
       <div>
@@ -50,11 +43,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <SettingsTabs
-        initialSettings={settingsMap}
-        users={users || []}
-        currentUserId={user.id}
-      />
+      <SettingsTabs initialSettings={settingsMap} />
     </div>
   );
 }
