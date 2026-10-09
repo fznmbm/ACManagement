@@ -59,21 +59,21 @@ export default async function ClassesPage({
     console.error("Error fetching classes:", error);
   }
 
-  // Get student counts for each class
-  const classesWithCounts = await Promise.all(
-    (classes || []).map(async (classItem) => {
-      const { count } = await supabase
-        .from("students")
-        .select("*", { count: "exact", head: true })
-        .eq("class_id", classItem.id)
-        .eq("status", "active");
+  // Student counts — one query, tallied in memory (was one query per class).
+  const { data: activeStudents } = await supabase
+    .from("students")
+    .select("class_id")
+    .eq("status", "active");
 
-      return {
-        ...classItem,
-        student_count: count || 0,
-      };
-    })
-  );
+  const counts = new Map<string, number>();
+  (activeStudents || []).forEach((s) => {
+    if (s.class_id) counts.set(s.class_id, (counts.get(s.class_id) || 0) + 1);
+  });
+
+  const classesWithCounts = (classes || []).map((classItem) => ({
+    ...classItem,
+    student_count: counts.get(classItem.id) || 0,
+  }));
 
   return (
     <div className="space-y-6">

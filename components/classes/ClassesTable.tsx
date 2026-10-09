@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Eye, Edit, Trash2, Users } from "lucide-react";
+import { Eye, Edit, Users } from "lucide-react";
 
 interface ClassItem {
   id: string;
@@ -68,8 +68,15 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                {classItem.student_count} students
+                {classItem.student_count}
+                {classItem.capacity ? `/${classItem.capacity}` : ""} students
               </span>
+              {classItem.capacity != null &&
+                classItem.student_count > classItem.capacity && (
+                  <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                    Over capacity
+                  </span>
+                )}
               {classItem.profiles && (
                 <span>{classItem.profiles.full_name}</span>
               )}
@@ -166,6 +173,12 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
                     <span className="text-sm font-medium">
                       {classItem.student_count}
                     </span>
+                    {classItem.capacity != null &&
+                      classItem.student_count > classItem.capacity && (
+                        <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                          Over
+                        </span>
+                      )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -195,32 +208,13 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
                       <Eye className="h-4 w-4 text-blue-600" />
                     </Link>
                     {canEdit && (
-                      <>
-                        <Link
-                          href={`/classes/${classItem.id}/edit`}
-                          className="p-1 hover:bg-accent rounded"
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4 text-green-600" />
-                        </Link>
-                        <button
-                          className="p-1 hover:bg-accent rounded"
-                          title="Delete"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                "Are you sure you want to delete this class?",
-                              )
-                            ) {
-                              alert(
-                                "Delete functionality will be implemented in edit page",
-                              );
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </button>
-                      </>
+                      <Link
+                        href={`/classes/${classItem.id}/edit`}
+                        className="p-1 hover:bg-accent rounded"
+                        title="Edit"
+                      >
+                        <Edit className="h-4 w-4 text-green-600" />
+                      </Link>
                     )}
                   </div>
                 </td>
