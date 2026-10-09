@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import AttendanceReportGenerator from "@/components/reports/AttendanceReportGenerator";
 import AcademicReportGenerator from "@/components/reports/AcademicReportGenerator";
 import FeeCollectionReport from "@/components/reports/FeeCollectionReport";
@@ -68,9 +69,10 @@ export default async function ReportsPage({
       <div className="border-b border-border">
         <div className="flex gap-1 overflow-x-auto pb-0">
           {TABS.map((tab) => (
-            <a
+            <Link
               key={tab.id}
               href={`/reports?tab=${tab.id}`}
+              scroll={false}
               className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? "border-primary text-primary"
@@ -78,7 +80,7 @@ export default async function ReportsPage({
               }`}
             >
               {tab.label}
-            </a>
+            </Link>
           ))}
         </div>
       </div>

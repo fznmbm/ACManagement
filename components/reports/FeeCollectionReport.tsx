@@ -23,8 +23,14 @@ export default function FeeCollectionReport({
   const [reportData, setReportData] = useState<any>(null);
 
   // Filters
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 3);
+    return d.toISOString().split("T")[0];
+  });
+  const [dateTo, setDateTo] = useState(
+    () => new Date().toISOString().split("T")[0],
+  );
   const [classFilter, setClassFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [feeTypeFilter, setFeeTypeFilter] = useState("");

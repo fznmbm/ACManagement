@@ -23,8 +23,14 @@ export default function AcademicReportGenerator({
   const [loading, setLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 3);
+    return d.toISOString().split("T")[0];
+  });
+  const [dateTo, setDateTo] = useState(
+    () => new Date().toISOString().split("T")[0],
+  );
   const [reportData, setReportData] = useState<any>(null);
 
   const generateReport = async () => {

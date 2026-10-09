@@ -7,6 +7,14 @@ import { Download, FileText, Table } from "lucide-react";
 import { formatDate } from "@/lib/utils/helpers";
 import { exportAttendanceToPDF } from "@/lib/utils/pdfExport";
 
+// Sensible default window so the report opens ready to run (last 3 months).
+const TODAY_ISO = new Date().toISOString().split("T")[0];
+const THREE_MONTHS_AGO_ISO = (() => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 3);
+  return d.toISOString().split("T")[0];
+})();
+
 interface AttendanceReportGeneratorProps {
   classes: Array<{ id: string; name: string }>;
   students: Array<{
@@ -29,8 +37,8 @@ export default function AttendanceReportGenerator({
   const [filters, setFilters] = useState({
     class_id: "",
     student_id: "",
-    from_date: "",
-    to_date: "",
+    from_date: THREE_MONTHS_AGO_ISO,
+    to_date: TODAY_ISO,
     status: "",
   });
 
