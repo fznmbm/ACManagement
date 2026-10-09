@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import {
   Loader2,
   Calendar,
@@ -24,6 +25,7 @@ interface ApplicationSettings {
 
 export default function ApplicationSettings() {
   const supabase = createClient();
+  const { toast, confirm } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -155,9 +157,9 @@ export default function ApplicationSettings() {
   const handleResetCount = async () => {
     if (!settings.id) return;
     if (
-      !confirm(
+      !(await confirm(
         "Reset application count to 0? This does not delete any applications, only resets the counter.",
-      )
+      ))
     )
       return;
     try {
@@ -167,9 +169,10 @@ export default function ApplicationSettings() {
         .eq("id", settings.id);
       if (error) throw error;
       setSettings({ ...settings, current_applications_count: 0 });
+      toast.success("Application count reset to 0.");
     } catch (err) {
       console.error("Reset error:", err);
-      alert("Failed to reset count.");
+      toast.error("Failed to reset count.");
     }
   };
 
@@ -253,7 +256,9 @@ export default function ApplicationSettings() {
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Format: YYYY-YYYY (e.g., 2025-2026)
+            The year you&apos;re collecting <em>new applications</em> for. The
+            school&apos;s current operating year is set separately, under
+            Academic settings. Format: YYYY-YYYY (e.g., 2025-2026).
           </p>
         </div>
 
@@ -344,20 +349,22 @@ export default function ApplicationSettings() {
         </div>
 
         {/* Current Count (Read-only) */}
-        <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-4">
+        <div className="bg-muted border border-border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-300">
+              <p className="text-sm font-medium text-muted-foreground">
                 Current Applications Received
               </p>
-              <p className="text-3xl font-bold text-white">
+              <p className="text-3xl font-bold text-foreground">
                 {settings.current_applications_count}
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
               <div className="text-right">
-                <p className="text-sm text-slate-300">Remaining Capacity</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-muted-foreground">
+                  Remaining Capacity
+                </p>
+                <p className="text-2xl font-bold text-foreground">
                   {settings.max_applications -
                     settings.current_applications_count}
                 </p>
@@ -367,7 +374,7 @@ export default function ApplicationSettings() {
                 disabled={
                   !settings.id || settings.current_applications_count === 0
                 }
-                className="flex items-center gap-1 px-3 py-1 text-xs bg-slate-600 hover:bg-slate-500 text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1 px-3 py-1 text-xs border border-border bg-background hover:bg-accent text-foreground rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <RotateCcw className="h-3 w-3" />
                 Reset Count
@@ -375,14 +382,14 @@ export default function ApplicationSettings() {
             </div>
           </div>
           {settings.current_applications_count >= settings.max_applications && (
-            <p className="text-sm text-orange-400 font-medium mt-2">
-              ⚠️ Maximum capacity reached!
+            <p className="text-sm text-orange-600 dark:text-orange-400 font-medium mt-2">
+              Maximum capacity reached.
             </p>
           )}
         </div>
 
         {/* Active Toggle */}
-        <div className="flex items-center justify-between p-4 bg-slate-700/30 border border-slate-600 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
           <div>
             <p className="font-medium">Activate Application Period</p>
             <p className="text-sm text-muted-foreground">

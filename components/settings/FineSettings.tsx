@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import { Save, AlertTriangle, Coins, Loader2 } from "lucide-react";
 
 interface FineSetting {
@@ -19,6 +20,7 @@ export default function FineSettings() {
   const [saved, setSaved] = useState(false);
 
   const supabase = createClient();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchFineSettings();
@@ -104,9 +106,11 @@ export default function FineSettings() {
       if (error) throw error;
 
       setSaved(true);
+      toast.success("Fine settings saved.");
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error("Error updating fine settings:", error);
+      toast.error("Failed to save fine settings.");
     } finally {
       setSaving(false);
     }

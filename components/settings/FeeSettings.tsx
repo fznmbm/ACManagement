@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import {
   Save,
   AlertTriangle,
@@ -61,6 +62,7 @@ export default function FeeSettings() {
   });
 
   const supabase = createClient();
+  const { toast, confirm } = useToast();
 
   const monthNames = [
     "January",
@@ -201,7 +203,7 @@ export default function FeeSettings() {
 
   const addFeeStructure = async () => {
     if (!newStructure.name || newStructure.amount <= 0) {
-      alert("Please fill in all required fields");
+      toast.error("Please add a name and an amount greater than 0.");
       return;
     }
 
@@ -225,14 +227,23 @@ export default function FeeSettings() {
         use_custom_quarters: false,
       });
       setShowNewStructure(false);
+      toast.success("Fee structure added.");
     } catch (error) {
       console.error("Error adding fee structure:", error);
-      alert("Failed to add fee structure");
+      toast.error("Failed to add fee structure");
     }
   };
 
   const deleteFeeStructure = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this fee structure?")) return;
+    if (
+      !(await confirm({
+        title: "Delete fee structure",
+        message: "Delete this fee structure? This can't be undone.",
+        confirmText: "Delete",
+        destructive: true,
+      }))
+    )
+      return;
 
     try {
       const { error } = await supabase
@@ -243,9 +254,10 @@ export default function FeeSettings() {
       if (error) throw error;
 
       setFeeStructures((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Fee structure deleted.");
     } catch (error) {
       console.error("Error deleting fee structure:", error);
-      alert("Failed to delete fee structure");
+      toast.error("Failed to delete fee structure");
     }
   };
 
@@ -273,19 +285,20 @@ export default function FeeSettings() {
       if (error) throw error;
 
       setSaved(true);
+      toast.success("Quarter settings saved.");
       setTimeout(() => setSaved(false), 3000);
       fetchQuarterSettings();
     } catch (err: any) {
       console.error("Error saving quarter settings:", err);
-      alert("Failed to save quarter settings: " + err.message);
+      toast.error("Failed to save quarter settings: " + err.message);
     } finally {
       setSaving(false);
     }
   };
 
-  const resetQuartersToDefault = () => {
+  const resetQuartersToDefault = async () => {
     if (
-      confirm(
+      await confirm(
         "Reset to default UK academic year quarters? This will lose your current settings.",
       )
     ) {
@@ -324,10 +337,11 @@ export default function FeeSettings() {
       if (settingsError) throw settingsError;
 
       setSaved(true);
+      toast.success("Fee settings saved.");
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error("Error updating fee settings:", error);
-      alert("Failed to update fee settings");
+      toast.error("Failed to update fee settings");
     } finally {
       setSaving(false);
     }
@@ -662,6 +676,10 @@ export default function FeeSettings() {
                         }
                         className="form-input"
                       />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Days after the due date before a payment is marked
+                        overdue.
+                      </p>
                     </div>
                   </div>
 

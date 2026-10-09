@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Save, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 
 interface AcademicSettingsProps {
   settings: Record<string, any>;
@@ -10,6 +11,7 @@ interface AcademicSettingsProps {
 
 export default function AcademicSettings({ settings }: AcademicSettingsProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -49,11 +51,12 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
       }
 
       setSaved(true);
+      toast.success("Academic settings saved.");
       router.refresh();
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Failed to save settings: " + (error as Error).message);
+      toast.error("Failed to save settings: " + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -75,6 +78,12 @@ export default function AcademicSettings({ settings }: AcademicSettingsProps) {
                 className="form-input"
                 placeholder="2024-2025"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                The school&apos;s current operating year — used across
+                attendance, classes and reports. The year you collect{" "}
+                <em>new applications</em> for is set separately, under
+                Applications settings.
+              </p>
             </div>
             <div>
               <label className="form-label">Start Date</label>
