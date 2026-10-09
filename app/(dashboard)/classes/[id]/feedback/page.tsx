@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 import {
   ArrowLeft,
   MessageSquare,
@@ -36,15 +37,20 @@ interface PastSession {
 export default function ClassFeedbackPage() {
   const params = useParams();
   const supabase = createClient();
+  const { toast, confirm } = useToast();
   const classId = params.id as string;
 
   const [className, setClassName] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [userRole, setUserRole] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Draft session state
+  // Draft session state. The draft row is created lazily (on first save),
+  // NOT on mount — opening and leaving the page must not litter the DB with
+  // empty draft sessions.
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const sessionPromiseRef = useRef<Promise<string | null> | null>(null);
   const [sessionStatus, setSessionStatus] = useState<"draft" | "completed">(
     "draft",
   );
@@ -97,6 +103,7 @@ export default function ClassFeedbackPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
+      setUserId(user.id);
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -132,10 +139,9 @@ export default function ClassFeedbackPage() {
       .eq("status", "draft")
       .single();
 
-    let sid: string;
     if (existingSession) {
-      // Use existing draft
-      sid = existingSession.id;
+      // Resume the existing draft for today
+      const sid = existingSession.id;
       setSessionId(sid);
       setSessionStatus("draft");
       setClassSummary(existingSession.class_summary || "");
@@ -157,25 +163,8 @@ export default function ClassFeedbackPage() {
         const withNotes = new Set(existingNotes.map((n) => n.student_id));
         setExpandedStudents(withNotes);
       }
-    } else {
-      // Create new draft session
-      const { data: newSession, error } = await supabase
-        .from("class_feedback_sessions")
-        .insert({
-          class_id: classId,
-          session_date: today,
-          status: "draft",
-          created_by: user?.id,
-        })
-        .select("id")
-        .single();
-
-      if (!error && newSession) {
-        sid = newSession.id;
-        setSessionId(sid);
-        setSessionStatus("draft");
-      }
     }
+    // No existing draft → leave sessionId null; it's created on first save.
 
     // Load past completed sessions
     const { data: sessions } = await supabase
@@ -205,8 +194,42 @@ export default function ClassFeedbackPage() {
     }, 800);
   };
 
+  // Create the draft session row lazily, the first time there's something to
+  // save. De-duped via a ref so two near-simultaneous saves don't race two rows.
+  const ensureSession = async (): Promise<string | null> => {
+    if (sessionId) return sessionId;
+    if (sessionPromiseRef.current) return sessionPromiseRef.current;
+
+    const promise = (async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("class_feedback_sessions")
+        .insert({
+          class_id: classId,
+          session_date: today,
+          status: "draft",
+          created_by: userId,
+        })
+        .select("id")
+        .single();
+      if (error || !data) {
+        sessionPromiseRef.current = null;
+        return null;
+      }
+      setSessionId(data.id);
+      return data.id as string;
+    })();
+
+    sessionPromiseRef.current = promise;
+    return promise;
+  };
+
   const saveStudentNote = async (studentId: string, note: string) => {
-    if (!sessionId) return;
+    // Nothing to persist and no draft yet → don't create an empty draft row.
+    if (!note.trim() && !sessionId) return;
+
+    const sid = await ensureSession();
+    if (!sid) return;
     setSavingStudent(studentId);
 
     try {
@@ -214,7 +237,7 @@ export default function ClassFeedbackPage() {
       const { data: existing } = await supabase
         .from("student_feedback")
         .select("id")
-        .eq("session_id", sessionId)
+        .eq("session_id", sid)
         .eq("student_id", studentId)
         .single();
 
@@ -233,7 +256,7 @@ export default function ClassFeedbackPage() {
         }
       } else if (note.trim()) {
         await supabase.from("student_feedback").insert({
-          session_id: sessionId,
+          session_id: sid,
           student_id: studentId,
           feedback_text: note.trim(),
         });
@@ -265,7 +288,11 @@ export default function ClassFeedbackPage() {
   };
 
   const saveMainFields = async (summary: string, hw: string) => {
-    if (!sessionId) return;
+    // Don't create an empty draft just because the fields were touched then cleared.
+    if (!summary.trim() && !hw.trim() && !sessionId) return;
+
+    const sid = await ensureSession();
+    if (!sid) return;
     setSavingMain(true);
     try {
       await supabase
@@ -274,7 +301,7 @@ export default function ClassFeedbackPage() {
           class_summary: summary.trim() || null,
           homework: hw.trim() || null,
         })
-        .eq("id", sessionId);
+        .eq("id", sid);
       setLastSaved(new Date());
     } catch (err) {
       console.error("Save error:", err);
@@ -338,15 +365,23 @@ export default function ClassFeedbackPage() {
 
   const handleComplete = async () => {
     if (!classSummary.trim()) {
-      alert("Please add a class summary before completing.");
+      toast.error("Please add a class summary before completing.");
       return;
     }
     if (
-      !confirm(
-        "Mark this feedback as complete and sent? This cannot be undone.",
-      )
+      !(await confirm({
+        title: "Complete feedback",
+        message: "Mark this feedback as complete and sent? This cannot be undone.",
+        confirmText: "Mark as sent",
+      }))
     )
       return;
+
+    const sid = await ensureSession();
+    if (!sid) {
+      toast.error("Couldn't save this feedback session. Please try again.");
+      return;
+    }
 
     setCompleting(true);
     try {
@@ -357,7 +392,7 @@ export default function ClassFeedbackPage() {
           class_summary: classSummary.trim(),
           homework: homework.trim() || null,
         })
-        .eq("id", sessionId);
+        .eq("id", sid);
 
       setSessionStatus("completed");
       // Refresh history
@@ -370,7 +405,7 @@ export default function ClassFeedbackPage() {
         .limit(5);
       setPastSessions(sessions || []);
     } catch (err: any) {
-      alert(err.message || "Failed to complete feedback");
+      toast.error(err.message || "Failed to complete feedback");
     } finally {
       setCompleting(false);
     }
@@ -702,7 +737,7 @@ export default function ClassFeedbackPage() {
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         copiedIndex === i
                           ? "bg-green-600 text-white"
-                          : "bg-slate-600 text-white hover:bg-slate-700"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
                       }`}
                     >
                       {copiedIndex === i ? (
