@@ -111,6 +111,49 @@ export default function AcademicReportGenerator({
     });
   };
 
+  const exportToCSV = () => {
+    if (!reportData || reportData.length === 0) return;
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+    const header = [
+      "Date",
+      "Student",
+      "Student #",
+      "Subject",
+      "Assessment",
+      "Score",
+      "Max",
+      "Percentage",
+      "Grade",
+    ];
+    const rows = reportData.map((r: any) =>
+      [
+        r.assessment_date || "",
+        `${r.students?.first_name || ""} ${r.students?.last_name || ""}`.trim(),
+        r.students?.student_number || "",
+        r.subjects?.name || "",
+        r.assessment_type || "",
+        r.score ?? "",
+        r.max_score ?? "",
+        r.percentage != null ? `${r.percentage}%` : "",
+        r.grade || "",
+      ].map(esc),
+    );
+
+    const csv = [header.map(esc).join(","), ...rows.map((r: any[]) => r.join(","))].join(
+      "\n",
+    );
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `academic-report-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -188,14 +231,23 @@ export default function AcademicReportGenerator({
         )}
       </button>
 
-      {reportData && (
-        <button
-          onClick={exportToPDF}
-          className="btn-outline flex items-center space-x-2"
-        >
-          <FileText className="h-4 w-4" />
-          <span>Export PDF</span>
-        </button>
+      {reportData && reportData.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={exportToPDF}
+            className="btn-outline flex items-center space-x-2"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Export PDF</span>
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="btn-outline flex items-center space-x-2"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
+        </div>
       )}
 
       {/* Report Results */}

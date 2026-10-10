@@ -253,18 +253,69 @@ export default function StudentReportGenerator({
         rate: reportData.attendanceStats.percentage,
         recent: reportData.attendanceRecords,
       },
-      quranProgress: reportData.memorization.map((item: any) => ({
-        surah_name: item.memorization_items?.title || "N/A",
-        verses_memorized: item.proficiency_rating || 0,
-        verses_total: 5,
-        progress_type: item.status,
-        proficiency_level: item.proficiency_rating
-          ? `${item.proficiency_rating}/5`
-          : "N/A",
-        teacher_notes: item.notes || "",
-      })),
+      // Memorisation is being retired from reports (folded into results),
+      // so the PDF is built from attendance + academic results only. This
+      // also fixes the previous crash (it read an undefined memorization array).
+      quranProgress: [],
       academicProgress: reportData.academicProgress,
     });
+  };
+
+  const exportToCSV = () => {
+    if (!reportData) return;
+
+    const s = reportData.student;
+    const a = reportData.attendanceStats;
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+    const lines: string[] = [];
+    lines.push("Student Report");
+    lines.push(
+      [esc("Student"), esc(`${s.first_name} ${s.last_name}`)].join(","),
+    );
+    lines.push([esc("Student number"), esc(s.student_number)].join(","));
+    lines.push([esc("Class"), esc(s.classes?.name || "No class")].join(","));
+    lines.push([esc("Attendance rate"), esc(`${a.percentage}%`)].join(","));
+    lines.push(
+      [
+        esc("Attendance"),
+        esc(
+          `Present ${a.present} / Absent ${a.absent} / Late ${a.late} / Excused ${a.excused} of ${a.total}`,
+        ),
+      ].join(","),
+    );
+    lines.push("");
+    lines.push("Results");
+    lines.push(
+      ["Date", "Subject", "Assessment", "Score", "Max", "Percentage", "Grade"]
+        .map(esc)
+        .join(","),
+    );
+    (reportData.academicProgress || []).forEach((r: any) => {
+      lines.push(
+        [
+          r.assessment_date || "",
+          r.subjects?.name || "",
+          r.assessment_type || "",
+          r.score ?? "",
+          r.max_score ?? "",
+          r.percentage != null ? `${r.percentage}%` : "",
+          r.grade || "",
+        ]
+          .map(esc)
+          .join(","),
+      );
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `student-report-${s.student_number}-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const getStatusBadge = (status: string) => {
@@ -338,6 +389,13 @@ export default function StudentReportGenerator({
               >
                 <FileText className="h-4 w-4" />
                 Export PDF
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="btn-outline flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
               </button>
               <button
                 onClick={openMeetingView}

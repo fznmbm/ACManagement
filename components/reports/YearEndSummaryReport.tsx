@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Download, Award, TrendingUp } from "lucide-react";
+import { Download, Award, TrendingUp, FileText } from "lucide-react";
+import { exportTablePDF } from "@/lib/utils/pdfExport";
 
 export default function YearEndSummaryReport() {
   const [loading, setLoading] = useState(false);
@@ -104,12 +105,6 @@ export default function YearEndSummaryReport() {
               grades.reduce((sum, g) => sum + g.percentage, 0) / grades.length
             )
           : 0;
-
-      // Memorization progress
-      const { count: totalMemorizationItems } = await supabase
-        .from("student_memorization")
-        .select("*", { count: "exact", head: true })
-        .in("progress_stage", ["memorized", "mastered"]);
 
       // Top performing students (by average grade)
       const { data: allGrades } = await supabase
@@ -218,7 +213,6 @@ export default function YearEndSummaryReport() {
         },
         activities: {
           eventsHosted: eventsHosted || 0,
-          memorizationItems: totalMemorizationItems || 0,
         },
         monthlyStats,
       });
@@ -230,9 +224,67 @@ export default function YearEndSummaryReport() {
     }
   };
 
+  const buildSummary = () => {
+    const d = reportData;
+    return [
+      { label: "Students enrolled", value: d.students.enrolled },
+      { label: "Active students", value: d.students.active },
+      { label: "Graduated", value: d.students.graduated },
+      { label: "Attendance rate", value: `${d.attendance.rate}%` },
+      { label: "Attendance records", value: d.attendance.totalRecords },
+      { label: "Fee revenue", value: `£${d.financial.feeRevenue.toFixed(2)}` },
+      { label: "Fine revenue", value: `£${d.financial.fineRevenue.toFixed(2)}` },
+      {
+        label: "Total revenue",
+        value: `£${d.financial.totalRevenue.toFixed(2)}`,
+      },
+      { label: "Average grade", value: `${d.academic.avgGrade}%` },
+      { label: "Certificates issued", value: d.academic.certificatesIssued },
+      { label: "Events hosted", value: d.activities.eventsHosted },
+    ];
+  };
+
   const exportToPDF = () => {
-    alert("PDF export feature coming soon!");
-    // This would require a PDF generation library like jsPDF or pdfmake
+    if (!reportData) return;
+    exportTablePDF({
+      title: "Year-End Summary Report",
+      subtitle: `Year ${reportData.year}`,
+      summary: buildSummary(),
+      columns: ["Top student", "Student #", "Average %"],
+      rows: (reportData.academic.topStudents || []).map((s: any) => [
+        s.name,
+        s.number,
+        `${s.avgGrade}%`,
+      ]),
+      filenameBase: `year-end-summary-${reportData.year}`,
+    });
+  };
+
+  const exportToCSV = () => {
+    if (!reportData) return;
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+    const lines: string[] = [];
+    lines.push(`Year-End Summary Report ${reportData.year}`);
+    buildSummary().forEach((r) =>
+      lines.push([esc(r.label), esc(r.value)].join(",")),
+    );
+    lines.push("");
+    lines.push("Top students");
+    lines.push(["Name", "Student #", "Average %"].map(esc).join(","));
+    (reportData.academic.topStudents || []).forEach((s: any) =>
+      lines.push(
+        [esc(s.name), esc(s.number), esc(`${s.avgGrade}%`)].join(","),
+      ),
+    );
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `year-end-summary-${reportData.year}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   // Generate year options
@@ -277,13 +329,22 @@ export default function YearEndSummaryReport() {
           </button>
 
           {reportData && (
-            <button
-              onClick={exportToPDF}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export PDF
-            </button>
+            <>
+              <button
+                onClick={exportToPDF}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Export PDF
+              </button>
+              <button
+                onClick={exportToCSV}
+                className="px-6 py-2 border border-input rounded-lg hover:bg-accent flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -411,12 +472,6 @@ export default function YearEndSummaryReport() {
                   </span>
                   <span className="font-semibold">
                     {reportData.academic.certificatesIssued}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Items Memorized</span>
-                  <span className="font-semibold">
-                    {reportData.activities.memorizationItems}
                   </span>
                 </div>
               </div>
