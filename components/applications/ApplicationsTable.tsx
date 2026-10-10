@@ -9,11 +9,12 @@ import {
   CheckSquare,
   X,
   Loader2,
-  CheckCircle2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
+import ReasonDialog from "@/components/ui/ReasonDialog";
 
 interface Application {
   id: string;
@@ -28,6 +29,9 @@ interface Application {
   converted_to_student_id?: string;
 }
 
+const SELECTABLE = ["pending", "under_review", "waitlist", "accepted"];
+const ACTIONABLE = ["pending", "under_review", "waitlist"];
+
 export default function ApplicationsTable({
   applications: initialApplications,
 }: {
@@ -41,10 +45,11 @@ export default function ApplicationsTable({
     done: number;
     total: number;
   } | null>(null);
-  const [bulkResult, setBulkResult] = useState<string | null>(null);
+  const [rejectOpen, setRejectOpen] = useState(false);
   const [newAppToast, setNewAppToast] = useState<Application | null>(null);
   const supabase = createClient();
   const router = useRouter();
+  const { toast, confirm } = useToast();
 
   useEffect(() => {
     setApplications(initialApplications);
@@ -66,7 +71,7 @@ export default function ApplicationsTable({
               typeof Notification !== "undefined" &&
               Notification.permission === "granted"
             ) {
-              new Notification("New Application Received!", {
+              new Notification("New application received", {
                 body: `${newApp.child_first_name} ${newApp.child_last_name} — ${newApp.application_number}`,
               });
             }
@@ -81,7 +86,6 @@ export default function ApplicationsTable({
               prev.filter((a) => a.id !== payload.old.id),
             );
           }
-          // Refresh server component to update stats cards
           router.refresh();
         },
       )
@@ -90,6 +94,7 @@ export default function ApplicationsTable({
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -110,41 +115,44 @@ export default function ApplicationsTable({
     });
   };
 
+  const selectablePending = applications.filter((a) =>
+    SELECTABLE.includes(a.status),
+  );
+
   const toggleSelectAll = () => {
-    const selectable = applications
-      .filter((a) =>
-        ["pending", "under_review", "waitlist", "accepted"].includes(a.status),
-      )
-      .map((a) => a.id);
-    if (selectedIds.size === selectable.length && selectable.length > 0) {
+    const ids = selectablePending.map((a) => a.id);
+    if (selectedIds.size === ids.length && ids.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(selectable));
+      setSelectedIds(new Set(ids));
     }
   };
 
   const selectedApplications = applications.filter((a) =>
     selectedIds.has(a.id),
   );
-  const selectablePending = applications.filter((a) =>
-    ["pending", "under_review", "waitlist", "accepted"].includes(a.status),
+  const rejectable = selectedApplications.filter((a) =>
+    ACTIONABLE.includes(a.status),
   );
 
   const handleBulkAccept = async () => {
     const toAccept = selectedApplications.filter((a) =>
-      ["pending", "under_review", "waitlist"].includes(a.status),
+      ACTIONABLE.includes(a.status),
     );
     if (toAccept.length === 0) return;
     if (
-      !confirm(
-        `Accept ${toAccept.length} application${toAccept.length > 1 ? "s" : ""}? This will create student records for each.`,
-      )
+      !(await confirm({
+        title: "Accept applications",
+        message: `Create a student record for ${toAccept.length} application${
+          toAccept.length > 1 ? "s" : ""
+        }? Each child is enrolled into their requested class where one was set.`,
+        confirmText: "Accept & create students",
+      }))
     )
       return;
 
     setBulkLoading(true);
     setBulkProgress({ done: 0, total: toAccept.length });
-    setBulkResult(null);
     let success = 0;
     let failed = 0;
 
@@ -153,11 +161,7 @@ export default function ApplicationsTable({
         const res = await fetch(`/api/applications/${app.id}/accept`, {
           method: "POST",
         });
-        if (res.ok) {
-          success++;
-        } else {
-          failed++;
-        }
+        res.ok ? success++ : failed++;
       } catch {
         failed++;
       }
@@ -167,26 +171,24 @@ export default function ApplicationsTable({
     setBulkLoading(false);
     setBulkProgress(null);
     setSelectedIds(new Set());
-    setBulkResult(
-      `✅ Accepted ${success}${failed > 0 ? ` · ❌ Failed ${failed}` : ""}`,
-    );
+    if (failed === 0) toast.success(`Accepted ${success}.`);
+    else toast.error(`Accepted ${success}, ${failed} failed.`);
     router.refresh();
-    setTimeout(() => setBulkResult(null), 5000);
   };
 
-  const handleBulkReject = async () => {
-    const toReject = selectedApplications.filter((a) =>
-      ["pending", "under_review", "waitlist"].includes(a.status),
-    );
-    if (toReject.length === 0) return;
-    const reason = prompt(
-      `Rejection reason for ${toReject.length} application${toReject.length > 1 ? "s" : ""}:`,
-    );
-    if (!reason?.trim()) return;
-
+  const doBulkReject = async (reason: string) => {
+    if (!reason.trim()) {
+      toast.error("Please add a reason for rejection.");
+      return;
+    }
+    const toReject = rejectable;
+    if (toReject.length === 0) {
+      setRejectOpen(false);
+      return;
+    }
+    setRejectOpen(false);
     setBulkLoading(true);
     setBulkProgress({ done: 0, total: toReject.length });
-    setBulkResult(null);
     let success = 0;
     let failed = 0;
 
@@ -197,11 +199,7 @@ export default function ApplicationsTable({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reason }),
         });
-        if (res.ok) {
-          success++;
-        } else {
-          failed++;
-        }
+        res.ok ? success++ : failed++;
       } catch {
         failed++;
       }
@@ -211,11 +209,9 @@ export default function ApplicationsTable({
     setBulkLoading(false);
     setBulkProgress(null);
     setSelectedIds(new Set());
-    setBulkResult(
-      `✅ Rejected ${success}${failed > 0 ? ` · ❌ Failed ${failed}` : ""}`,
-    );
+    if (failed === 0) toast.success(`Rejected ${success}.`);
+    else toast.error(`Rejected ${success}, ${failed} failed.`);
     router.refresh();
-    setTimeout(() => setBulkResult(null), 5000);
   };
 
   const handleBulkSendLogin = async () => {
@@ -226,19 +222,22 @@ export default function ApplicationsTable({
         a.converted_to_student_id,
     );
     if (toSend.length === 0) {
-      alert("No accepted applications with student records selected.");
+      toast.error("No accepted applications with student records selected.");
       return;
     }
     if (
-      !confirm(
-        `Send login details to ${toSend.length} parent${toSend.length > 1 ? "s" : ""}?`,
-      )
+      !(await confirm({
+        title: "Send login details",
+        message: `Send parent login details to ${toSend.length} parent${
+          toSend.length > 1 ? "s" : ""
+        }?`,
+        confirmText: "Send",
+      }))
     )
       return;
 
     setBulkLoading(true);
     setBulkProgress({ done: 0, total: toSend.length });
-    setBulkResult(null);
     let success = 0;
     let failed = 0;
 
@@ -252,11 +251,7 @@ export default function ApplicationsTable({
             studentId: app.converted_to_student_id,
           }),
         });
-        if (res.ok) {
-          success++;
-        } else {
-          failed++;
-        }
+        res.ok ? success++ : failed++;
       } catch {
         failed++;
       }
@@ -266,14 +261,12 @@ export default function ApplicationsTable({
     setBulkLoading(false);
     setBulkProgress(null);
     setSelectedIds(new Set());
-    setBulkResult(
-      `✅ Sent ${success}${failed > 0 ? ` · ❌ Failed ${failed}` : ""}`,
-    );
-    setTimeout(() => setBulkResult(null), 5000);
+    if (failed === 0) toast.success(`Sent ${success}.`);
+    else toast.error(`Sent ${success}, ${failed} failed.`);
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles = {
+  const statusClass = (status: string) => {
+    const styles: Record<string, string> = {
       pending:
         "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
       under_review:
@@ -284,17 +277,15 @@ export default function ApplicationsTable({
       waitlist:
         "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     };
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          styles[status as keyof typeof styles] || styles.pending
-        }`}
-      >
-        {status.replace("_", " ").toUpperCase()}
-      </span>
-    );
+    return styles[status] || styles.pending;
   };
+  const StatusBadge = ({ status }: { status: string }) => (
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass(status)}`}
+    >
+      {status.replace("_", " ").toUpperCase()}
+    </span>
+  );
 
   if (!applications || applications.length === 0) {
     return (
@@ -308,6 +299,10 @@ export default function ApplicationsTable({
     selectablePending.length > 0 &&
     selectedIds.size === selectablePending.length &&
     selectablePending.every((a) => selectedIds.has(a.id));
+  const hasActionable = selectedApplications.some((a) =>
+    ACTIONABLE.includes(a.status),
+  );
+  const hasAccepted = selectedApplications.some((a) => a.status === "accepted");
 
   return (
     <>
@@ -317,7 +312,7 @@ export default function ApplicationsTable({
             <User className="h-4 w-4" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-sm">🎉 New Application!</p>
+            <p className="font-semibold text-sm">New application</p>
             <p className="text-xs opacity-90">
               {newAppToast.child_first_name} {newAppToast.child_last_name} —{" "}
               {newAppToast.application_number}
@@ -326,13 +321,15 @@ export default function ApplicationsTable({
           <button
             onClick={() => setNewAppToast(null)}
             className="opacity-70 hover:opacity-100 text-lg leading-none shrink-0"
+            aria-label="Dismiss"
           >
             ×
           </button>
         </div>
       )}
+
       <div className="space-y-3">
-        {/* Bulk Action Bar */}
+        {/* Bulk action bar */}
         {selectedIds.size > 0 && (
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -345,39 +342,35 @@ export default function ApplicationsTable({
               {bulkLoading && bulkProgress ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing {bulkProgress.done}/{bulkProgress.total}...
+                  Processing {bulkProgress.done}/{bulkProgress.total}…
                 </div>
               ) : (
                 <>
-                  {selectedApplications.some((a) =>
-                    ["pending", "under_review", "waitlist"].includes(a.status),
-                  ) && (
+                  {hasActionable && (
                     <>
                       <button
                         onClick={handleBulkAccept}
                         disabled={bulkLoading}
                         className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
                       >
-                        ✓ Accept Selected
+                        Accept selected
                       </button>
                       <button
-                        onClick={handleBulkReject}
+                        onClick={() => setRejectOpen(true)}
                         disabled={bulkLoading}
                         className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
                       >
-                        ✕ Reject Selected
+                        Reject selected
                       </button>
                     </>
                   )}
-                  {selectedApplications.some(
-                    (a) => a.status === "accepted",
-                  ) && (
+                  {hasAccepted && (
                     <button
                       onClick={handleBulkSendLogin}
                       disabled={bulkLoading}
-                      className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                     >
-                      📧 Send Login Details
+                      Send login details
                     </button>
                   )}
                 </>
@@ -392,16 +385,80 @@ export default function ApplicationsTable({
           </div>
         )}
 
-        {/* Result message */}
-        {bulkResult && (
-          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-400">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            {bulkResult}
-          </div>
-        )}
-
         <div className="bg-card border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile select-all */}
+          <div className="flex items-center gap-2 border-b border-border p-3 md:hidden">
+            <input
+              type="checkbox"
+              checked={allSelectableSelected}
+              ref={(el) => {
+                if (el)
+                  el.indeterminate =
+                    selectedIds.size > 0 && !allSelectableSelected;
+              }}
+              onChange={toggleSelectAll}
+              className="h-4 w-4 rounded border-input text-primary"
+              id="selectall-m"
+            />
+            <label htmlFor="selectall-m" className="text-sm text-muted-foreground">
+              Select all ({selectablePending.length})
+            </label>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="divide-y divide-border md:hidden">
+            {applications.map((a) => {
+              const selectable = SELECTABLE.includes(a.status);
+              const selected = selectedIds.has(a.id);
+              return (
+                <div
+                  key={a.id}
+                  className={`p-4 ${selected ? "bg-primary/5" : ""}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      disabled={!selectable}
+                      onChange={() => toggleSelect(a.id)}
+                      className="mt-1 h-4 w-4 rounded border-input text-primary disabled:opacity-30"
+                      aria-label={`Select ${a.child_first_name}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">
+                          {a.child_first_name} {a.child_last_name}
+                        </p>
+                        <StatusBadge status={a.status} />
+                      </div>
+                      <p className="font-mono text-xs text-muted-foreground">
+                        {a.application_number}
+                      </p>
+                      <p className="mt-1 text-sm">{a.parent_name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {a.parent_email}
+                      </p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(a.submission_date), "dd MMM yyyy")}
+                        </span>
+                        <Link
+                          href={`/applications/${a.id}`}
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary"
+                        >
+                          <Eye className="h-4 w-4" /> View
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead className="bg-muted/50 border-b">
                 <tr>
@@ -410,10 +467,9 @@ export default function ApplicationsTable({
                       type="checkbox"
                       checked={allSelectableSelected}
                       ref={(el) => {
-                        if (el) {
+                        if (el)
                           el.indeterminate =
                             selectedIds.size > 0 && !allSelectableSelected;
-                        }
                       }}
                       onChange={toggleSelectAll}
                       className="h-4 w-4 rounded border-input text-primary"
@@ -422,7 +478,7 @@ export default function ApplicationsTable({
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-sm">
                     Application #
-                  </th>{" "}
+                  </th>
                   <th className="text-left py-3 px-4 font-semibold text-sm">
                     Child Name
                   </th>
@@ -445,12 +501,7 @@ export default function ApplicationsTable({
               </thead>
               <tbody className="divide-y">
                 {applications.map((application) => {
-                  const isSelectable = [
-                    "pending",
-                    "under_review",
-                    "waitlist",
-                    "accepted",
-                  ].includes(application.status);
+                  const isSelectable = SELECTABLE.includes(application.status);
                   const isSelected = selectedIds.has(application.id);
                   return (
                     <tr
@@ -506,7 +557,7 @@ export default function ApplicationsTable({
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        {getStatusBadge(application.status)}
+                        <StatusBadge status={application.status} />
                       </td>
                       <td className="py-3 px-4">
                         <Link
@@ -525,6 +576,19 @@ export default function ApplicationsTable({
           </div>
         </div>
       </div>
+
+      <ReasonDialog
+        open={rejectOpen}
+        title={`Reject ${rejectable.length} application${rejectable.length > 1 ? "s" : ""}`}
+        message="This reason is recorded against each application."
+        label="Rejection reason"
+        placeholder="e.g. Class full for this year group"
+        confirmText="Reject"
+        destructive
+        busy={bulkLoading}
+        onCancel={() => setRejectOpen(false)}
+        onConfirm={doBulkReject}
+      />
     </>
   );
 }
