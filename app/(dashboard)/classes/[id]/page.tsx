@@ -12,6 +12,7 @@ import {
   MapPin,
   User,
   ClipboardCheck,
+  ClipboardList,
   MessageSquare,
 } from "lucide-react";
 import EnrolStudentsButton from "@/components/classes/EnrolStudentsButton";
@@ -372,11 +373,15 @@ export default async function ClassDetailPage({
                 <MessageSquare className="h-4 w-4" />
                 Send feedback
               </Link>
+
+              <Link
+                href={`/curriculum-assessment/exams/new?class=${classData.id}`}
+                className="btn-outline w-full flex items-center justify-center gap-2"
+              >
+                <ClipboardList className="h-4 w-4" />
+                Record exam
+              </Link>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              Recording exam results moves here too once the Learning update
-              lands.
-            </p>
           </div>
 
           {/* More */}
