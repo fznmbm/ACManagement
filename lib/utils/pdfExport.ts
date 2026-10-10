@@ -193,6 +193,64 @@ export function exportAttendanceToPDF(data: {
 }
 
 /**
+ * Generic tabular report → PDF. Branded header, optional key/value summary,
+ * one data table, footer on every page. Used by reports that don't need a
+ * bespoke layout (Fee Collection, Prayer Compliance, …).
+ */
+export function exportTablePDF(opts: {
+  title: string;
+  subtitle?: string;
+  summary?: Array<{ label: string; value: string | number }>;
+  columns: string[];
+  rows: (string | number)[][];
+  filenameBase: string;
+}) {
+  const doc = initializePDF(opts.title);
+  let yPos = 50;
+
+  if (opts.subtitle) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...COLORS.secondary);
+    doc.text(opts.subtitle, 20, yPos);
+    doc.setTextColor(0, 0, 0);
+    yPos += 8;
+  }
+
+  if (opts.summary && opts.summary.length > 0) {
+    autoTable(doc, {
+      startY: yPos,
+      body: opts.summary.map((s) => [s.label, String(s.value)]),
+      theme: "plain",
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: "bold", textColor: COLORS.secondary },
+        1: { halign: "right" },
+      },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 6;
+  }
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [opts.columns],
+    body: opts.rows.map((r) => r.map((c) => String(c ?? ""))),
+    theme: "striped",
+    headStyles: {
+      fillColor: COLORS.primary,
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    styles: { fontSize: 8, cellPadding: 2 },
+    didDrawPage: (d: any) => {
+      addFooter(doc, d.pageNumber, doc.getNumberOfPages());
+    },
+  });
+
+  doc.save(`${opts.filenameBase}-${new Date().toISOString().split("T")[0]}.pdf`);
+}
+
+/**
  * Export Student Report to PDF
  */
 export function exportStudentToPDF(data: {

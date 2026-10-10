@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Download, Calendar, Filter } from "lucide-react";
+import { Download, FileText, Filter } from "lucide-react";
+import { exportTablePDF } from "@/lib/utils/pdfExport";
 
 interface FeeCollectionReportProps {
   classes: Array<{ id: string; name: string }>;
@@ -221,6 +222,43 @@ export default function FeeCollectionReport({
     a.click();
   };
 
+  const exportToPDF = () => {
+    if (!reportData) return;
+    const s = reportData.summary;
+    exportTablePDF({
+      title: "Fee Collection Report",
+      subtitle: `${dateFrom || "start"} to ${dateTo || "today"}`,
+      summary: [
+        { label: "Total invoices", value: s.totalInvoices },
+        { label: "Total billed", value: `£${s.totalBilled.toFixed(2)}` },
+        { label: "Total collected", value: `£${s.totalCollected.toFixed(2)}` },
+        { label: "Outstanding", value: `£${s.totalOutstanding.toFixed(2)}` },
+        { label: "Collection rate", value: `${s.collectionRate}%` },
+      ],
+      columns: [
+        "Invoice",
+        "Student",
+        "Fee Type",
+        "Due Date",
+        "Due",
+        "Paid",
+        "Outstanding",
+        "Status",
+      ],
+      rows: reportData.invoices.map((inv: any) => [
+        inv.invoice_number,
+        `${inv.students?.first_name || ""} ${inv.students?.last_name || ""}`.trim(),
+        inv.fee_structures?.name || "",
+        inv.due_date,
+        inv.amount_due.toFixed(2),
+        inv.amount_paid.toFixed(2),
+        (inv.amount_due - inv.amount_paid).toFixed(2),
+        inv.status,
+      ]),
+      filenameBase: "fee-collection-report",
+    });
+  };
+
   // Get unique fee types for filter
   const [feeTypes, setFeeTypes] = useState<any[]>([]);
   useState(() => {
@@ -323,13 +361,22 @@ export default function FeeCollectionReport({
           </button>
 
           {reportData && (
-            <button
-              onClick={exportToCSV}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
+            <>
+              <button
+                onClick={exportToCSV}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
+              <button
+                onClick={exportToPDF}
+                className="px-6 py-2 border border-border rounded-lg hover:bg-accent flex items-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Export PDF
+              </button>
+            </>
           )}
         </div>
       </div>

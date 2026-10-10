@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Download, FileText } from "lucide-react";
+import { exportTablePDF } from "@/lib/utils/pdfExport";
 
 interface PrayerComplianceReportProps {
   classes: Array<{ id: string; name: string }>;
@@ -213,6 +214,47 @@ export default function PrayerComplianceReport({
     a.click();
   };
 
+  const exportToPDF = () => {
+    if (reportData.length === 0) return;
+    exportTablePDF({
+      title: "Prayer Compliance Report",
+      subtitle: selectedClass
+        ? classes.find((c) => c.id === selectedClass)?.name || "Class"
+        : "All classes",
+      summary: [
+        { label: "Students", value: reportData.length },
+        { label: "Avg submission rate", value: `${avgSubmission}%` },
+        { label: "Avg prayer rate", value: `${avgOverall}%` },
+        { label: "Never submitted", value: neverSubmitted },
+      ],
+      columns: [
+        "Student",
+        "Student #",
+        "Class",
+        "Submitted",
+        "Fajr",
+        "Dhuhr",
+        "Asr",
+        "Maghrib",
+        "Isha",
+        "Overall",
+      ],
+      rows: sorted.map((s) => [
+        s.name,
+        s.number,
+        s.class_name,
+        `${s.submitted}/${s.total_sheets} (${s.submission_rate}%)`,
+        `${s.fajr}%`,
+        `${s.dhuhr}%`,
+        `${s.asr}%`,
+        `${s.maghrib}%`,
+        `${s.isha}%`,
+        `${s.overall_rate}%`,
+      ]),
+      filenameBase: "prayer-compliance",
+    });
+  };
+
   // Summary stats
   const avgSubmission =
     reportData.length > 0
@@ -271,13 +313,22 @@ export default function PrayerComplianceReport({
           )}
         </button>
         {reportData.length > 0 && (
-          <button
-            onClick={exportToCSV}
-            className="btn-outline flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </button>
+          <>
+            <button
+              onClick={exportToCSV}
+              className="btn-outline flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="btn-outline flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Export PDF
+            </button>
+          </>
         )}
       </div>
 
