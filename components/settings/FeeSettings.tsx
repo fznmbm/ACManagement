@@ -50,7 +50,6 @@ export default function FeeSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showNewStructure, setShowNewStructure] = useState(false);
-  const [activeTab, setActiveTab] = useState("structures");
   const [newStructure, setNewStructure] = useState({
     name: "",
     amount: 0,
@@ -110,11 +109,6 @@ export default function FeeSettings() {
     },
   ];
 
-  const tabs = [
-    { id: "structures", label: "Fee Structures", icon: Receipt },
-    { id: "quarters", label: "Quarterly Periods", icon: Calendar },
-    { id: "general", label: "General Settings", icon: Save },
-  ];
 
   useEffect(() => {
     fetchFeeStructures();
@@ -374,31 +368,8 @@ export default function FeeSettings() {
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-border">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === "structures" && (
+      {/* Sections stacked (no inner tabs) */}
+      {(
         <div className="space-y-6">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-start space-x-3">
@@ -738,8 +709,8 @@ export default function FeeSettings() {
         </div>
       )}
 
-      {activeTab === "quarters" && (
-        <div className="space-y-6">
+      {(
+        <div className="space-y-6 border-t border-border pt-8">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -913,8 +884,8 @@ export default function FeeSettings() {
         </div>
       )}
 
-      {activeTab === "general" && (
-        <div className="space-y-6">
+      {(
+        <div className="space-y-6 border-t border-border pt-8">
           {/* General Fee Settings */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">General Settings</h3>
