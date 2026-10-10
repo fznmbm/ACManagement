@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
@@ -92,8 +92,27 @@ export default function SendUpdatePage() {
     string | null
   >(null);
 
+  // Class-day collaboration: who wrote each note. Notes in feedback mode
+  // auto-save as they're typed and are stamped with the current author, so a
+  // teacher and a helper can both contribute and you see who wrote what.
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [noteAuthors, setNoteAuthors] = useState<
+    Record<string, { name: string | null; at: string | null }>
+  >({});
+  const [savingNote, setSavingNote] = useState<string | null>(null);
+  const autoSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
+  const sessionPromiseRef = useRef<Promise<string | null> | null>(null);
+
   useEffect(() => {
     fetchInitialData();
+    return () => {
+      Object.values(autoSaveTimers.current).forEach(clearTimeout);
+    };
   }, []);
 
   useEffect(() => {
@@ -146,6 +165,19 @@ export default function SendUpdatePage() {
         setGreeting(val.greeting || "");
         setSignOff(val.sign_off || "");
       }
+
+      // Who's writing — used to stamp notes with their author.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        setCurrentUser({ id: user.id, name: prof?.full_name || "You" });
+      }
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
@@ -180,17 +212,41 @@ export default function SendUpdatePage() {
       if (data.status === "draft") {
         setClassSummary(data.class_summary || "");
         setHomework(data.homework || "");
-        // Load existing student notes
+        // Load existing student notes, with who wrote each one.
         const { data: notes } = await supabase
           .from("student_feedback")
-          .select("student_id, feedback_text")
+          .select("student_id, feedback_text, author_id, updated_at")
           .eq("session_id", data.id);
         if (notes) {
+          const authorIds = [
+            ...new Set(
+              notes.map((n: any) => n.author_id).filter(Boolean) as string[],
+            ),
+          ];
+          const names: Record<string, string> = {};
+          if (authorIds.length > 0) {
+            const { data: profs } = await supabase
+              .from("profiles")
+              .select("id, full_name")
+              .in("id", authorIds);
+            (profs || []).forEach((p: any) => {
+              names[p.id] = p.full_name;
+            });
+          }
           const notesMap: Record<string, string> = {};
-          notes.forEach((n) => {
+          const authorMap: Record<
+            string,
+            { name: string | null; at: string | null }
+          > = {};
+          notes.forEach((n: any) => {
             notesMap[n.student_id] = n.feedback_text || "";
+            authorMap[n.student_id] = {
+              name: n.author_id ? names[n.author_id] || "Staff" : null,
+              at: n.updated_at || null,
+            };
           });
           setStudentNotes(notesMap);
+          setNoteAuthors(authorMap);
           setExpandedStudents(new Set(notes.map((n) => n.student_id)));
         }
       }
@@ -200,9 +256,112 @@ export default function SendUpdatePage() {
       setClassSummary("");
       setHomework("");
       setStudentNotes({});
+      setNoteAuthors({});
       setExpandedStudents(new Set());
     }
   };
+
+  // --- Feedback-mode note autosave (stamps the author) --------------------
+  // Create today's draft session lazily, on first note — de-duped via a ref so
+  // two quick saves don't race two rows.
+  const ensureDraftSession = async (): Promise<string | null> => {
+    if (existingSessionId) return existingSessionId;
+    if (!selectedClass || !currentUser) return null; // need both to create the row
+    if (sessionPromiseRef.current) return sessionPromiseRef.current;
+    const promise = (async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("class_feedback_sessions")
+        .insert({
+          class_id: selectedClass,
+          session_date: today,
+          status: "draft",
+          created_by: currentUser?.id,
+        })
+        .select("id")
+        .single();
+      if (error || !data) {
+        sessionPromiseRef.current = null;
+        return null;
+      }
+      setExistingSessionId(data.id);
+      setExistingSessionStatus("draft");
+      return data.id as string;
+    })();
+    sessionPromiseRef.current = promise;
+    return promise;
+  };
+
+  const saveNote = async (studentId: string, note: string) => {
+    // Only autosave real feedback drafts; never touch a sent (completed) one.
+    if (existingSessionStatus === "completed") return;
+    if (!note.trim() && !existingSessionId) return; // don't create an empty draft
+
+    const sid = await ensureDraftSession();
+    if (!sid) return;
+    setSavingNote(studentId);
+    try {
+      const { data: existing } = await supabase
+        .from("student_feedback")
+        .select("id")
+        .eq("session_id", sid)
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+      if (existing) {
+        if (note.trim()) {
+          await supabase
+            .from("student_feedback")
+            .update({
+              feedback_text: note.trim(),
+              author_id: currentUser?.id,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("student_feedback").delete().eq("id", existing.id);
+        }
+      } else if (note.trim()) {
+        await supabase.from("student_feedback").insert({
+          session_id: sid,
+          student_id: studentId,
+          feedback_text: note.trim(),
+          author_id: currentUser?.id,
+        });
+      }
+
+      setNoteAuthors((prev) => ({
+        ...prev,
+        [studentId]: note.trim()
+          ? { name: currentUser?.name || "You", at: new Date().toISOString() }
+          : { name: null, at: null },
+      }));
+    } catch {
+      // best-effort; the note stays in the box and will also save on Send
+    } finally {
+      setSavingNote(null);
+    }
+  };
+
+  const handleNoteChange = (studentId: string, value: string) => {
+    setStudentNotes((prev) => ({ ...prev, [studentId]: value }));
+    if (autoSaveTimers.current[studentId]) {
+      clearTimeout(autoSaveTimers.current[studentId]);
+    }
+    autoSaveTimers.current[studentId] = setTimeout(() => {
+      saveNote(studentId, value);
+    }, 800);
+  };
+
+  const formatStamp = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleString("en-GB", {
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
 
   const applyTemplate = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -439,6 +598,7 @@ export default function SendUpdatePage() {
               session_id: sessionId,
               student_id: studentId,
               feedback_text: note.trim(),
+              author_id: user?.id,
             });
           }
         }
@@ -479,6 +639,8 @@ export default function SendUpdatePage() {
     setClassSummary("");
     setHomework("");
     setStudentNotes({});
+    setNoteAuthors({});
+    sessionPromiseRef.current = null;
     setExpandedStudents(new Set());
     setSent(false);
     setWhatsAppMsg("");
@@ -581,6 +743,8 @@ export default function SendUpdatePage() {
             setSelectedClass(e.target.value);
             setSelectedStudent("");
             setStudentNotes({});
+            setNoteAuthors({});
+            sessionPromiseRef.current = null;
             setExpandedStudents(new Set());
           }}
           className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -863,15 +1027,25 @@ export default function SendUpdatePage() {
                               <textarea
                                 value={studentNotes[student.id] || ""}
                                 onChange={(e) =>
-                                  setStudentNotes((prev) => ({
-                                    ...prev,
-                                    [student.id]: e.target.value,
-                                  }))
+                                  handleNoteChange(student.id, e.target.value)
                                 }
                                 rows={2}
                                 placeholder={`Note for ${student.first_name}...`}
                                 className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                               />
+                              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {savingNote === student.id
+                                    ? "Saving…"
+                                    : noteAuthors[student.id]?.name
+                                      ? `— added by ${noteAuthors[student.id]!.name}${
+                                          noteAuthors[student.id]?.at
+                                            ? `, ${formatStamp(noteAuthors[student.id]!.at)}`
+                                            : ""
+                                        }`
+                                      : "Saves as you type"}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>
