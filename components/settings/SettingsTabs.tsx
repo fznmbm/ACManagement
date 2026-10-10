@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/toast";
 import {
   Building2,
   Calendar,
@@ -29,6 +30,47 @@ type TabId = "centre" | "academic" | "communication" | "financial" | "security";
 
 export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("centre");
+  const [dirty, setDirty] = useState(false);
+  const { confirm } = useToast();
+
+  // Warn before a full page close/navigation while there are unsaved edits.
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // Edits inside a tab bubble up here (inputs/selects/textareas). A Save/Update
+  // click clears the flag so saving then switching doesn't nag.
+  const markDirty = () => setDirty(true);
+  const maybeClearOnSave = (e: React.MouseEvent) => {
+    const btn = (e.target as HTMLElement).closest("button");
+    if (btn && /sav|update|create|add/i.test(btn.textContent || "")) {
+      setTimeout(() => setDirty(false), 50);
+    }
+  };
+
+  const switchTab = async (id: TabId) => {
+    if (id === activeTab) return;
+    if (
+      dirty &&
+      !(await confirm({
+        title: "Unsaved changes",
+        message:
+          "You've edited this tab but haven't saved. Switch tabs and lose those changes?",
+        confirmText: "Switch anyway",
+        cancelText: "Stay",
+        destructive: true,
+      }))
+    )
+      return;
+    setActiveTab(id);
+    setDirty(false);
+  };
 
   const tabs = [
     { id: "centre" as TabId, name: "Centre Info", icon: Building2 },
@@ -54,7 +96,7 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => switchTab(tab.id)}
                 className={`flex items-center space-x-2 px-6 py-4 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? "border-primary text-primary bg-primary/5"
@@ -70,7 +112,12 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
       </div>
 
       {/* Tab Content */}
-      <div className="p-3 md:p-6">
+      <div
+        className="p-3 md:p-6"
+        onInput={markDirty}
+        onChange={markDirty}
+        onClickCapture={maybeClearOnSave}
+      >
         {activeTab === "centre" && (
           <CentreSettings settings={initialSettings} />
         )}
