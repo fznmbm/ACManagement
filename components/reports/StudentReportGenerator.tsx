@@ -400,7 +400,7 @@ export default function StudentReportGenerator({
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Enrollment Date</p>
+                <p className="text-muted-foreground">Enrolment Date</p>
                 <p className="font-medium">
                   {new Date(
                     reportData.student.enrollment_date,

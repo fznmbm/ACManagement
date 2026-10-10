@@ -240,7 +240,7 @@ export default function CertificatePreview({
           <li>• Click "Print" to print directly to paper</li>
           <li>• Use your browser's "Save as PDF" option when printing</li>
           <li>• For best results, use A4 paper in portrait orientation</li>
-          <li>• You can customize the school logo in Settings</li>
+          <li>• You can customise the school logo in Settings</li>
         </ul>
       </div>
     </div>

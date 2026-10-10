@@ -85,7 +85,7 @@ export function CookieConsent() {
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       We use cookies to improve your experience on our website,
-                      analyze site traffic, and provide personalized content.
+                      analyse site traffic, and provide personalised content.
                       Please choose whether you accept or decline our use of
                       cookies.
                     </p>

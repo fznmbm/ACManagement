@@ -719,7 +719,7 @@ export default function FeeSettings() {
                 <span>Quarterly Fee Periods</span>
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Customize quarterly billing periods to match your academic
+                Customise quarterly billing periods to match your academic
                 calendar
               </p>
             </div>

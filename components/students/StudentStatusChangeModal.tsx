@@ -50,7 +50,7 @@ export default function StudentStatusChangeModal({
       value: "graduated",
       label: "Graduated",
       color: "text-blue-600",
-      description: "Completed program, end all billing",
+      description: "Completed programme, end all billing",
     },
   ];
 

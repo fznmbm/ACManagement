@@ -136,7 +136,7 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
                 Application Settings
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Configure enrollment deadlines and application form settings
+                Configure enrolment deadlines and application form settings
               </p>
               <ApplicationSettings />
             </div>

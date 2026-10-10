@@ -173,7 +173,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 name="registration_number"
                 defaultValue={centreInfo.registration_number}
                 className="form-input"
-                placeholder="Charity/Organization registration number"
+                placeholder="Charity/Organisation registration number"
               />
             </div>
           </div>

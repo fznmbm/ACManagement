@@ -133,7 +133,7 @@ export default async function AttendanceHistoryPage({
         <div>
           <h2 className="text-2xl font-bold">Attendance History</h2>
           <p className="text-muted-foreground">
-            View and analyze attendance records
+            View and analyse attendance records
           </p>
         </div>
         <Link
