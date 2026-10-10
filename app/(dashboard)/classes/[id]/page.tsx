@@ -11,6 +11,8 @@ import {
   Clock,
   MapPin,
   User,
+  ClipboardCheck,
+  MessageSquare,
 } from "lucide-react";
 import EnrolStudentsButton from "@/components/classes/EnrolStudentsButton";
 
@@ -348,37 +350,50 @@ export default async function ClassDetailPage({
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Class day — the recurring tasks for this class, in order */}
           <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-semibold mb-1">Class day</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Take the register, then send feedback at the end of the session.
+            </p>
             <div className="space-y-2">
               <Link
                 href={`/attendance?class=${classData.id}`}
-                className="btn-primary w-full"
+                className="btn-primary w-full flex items-center justify-center gap-2"
               >
-                Mark Attendance
+                <ClipboardCheck className="h-4 w-4" />
+                Take register
               </Link>
 
               <Link
-                href={`/send-update?class=${classData.id}`}
-                className="btn-outline w-full"
+                href={`/send-update?class=${classData.id}&mode=feedback`}
+                className="btn-outline w-full flex items-center justify-center gap-2"
               >
-                Send update
+                <MessageSquare className="h-4 w-4" />
+                Send feedback
               </Link>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Recording exam results moves here too once the Learning update
+              lands.
+            </p>
+          </div>
 
+          {/* More */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">More</h3>
+            <div className="space-y-2">
               <Link
                 href={`/attendance/history?class=${classData.id}`}
                 className="btn-outline w-full"
               >
-                View Attendance History
+                View attendance history
               </Link>
-
-              {/* Manage Students Button */}
               <Link
                 href={`/students?class=${classData.id}`}
                 className="btn-outline w-full"
               >
-                Manage Students
+                Manage students
               </Link>
             </div>
           </div>

@@ -44,6 +44,9 @@ export default function SendUpdatePage() {
   const searchParams = useSearchParams();
   const { toast, confirm } = useToast();
   const prefilledClassId = searchParams.get("class") || "";
+  // Opened from a class's "Send feedback" → start in the class weekly-log
+  // mode (class summary + per-student notes) rather than a quick note.
+  const prefilledFeedbackMode = searchParams.get("mode") === "feedback";
 
   // Core state
   const [classes, setClasses] = useState<Class[]>([]);
@@ -55,7 +58,9 @@ export default function SendUpdatePage() {
   // Form state
   const [selectedClass, setSelectedClass] = useState(prefilledClassId);
   const [audience, setAudience] = useState<"class" | "student">("class");
-  const [updateType, setUpdateType] = useState<"note" | "log">("note");
+  const [updateType, setUpdateType] = useState<"note" | "log">(
+    prefilledFeedbackMode ? "log" : "note",
+  );
   const [selectedStudent, setSelectedStudent] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
 
