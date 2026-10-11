@@ -120,10 +120,10 @@ export default async function CertificatesPage({
 
         <div className="bg-card border border-border rounded-lg p-6">
           <div>
-            <p className="text-sm text-muted-foreground">Memorization</p>
+            <p className="text-sm text-muted-foreground">Year Completion</p>
             <p className="text-3xl font-bold mt-1 text-green-600">
               {certificates?.filter(
-                (c) => c.certificate_type === "memorization_completion",
+                (c) => c.certificate_type === "year_completion",
               ).length || 0}
             </p>
           </div>
@@ -165,9 +165,6 @@ export default async function CertificatesPage({
           >
             <option value="">All Types</option>
             <option value="subject_completion">Subject Completion</option>
-            <option value="memorization_completion">
-              Memorization Completion
-            </option>
             <option value="academic_excellence">Academic Excellence</option>
             <option value="year_completion">Year Completion</option>
           </select>

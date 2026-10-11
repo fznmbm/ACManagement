@@ -1,7 +1,7 @@
 // components/curriculum/CertificateForm.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Award } from "lucide-react";
@@ -38,26 +38,32 @@ export default function CertificateForm({
     issue_date: new Date().toISOString().split("T")[0],
     grade: "",
     remarks: "",
+    source: "generated",
   });
 
-  const [certificateNumber, setCertificateNumber] = useState("");
-
-  // Generate certificate number
-  useEffect(() => {
-    const generateCertNumber = () => {
-      const year = new Date().getFullYear();
-      const random = Math.floor(Math.random() * 10000)
-        .toString()
-        .padStart(4, "0");
-      return `CERT-${year}-${random}`;
-    };
-    setCertificateNumber(generateCertNumber());
-  }, []);
+  // Assign a sequential number from the DB (gap-free, no collisions). Falls
+  // back to a random number if the generate_certificate_number() function
+  // (migration 017) isn't applied yet, so the form always works.
+  const generateCertNumber = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase.rpc(
+        "generate_certificate_number",
+      );
+      if (!error && typeof data === "string" && data) return data;
+    } catch {
+      /* fall through */
+    }
+    const year = new Date().getFullYear();
+    const rand = Math.floor(Math.random() * 100000)
+      .toString()
+      .padStart(5, "0");
+    return `CERT-${year}-${rand}`;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     setFormData({
       ...formData,
@@ -76,14 +82,17 @@ export default function CertificateForm({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      const certificate_number = await generateCertNumber();
+
       const payload = {
         student_id: formData.student_id,
         certificate_type: formData.certificate_type,
         subject_id: formData.subject_id || null,
         issue_date: formData.issue_date,
-        certificate_number: certificateNumber,
+        certificate_number,
         grade: formData.grade || null,
         remarks: formData.remarks || null,
+        source: formData.source,
         issued_by: user.id,
       };
 
@@ -113,19 +122,12 @@ export default function CertificateForm({
         </div>
       )}
 
-      {/* Certificate Preview */}
-      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-lg p-6">
-        <div className="flex items-center justify-center mb-4">
-          <Award className="h-12 w-12 text-yellow-600" />
-        </div>
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-1">
-            Certificate Number
-          </p>
-          <p className="text-2xl font-bold font-mono text-yellow-800">
-            {certificateNumber}
-          </p>
-        </div>
+      {/* Header */}
+      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/30 dark:to-orange-950/20 border-2 border-yellow-300 dark:border-yellow-800 rounded-lg p-6 text-center">
+        <Award className="h-12 w-12 text-yellow-600 mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">
+          A certificate number is assigned automatically when you save.
+        </p>
       </div>
 
       {/* Form Fields */}
@@ -154,7 +156,7 @@ export default function CertificateForm({
 
         <div>
           <label htmlFor="certificate_type" className="form-label">
-            Certificate Type *
+            Certificate type *
           </label>
           <select
             id="certificate_type"
@@ -164,12 +166,9 @@ export default function CertificateForm({
             className="form-input"
             required
           >
-            <option value="subject_completion">Subject Completion</option>
-            <option value="memorization_completion">
-              Memorization Completion
-            </option>
-            <option value="academic_excellence">Academic Excellence</option>
-            <option value="year_completion">Year Completion</option>
+            <option value="subject_completion">Subject completion</option>
+            <option value="academic_excellence">Academic excellence</option>
+            <option value="year_completion">Year completion</option>
           </select>
         </div>
 
@@ -199,7 +198,7 @@ export default function CertificateForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="issue_date" className="form-label">
-              Issue Date *
+              Issue date *
             </label>
             <input
               type="date"
@@ -214,7 +213,7 @@ export default function CertificateForm({
 
           <div>
             <label htmlFor="grade" className="form-label">
-              Grade/Achievement Level
+              Grade / achievement level
             </label>
             <input
               type="text"
@@ -223,9 +222,31 @@ export default function CertificateForm({
               value={formData.grade}
               onChange={handleChange}
               className="form-input"
-              placeholder="e.g., A+, Excellent, With Distinction"
+              placeholder="e.g. A+, Excellent, With Distinction"
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="source" className="form-label">
+            How is it produced?
+          </label>
+          <select
+            id="source"
+            name="source"
+            value={formData.source}
+            onChange={handleChange}
+            className="form-input"
+          >
+            <option value="generated">Generated here (printed from the system)</option>
+            <option value="printed_externally">
+              Printed externally (recording it here only)
+            </option>
+          </select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Use &quot;printed externally&quot; when the paper certificate was
+            made elsewhere and you just want a record of it.
+          </p>
         </div>
 
         <div>
@@ -244,22 +265,8 @@ export default function CertificateForm({
         </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-semibold text-blue-900 mb-2">
-          📝 Certificate Information
-        </h4>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>
-            • Certificate will be generated with number: {certificateNumber}
-          </li>
-          <li>• Student will be able to view this in their profile</li>
-          <li>• PDF generation can be added in future updates</li>
-        </ul>
-      </div>
-
       {/* Buttons */}
-      <div className="flex items-center justify-end space-x-4 pt-4 border-t">
+      <div className="flex items-center justify-end space-x-4 pt-4 border-t border-border">
         <button
           type="button"
           onClick={() => router.back()}
@@ -275,7 +282,7 @@ export default function CertificateForm({
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           <Award className="h-4 w-4" />
-          <span>{loading ? "Generating..." : "Generate Certificate"}</span>
+          <span>{loading ? "Saving..." : "Create certificate"}</span>
         </button>
       </div>
     </form>

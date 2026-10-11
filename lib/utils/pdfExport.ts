@@ -1115,3 +1115,177 @@ export function exportLowAttendanceToPDF(data: {
     `low-attendance-alert-${new Date().toISOString().split("T")[0]}.pdf`
   );
 }
+
+/**
+ * Export a single certificate as a real, downloadable A4 PDF.
+ *
+ * This is a clean, formal rendering (not the ornate on-screen HTML version,
+ * which is still available via Print). It needs no external canvas library.
+ */
+export function exportSingleCertificatePDF(
+  certificate: any,
+  schoolInfo?: any,
+) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" }); // 210 x 297
+  const W = 210;
+  const gold: [number, number, number] = [202, 138, 4];
+  const ink: [number, number, number] = [31, 41, 55];
+  const grey: [number, number, number] = [107, 114, 128];
+
+  const titles: Record<string, string> = {
+    subject_completion: "Certificate of Subject Completion",
+    memorization_completion: "Certificate of Memorisation Achievement",
+    academic_excellence: "Certificate of Academic Excellence",
+    year_completion: "Certificate of Year Completion",
+  };
+  const bodies: Record<string, string> = {
+    subject_completion: `has successfully completed the study of ${
+      certificate.subjects?.name || "the subject"
+    }`,
+    memorization_completion:
+      "has successfully completed the memorisation requirements",
+    academic_excellence: "has demonstrated outstanding academic excellence",
+    year_completion: "has successfully completed the academic year",
+  };
+
+  const title =
+    titles[certificate.certificate_type] || "Certificate of Achievement";
+  const body =
+    bodies[certificate.certificate_type] ||
+    "is hereby recognised for their achievement";
+
+  const studentName = certificate.students
+    ? `${certificate.students.first_name} ${certificate.students.last_name}`
+    : "Student";
+  const schoolName =
+    schoolInfo?.centre_name || "Islamic Education Centre";
+
+  // Decorative double border
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(1.5);
+  doc.rect(12, 12, W - 24, 297 - 24);
+  doc.setLineWidth(0.4);
+  doc.rect(16, 16, W - 32, 297 - 32);
+
+  // School name
+  doc.setTextColor(...ink);
+  doc.setFont("times", "bold");
+  doc.setFontSize(24);
+  doc.text(schoolName, W / 2, 46, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...grey);
+  doc.text("ISLAMIC EDUCATION", W / 2, 53, { align: "center" });
+
+  // Title band
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(0.5);
+  doc.line(40, 66, W - 40, 66);
+  doc.setFont("times", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(...gold);
+  doc.text(title, W / 2, 80, { align: "center" });
+  doc.line(40, 86, W - 40, 86);
+
+  // Certify line
+  doc.setFont("times", "italic");
+  doc.setFontSize(13);
+  doc.setTextColor(...ink);
+  doc.text("This is to certify that", W / 2, 104, { align: "center" });
+
+  // Student name
+  doc.setFont("times", "bold");
+  doc.setFontSize(30);
+  doc.text(studentName, W / 2, 122, { align: "center" });
+
+  // Body text (wrapped)
+  doc.setFont("times", "normal");
+  doc.setFontSize(14);
+  const bodyLines = doc.splitTextToSize(body, W - 80) as string[];
+  let y = 138;
+  bodyLines.forEach((ln) => {
+    doc.text(ln, W / 2, y, { align: "center" });
+    y += 8;
+  });
+
+  // Grade
+  if (certificate.grade) {
+    doc.setFont("times", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(...gold);
+    doc.text(`with grade: ${certificate.grade}`, W / 2, y + 4, {
+      align: "center",
+    });
+    y += 12;
+  }
+
+  // Remarks
+  if (certificate.remarks) {
+    doc.setFont("times", "italic");
+    doc.setFontSize(11);
+    doc.setTextColor(...grey);
+    const remarkLines = doc.splitTextToSize(
+      `"${certificate.remarks}"`,
+      W - 90,
+    ) as string[];
+    remarkLines.forEach((ln) => {
+      doc.text(ln, W / 2, y + 6, { align: "center" });
+      y += 6;
+    });
+  }
+
+  // Date + certificate number
+  doc.setTextColor(...ink);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...grey);
+  doc.text("DATE OF ISSUE", 55, 236, { align: "center" });
+  doc.text("CERTIFICATE NO.", W - 55, 236, { align: "center" });
+  doc.setTextColor(...ink);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text(
+    certificate.issue_date ? formatDate(certificate.issue_date, "long") : "—",
+    55,
+    243,
+    { align: "center" },
+  );
+  doc.text(certificate.certificate_number || "—", W - 55, 243, {
+    align: "center",
+  });
+
+  // Signatures
+  doc.setDrawColor(...grey);
+  doc.setLineWidth(0.3);
+  doc.line(45, 266, 95, 266);
+  doc.line(W - 95, 266, W - 45, 266);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...ink);
+  doc.text(
+    schoolInfo?.director_name || certificate.profiles?.full_name || "Director",
+    70,
+    272,
+    { align: "center" },
+  );
+  doc.text("Teacher", W - 70, 272, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...grey);
+  doc.text("Authorised Signature", 70, 277, { align: "center" });
+  doc.text("Academic Authority", W - 70, 277, { align: "center" });
+
+  // Printed-externally marker
+  if (certificate.source === "printed_externally") {
+    doc.setFontSize(7);
+    doc.setTextColor(...grey);
+    doc.text("Record of an externally printed certificate", W / 2, 285, {
+      align: "center",
+    });
+  }
+
+  doc.save(
+    `certificate-${certificate.certificate_number || "unnumbered"}.pdf`,
+  );
+}

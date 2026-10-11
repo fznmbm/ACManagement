@@ -2,10 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Award, Download, Eye, X } from "lucide-react";
+import { Award, Download, Eye, X, FileText } from "lucide-react";
 import { formatDate } from "@/lib/utils/helpers";
 import CertificatePreview from "./CertificatePreview";
 import { createClient } from "@/lib/supabase/client";
+import { exportSingleCertificatePDF } from "@/lib/utils/pdfExport";
 
 interface Certificate {
   id: string;
@@ -15,6 +16,7 @@ interface Certificate {
   grade: string | null;
   remarks: string | null;
   pdf_url: string | null;
+  source?: string | null;
   students: {
     id: string;
     first_name: string;
@@ -46,26 +48,24 @@ export default function CertificatesList({
   useEffect(() => {
     const fetchSettings = async () => {
       const supabase = createClient();
-
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("system_settings")
         .select("setting_value")
         .eq("setting_key", "centre_info")
         .maybeSingle();
 
       if (data?.setting_value) {
-        let parsedSettings = data.setting_value;
-
-        if (typeof parsedSettings === "string") {
-          parsedSettings = JSON.parse(parsedSettings);
+        let parsed = data.setting_value;
+        if (typeof parsed === "string") {
+          try {
+            parsed = JSON.parse(parsed);
+          } catch {
+            parsed = {};
+          }
         }
-
-        setSchoolInfo(parsedSettings);
-      } else {
-        console.log("⚠️ [CertificatesList] No settings found");
+        setSchoolInfo(parsed);
       }
     };
-
     fetchSettings();
   }, []);
 
@@ -87,16 +87,16 @@ export default function CertificatesList({
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       subject_completion: "Subject Completion",
-      memorization_completion: "Memorization Completion",
+      memorization_completion: "Memorisation Completion",
       academic_excellence: "Academic Excellence",
       year_completion: "Year Completion",
     };
     return labels[type] || type;
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
+  const handleDownload = (cert: Certificate) =>
+    exportSingleCertificatePDF(cert, schoolInfo);
 
   if (certificates.length === 0) {
     return (
@@ -106,7 +106,7 @@ export default function CertificatesList({
           No certificates issued yet
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          Start recognizing student achievements
+          Start recognising student achievements
         </p>
         {canManage && (
           <a
@@ -122,7 +122,8 @@ export default function CertificatesList({
 
   return (
     <>
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
+      {/* Desktop table */}
+      <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50 border-b border-border">
@@ -152,14 +153,14 @@ export default function CertificatesList({
             </thead>
             <tbody className="divide-y divide-border">
               {certificates.map((cert) => (
-                <tr
-                  key={cert.id}
-                  //className="hover:bg-muted/30 transition-colors"
-                  //className="form-input bg-background text-foreground border-border"
-                  className="table-row-hover"
-                >
+                <tr key={cert.id} className="table-row-hover">
                   <td className="px-6 py-4 text-sm font-mono">
                     {cert.certificate_number}
+                    {cert.source === "printed_externally" && (
+                      <span className="ml-2 px-2 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground align-middle">
+                        printed externally
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     {cert.students ? (
@@ -180,7 +181,7 @@ export default function CertificatesList({
                   <td className="px-6 py-4">
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${getTypeColor(
-                        cert.certificate_type
+                        cert.certificate_type,
                       )}`}
                     >
                       {getTypeLabel(cert.certificate_type)}
@@ -196,24 +197,21 @@ export default function CertificatesList({
                     {cert.grade || "-"}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
                       <button
                         onClick={() => setSelectedCertificate(cert)}
-                        className="p-1 hover:bg-accent rounded"
-                        title="View Certificate"
+                        className="p-2 hover:bg-accent rounded"
+                        title="View certificate"
                       >
                         <Eye className="h-4 w-4 text-blue-600" />
                       </button>
-                      {cert.pdf_url && (
-                        <a
-                          href={cert.pdf_url}
-                          download
-                          className="p-1 hover:bg-accent rounded"
-                          title="Download PDF"
-                        >
-                          <Download className="h-4 w-4 text-green-600" />
-                        </a>
-                      )}
+                      <button
+                        onClick={() => handleDownload(cert)}
+                        className="p-2 hover:bg-accent rounded"
+                        title="Download PDF"
+                      >
+                        <Download className="h-4 w-4 text-green-600" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -230,6 +228,60 @@ export default function CertificatesList({
         </div>
       </div>
 
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {certificates.map((cert) => (
+          <div
+            key={cert.id}
+            className="bg-card border border-border rounded-lg p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {cert.students
+                    ? `${cert.students.first_name} ${cert.students.last_name}`
+                    : "Unknown"}
+                </p>
+                <p className="text-xs font-mono text-muted-foreground mt-0.5">
+                  {cert.certificate_number}
+                </p>
+              </div>
+              <span
+                className={`px-2 py-1 text-xs rounded-full shrink-0 ${getTypeColor(
+                  cert.certificate_type,
+                )}`}
+              >
+                {getTypeLabel(cert.certificate_type)}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {cert.subjects && <span>{cert.subjects.name}</span>}
+              <span>{formatDate(cert.issue_date, "short")}</span>
+              {cert.grade && <span>Grade: {cert.grade}</span>}
+              {cert.source === "printed_externally" && (
+                <span className="italic">printed externally</span>
+              )}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => setSelectedCertificate(cert)}
+                className="btn-outline flex-1 flex items-center justify-center gap-2 text-sm"
+              >
+                <Eye className="h-4 w-4" />
+                View
+              </button>
+              <button
+                onClick={() => handleDownload(cert)}
+                className="btn-outline flex-1 flex items-center justify-center gap-2 text-sm"
+              >
+                <Download className="h-4 w-4" />
+                PDF
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Certificate Preview Modal */}
       {selectedCertificate && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -243,6 +295,13 @@ export default function CertificatesList({
                 </p>
               </div>
               <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleDownload(selectedCertificate)}
+                  className="btn-outline flex items-center space-x-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>PDF</span>
+                </button>
                 <button
                   onClick={handlePrint}
                   className="btn-outline flex items-center space-x-2"

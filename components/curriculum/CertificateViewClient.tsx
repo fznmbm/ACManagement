@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Printer, Download } from "lucide-react";
 import CertificatePreview from "./CertificatePreview";
 import { createClient } from "@/lib/supabase/client";
+import { exportSingleCertificatePDF } from "@/lib/utils/pdfExport";
 
 interface CertificateViewClientProps {
   certificate: any;
@@ -54,7 +55,7 @@ export default function CertificateViewClient({
   };
 
   const handleDownload = () => {
-    alert("PDF download will be implemented. For now, use Print > Save as PDF");
+    exportSingleCertificatePDF(certificate, schoolInfo);
   };
 
   return (
