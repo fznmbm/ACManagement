@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
+import SentNoticeStatus from "@/components/updates/SentNoticeStatus";
 import {
   Send,
   Users,
@@ -69,6 +70,7 @@ export default function SendUpdatePage() {
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
   const [isAcademicNote, setIsAcademicNote] = useState(false);
+  const [requiresAck, setRequiresAck] = useState(false);
   const [recipientCount, setRecipientCount] = useState(0);
 
   // Weekly class update fields
@@ -442,6 +444,7 @@ export default function SendUpdatePage() {
             title: title.trim(),
             message: message.trim(),
             is_read: false,
+            requires_ack: requiresAck,
           })),
         );
         if (error) throw error;
@@ -492,6 +495,7 @@ export default function SendUpdatePage() {
               title: title.trim(),
               message: message.trim(),
               is_read: false,
+              requires_ack: requiresAck,
             })),
           );
           if (insertError) throw insertError;
@@ -634,6 +638,7 @@ export default function SendUpdatePage() {
     setTitle("");
     setMessage("");
     setPriority("normal");
+    setRequiresAck(false);
     setIsAcademicNote(false);
     setRecipientCount(0);
     setClassSummary("");
@@ -934,6 +939,31 @@ export default function SendUpdatePage() {
                   </span>
                 </label>
               )}
+
+              {/* Require acknowledgement */}
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-3 transition-colors ${
+                  requiresAck
+                    ? "border-amber-400 bg-amber-50 dark:bg-amber-900/15"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={requiresAck}
+                  onChange={() => setRequiresAck(!requiresAck)}
+                  className="mt-0.5 h-4 w-4 rounded border-input text-amber-600"
+                />
+                <span>
+                  <span className="block text-sm font-medium">
+                    Require acknowledgement
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Parents must tap &quot;Acknowledge&quot; to confirm they&apos;ve
+                    seen this. You&apos;ll see who has in Delivery status.
+                  </span>
+                </span>
+              </label>
             </div>
           )}
 
@@ -1081,6 +1111,9 @@ export default function SendUpdatePage() {
           )}
         </>
       )}
+
+      {/* Admin: who has seen / acknowledged recent notices */}
+      <SentNoticeStatus />
     </div>
   );
 }
