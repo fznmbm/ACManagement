@@ -15,6 +15,8 @@ import {
   CalendarCheck,
   Calendar,
   CheckCheck,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 
 interface Notification {
@@ -25,54 +27,29 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   student_id: string | null;
+  requires_ack?: boolean | null;
+  acknowledged_at?: string | null;
+  seen_at?: string | null;
   students?: { first_name: string; last_name: string } | null;
 }
 
-const TYPE_META: Record<string, { icon: any; label: string; tint: string }> = {
-  fine: {
-    icon: Receipt,
-    label: "Fine",
-    tint: "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400",
-  },
-  fee_alert: {
-    icon: CreditCard,
-    label: "Fee",
-    tint: "text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400",
-  },
-  feedback: {
-    icon: MessageSquare,
-    label: "Class feedback",
-    tint: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  academic_note: {
-    icon: BookOpen,
-    label: "Academic note",
-    tint: "text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400",
-  },
-  announcement: {
-    icon: Megaphone,
-    label: "Announcement",
-    tint: "text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400",
-  },
-  certificate: {
-    icon: Award,
-    label: "Certificate",
-    tint: "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400",
-  },
-  attendance: {
-    icon: CalendarCheck,
-    label: "Attendance",
-    tint: "text-teal-600 bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400",
-  },
-  event: {
-    icon: Calendar,
-    label: "Event",
-    tint: "text-slate-600 bg-slate-100 dark:bg-slate-700 dark:text-slate-300",
-  },
+const TYPE_META: Record<
+  string,
+  { icon: any; label: string; tint: string }
+> = {
+  fine: { icon: Receipt, label: "Fine", tint: "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400" },
+  fee_alert: { icon: CreditCard, label: "Fee", tint: "text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400" },
+  feedback: { icon: MessageSquare, label: "Class feedback", tint: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400" },
+  academic_note: { icon: BookOpen, label: "Academic note", tint: "text-indigo-600 bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400" },
+  announcement: { icon: Megaphone, label: "Announcement", tint: "text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400" },
+  certificate: { icon: Award, label: "Certificate", tint: "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400" },
+  attendance: { icon: CalendarCheck, label: "Attendance", tint: "text-teal-600 bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400" },
+  event: { icon: Calendar, label: "Event", tint: "text-slate-600 bg-slate-100 dark:bg-slate-700 dark:text-slate-300" },
 };
 
 function timeAgo(iso: string): string {
-  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const then = new Date(iso).getTime();
+  const diff = Math.max(0, Date.now() - then);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -99,6 +76,7 @@ export default function ParentUpdatesPage() {
   const { toast } = useToast();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ackBusy, setAckBusy] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUpdates();
@@ -117,7 +95,7 @@ export default function ParentUpdatesPage() {
       const { data } = await supabase
         .from("parent_notifications")
         .select(
-          "id, type, title, message, is_read, created_at, student_id, students(first_name, last_name)",
+          "id, type, title, message, is_read, created_at, student_id, requires_ack, acknowledged_at, seen_at, students(first_name, last_name)",
         )
         .eq("parent_user_id", user.id)
         .order("created_at", { ascending: false })
@@ -130,17 +108,55 @@ export default function ParentUpdatesPage() {
     }
   };
 
+  // Mark an item seen the moment the parent opens it (read + seen_at).
   const openItem = async (n: Notification) => {
-    if (!n.is_read) {
+    if (!n.is_read || !n.seen_at) {
+      const now = new Date().toISOString();
       setItems((prev) =>
-        prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)),
+        prev.map((x) =>
+          x.id === n.id ? { ...x, is_read: true, seen_at: x.seen_at || now } : x,
+        ),
       );
       await supabase
         .from("parent_notifications")
-        .update({ is_read: true, read_at: new Date().toISOString() })
+        .update({
+          is_read: true,
+          read_at: now,
+          seen_at: n.seen_at || now,
+        })
         .eq("id", n.id);
     }
     router.push(targetFor(n));
+  };
+
+  // Explicit "I've seen this" for notices the school flagged as requiring it.
+  const acknowledge = async (n: Notification) => {
+    setAckBusy(n.id);
+    const now = new Date().toISOString();
+    try {
+      const { error } = await supabase
+        .from("parent_notifications")
+        .update({
+          acknowledged_at: now,
+          is_read: true,
+          read_at: now,
+          seen_at: n.seen_at || now,
+        })
+        .eq("id", n.id);
+      if (error) throw error;
+      setItems((prev) =>
+        prev.map((x) =>
+          x.id === n.id
+            ? { ...x, acknowledged_at: now, is_read: true, seen_at: x.seen_at || now }
+            : x,
+        ),
+      );
+      toast.success("Thanks — marked as acknowledged");
+    } catch {
+      toast.error("Couldn't acknowledge. Please try again.");
+    } finally {
+      setAckBusy(null);
+    }
   };
 
   const markAllRead = async () => {
@@ -148,10 +164,13 @@ export default function ParentUpdatesPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
-    setItems((prev) => prev.map((x) => ({ ...x, is_read: true })));
+    const now = new Date().toISOString();
+    setItems((prev) =>
+      prev.map((x) => ({ ...x, is_read: true, seen_at: x.seen_at || now })),
+    );
     const { error } = await supabase
       .from("parent_notifications")
-      .update({ is_read: true, read_at: new Date().toISOString() })
+      .update({ is_read: true, read_at: now })
       .eq("parent_user_id", user.id)
       .eq("is_read", false);
     if (error) toast.error("Couldn't update. Please try again.");
@@ -159,6 +178,9 @@ export default function ParentUpdatesPage() {
   };
 
   const unreadCount = items.filter((i) => !i.is_read).length;
+  const needsAckCount = items.filter(
+    (i) => i.requires_ack && !i.acknowledged_at,
+  ).length;
 
   if (loading) {
     return (
@@ -177,6 +199,12 @@ export default function ParentUpdatesPage() {
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up"}
+            {needsAckCount > 0 && (
+              <span className="text-amber-600 dark:text-amber-400 font-medium">
+                {" "}
+                · {needsAckCount} need acknowledging
+              </span>
+            )}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -206,44 +234,81 @@ export default function ParentUpdatesPage() {
             const childName = n.students
               ? `${n.students.first_name} ${n.students.last_name}`
               : null;
+            const needsAck = !!n.requires_ack && !n.acknowledged_at;
             return (
-              <button
+              <div
                 key={n.id}
-                onClick={() => openItem(n)}
-                className={`w-full text-left flex items-start gap-3 rounded-xl border p-4 transition-colors ${
-                  n.is_read
-                    ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                    : "bg-primary/5 dark:bg-primary/10 border-primary/30"
-                } hover:border-primary`}
+                className={`rounded-xl border transition-colors ${
+                  needsAck
+                    ? "bg-amber-50 dark:bg-amber-900/15 border-amber-300 dark:border-amber-800"
+                    : n.is_read
+                      ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                      : "bg-primary/5 dark:bg-primary/10 border-primary/30"
+                }`}
               >
-                <div className={`shrink-0 rounded-full p-2 ${meta.tint}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
-                      {n.title}
-                    </p>
-                    {!n.is_read && (
-                      <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
-                    )}
+                <button
+                  onClick={() => openItem(n)}
+                  className="w-full text-left flex items-start gap-3 p-4 hover:opacity-90"
+                >
+                  <div className={`shrink-0 rounded-full p-2 ${meta.tint}`}>
+                    <Icon className="h-4 w-4" />
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
-                    {n.message}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-400">
-                    <span className="font-medium">{meta.label}</span>
-                    {childName && (
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                        {n.title}
+                      </p>
+                      {!n.is_read && (
+                        <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
+                      {n.message}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-400">
+                      <span className="font-medium">{meta.label}</span>
+                      {childName && (
+                        <>
+                          <span>·</span>
+                          <span className="truncate">{childName}</span>
+                        </>
+                      )}
+                      <span>·</span>
+                      <span className="shrink-0">{timeAgo(n.created_at)}</span>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Acknowledge strip — only for notices the school flagged */}
+                {n.requires_ack && (
+                  <div className="flex items-center justify-between gap-3 border-t border-amber-200 dark:border-amber-800/60 px-4 py-2.5">
+                    {n.acknowledged_at ? (
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-green-700 dark:text-green-400">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Acknowledged {timeAgo(n.acknowledged_at)}
+                      </span>
+                    ) : (
                       <>
-                        <span>·</span>
-                        <span className="truncate">{childName}</span>
+                        <span className="text-xs text-amber-700 dark:text-amber-400">
+                          The school asked you to confirm you&apos;ve seen this.
+                        </span>
+                        <button
+                          onClick={() => acknowledge(n)}
+                          disabled={ackBusy === n.id}
+                          className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium px-3 py-1.5 disabled:opacity-60"
+                        >
+                          {ackBusy === n.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          )}
+                          Acknowledge
+                        </button>
                       </>
                     )}
-                    <span>·</span>
-                    <span className="shrink-0">{timeAgo(n.created_at)}</span>
                   </div>
-                </div>
-              </button>
+                )}
+              </div>
             );
           })}
         </div>
