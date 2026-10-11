@@ -7,7 +7,6 @@ import { formatMoney } from "@/lib/utils/helpers";
 import {
   Calendar,
   GraduationCap,
-  BookOpen,
   PoundSterling,
   AlertCircle,
   Award,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react";
 import AttendanceTab from "@/components/parent/tabs/AttendanceTab";
 import GradesTab from "@/components/parent/tabs/GradesTab";
-import MemorizationTab from "@/components/parent/tabs/MemorizationTab";
 import FinancesTab from "@/components/parent/tabs/FinancesTab";
 import CertificatesTab from "@/components/parent/tabs/CertificatesTab";
 import ParentPrayerSheet from "@/components/prayer/ParentPrayerSheet";
@@ -39,7 +37,7 @@ interface Student {
 }
 
 type TabType = "attendance" | "progress" | "finances" | "prayers" | "feedback";
-type ProgressView = "grades" | "memorization" | "certificates";
+type ProgressView = "grades" | "certificates";
 
 interface Snapshot {
   attendance: number | null;
@@ -207,10 +205,7 @@ export default function StudentDetailPage() {
           const invOwed = (inv || []).reduce(
             (s, i: any) =>
               s +
-              Math.max(
-                0,
-                Number(i.amount_due || 0) - Number(i.amount_paid || 0),
-              ),
+              Math.max(0, Number(i.amount_due || 0) - Number(i.amount_paid || 0)),
             0,
           );
           snap.balance = finesOwed + invOwed;
@@ -338,12 +333,7 @@ export default function StudentDetailPage() {
       icon: PoundSterling,
       show: !!parentLink?.can_view_financial,
     },
-    {
-      id: "prayers" as TabType,
-      label: "Prayers",
-      icon: ScrollText,
-      show: true,
-    },
+    { id: "prayers" as TabType, label: "Prayers", icon: ScrollText, show: true },
     {
       id: "feedback" as TabType,
       label: "Feedback",
@@ -359,8 +349,7 @@ export default function StudentDetailPage() {
     : visibleTabs[0]?.id;
 
   const progressTabs: { id: ProgressView; label: string; icon: any }[] = [
-    { id: "grades", label: "Grades", icon: GraduationCap },
-    { id: "memorization", label: "Memorization", icon: BookOpen },
+    { id: "grades", label: "Results", icon: GraduationCap },
     { id: "certificates", label: "Certificates", icon: Award },
   ];
 
@@ -550,9 +539,6 @@ export default function StudentDetailPage() {
             </div>
             {progressView === "grades" && (
               <GradesTab studentId={params.id as string} />
-            )}
-            {progressView === "memorization" && (
-              <MemorizationTab studentId={params.id as string} />
             )}
             {progressView === "certificates" && (
               <CertificatesTab studentId={params.id as string} />

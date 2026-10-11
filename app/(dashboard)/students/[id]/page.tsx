@@ -11,7 +11,6 @@ import {
   MapPin,
   Users,
   TrendingUp,
-  Brain,
   Award,
   AlertCircle,
   FileText,
@@ -123,90 +122,6 @@ export default async function StudentDetailPage({
             typedAcademic.length,
         )
       : 0;
-
-  // Get Memorization Progress (FIXED - was querying non-existent quran_progress table)
-  // Get Memorization Progress (ALTERNATIVE - with type assertion)
-  const { data: memorizationData } = await supabase
-    .from("student_memorization")
-    .select(
-      `
-      id,
-      status,
-      proficiency_rating,
-      memorization_items!inner (
-        id,
-        name,
-        item_type,
-        category_name,
-        arabic_text
-      )
-    `,
-    )
-    .eq("student_id", params.id);
-
-  // Type definition
-  type MemorizationRecord = {
-    id: string;
-    status: string;
-    proficiency_rating: number | null;
-    memorization_items: {
-      id: string;
-      name: string;
-      item_type: string | null;
-      category_name: string | null;
-      arabic_text: string;
-    };
-  };
-
-  // Calculate memorization stats with proper typing
-  const typedData = memorizationData as MemorizationRecord[] | null;
-
-  // item_type/category_name are free text; match the bucket case-insensitively
-  const catOf = (m: MemorizationRecord) =>
-    `${m.memorization_items.category_name || ""} ${m.memorization_items.item_type || ""}`.toLowerCase();
-  const inBucket = (m: MemorizationRecord, key: string) => catOf(m).includes(key);
-  const isMemorized = (m: MemorizationRecord) =>
-    m.status === "memorized" || m.status === "mastered";
-  const isMastered = (m: MemorizationRecord) => m.status === "mastered";
-
-  const memorizationStats = typedData
-    ? {
-        duas: {
-          total: typedData.filter((m) => inBucket(m, "dua")).length,
-          memorized: typedData.filter((m) => inBucket(m, "dua") && isMemorized(m))
-            .length,
-          mastered: typedData.filter((m) => inBucket(m, "dua") && isMastered(m))
-            .length,
-        },
-        surahs: {
-          total: typedData.filter((m) => inBucket(m, "surah")).length,
-          memorized: typedData.filter(
-            (m) => inBucket(m, "surah") && isMemorized(m),
-          ).length,
-          mastered: typedData.filter((m) => inBucket(m, "surah") && isMastered(m))
-            .length,
-        },
-        hadiths: {
-          total: typedData.filter((m) => inBucket(m, "hadith")).length,
-          memorized: typedData.filter(
-            (m) => inBucket(m, "hadith") && isMemorized(m),
-          ).length,
-          mastered: typedData.filter((m) => inBucket(m, "hadith") && isMastered(m))
-            .length,
-        },
-      }
-    : null;
-
-  // Calculate overall memorization percentage
-  const overallMemorization = memorizationStats
-    ? Math.round(
-        ((memorizationStats.duas.memorized +
-          memorizationStats.surahs.memorized +
-          memorizationStats.hadiths.memorized) /
-          45) *
-          100,
-      )
-    : 0;
 
   // Get Certificates (NEW)
   const { data: certificates } = await supabase
@@ -474,74 +389,6 @@ export default async function StudentDetailPage({
             ) : (
               <p className="text-center py-8 text-muted-foreground">
                 No academic assessments recorded yet.
-              </p>
-            )}
-          </div>
-
-          {/* Memorization Progress (FIXED - renamed from "Quran Progress") */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">Memorization Progress</h3>
-              </div>
-              <Link
-                href={`/curriculum-assessment/memorization?student=${student.id}`}
-                className="text-sm text-primary hover:underline"
-              >
-                View Details →
-              </Link>
-            </div>
-
-            {memorizationStats ? (
-              <div className="space-y-4">
-                {/* Progress Summary */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1">
-                      Duas
-                    </p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {memorizationStats.duas.memorized}/15
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <p className="text-sm text-green-700 dark:text-green-300 mb-1">
-                      Surahs
-                    </p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {memorizationStats.surahs.memorized}/15
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                    <p className="text-sm text-purple-700 dark:text-purple-300 mb-1">
-                      Hadiths
-                    </p>
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {memorizationStats.hadiths.memorized}/15
-                    </p>
-                  </div>
-                </div>
-
-                {/* Overall Progress */}
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Overall Completion</span>
-                    <span className="font-semibold">
-                      {overallMemorization}%
-                    </span>
-                  </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all"
-                      style={{ width: `${overallMemorization}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-center py-8 text-muted-foreground">
-                No memorization progress recorded yet.
               </p>
             )}
           </div>

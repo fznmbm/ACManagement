@@ -6,7 +6,6 @@ import {
   BookOpen,
   ClipboardList,
   Award,
-  Brain,
   Plus,
   ChevronRight,
 } from "lucide-react";
@@ -265,22 +264,6 @@ export default async function LearningPage() {
         </Link>
       </div>
 
-      {/* Memorization — being retired; kept linked so nothing dead-ends */}
-      <Link
-        href="/curriculum-assessment/memorization"
-        className="flex items-center justify-between bg-muted/40 border border-border rounded-lg px-5 py-3 hover:bg-muted/60 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <Brain className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium">Memorisation tracking</p>
-            <p className="text-xs text-muted-foreground">
-              Being folded into results — still here for now
-            </p>
-          </div>
-        </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-      </Link>
     </div>
   );
 }
