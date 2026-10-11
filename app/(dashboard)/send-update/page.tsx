@@ -71,6 +71,7 @@ export default function SendUpdatePage() {
   const [priority, setPriority] = useState<"normal" | "urgent">("normal");
   const [isAcademicNote, setIsAcademicNote] = useState(false);
   const [requiresAck, setRequiresAck] = useState(false);
+  const [ackDefaultTypes, setAckDefaultTypes] = useState<string[]>([]);
   const [recipientCount, setRecipientCount] = useState(0);
 
   // Weekly class update fields
@@ -136,9 +137,16 @@ export default function SendUpdatePage() {
     }
   }, [audience, updateType]);
 
+  // The notice type this compose will create, and the ack default for it.
+  const noticeType =
+    audience === "student" && isAcademicNote ? "academic_note" : "announcement";
+  useEffect(() => {
+    setRequiresAck(ackDefaultTypes.includes(noticeType));
+  }, [noticeType, ackDefaultTypes]);
+
   const fetchInitialData = async () => {
     try {
-      const [classRes, templateRes, settingsRes] = await Promise.all([
+      const [classRes, templateRes, settingsRes, ackRes] = await Promise.all([
         supabase
           .from("classes")
           .select("id, name")
@@ -154,10 +162,23 @@ export default function SendUpdatePage() {
           .select("setting_value")
           .eq("setting_key", "communication_settings")
           .single(),
+        supabase
+          .from("system_settings")
+          .select("setting_value")
+          .eq("setting_key", "parent_ack_settings")
+          .maybeSingle(),
       ]);
 
       setClasses(classRes.data || []);
       setTemplates(templateRes.data || []);
+
+      if (ackRes.data?.setting_value) {
+        const val =
+          typeof ackRes.data.setting_value === "string"
+            ? JSON.parse(ackRes.data.setting_value)
+            : ackRes.data.setting_value;
+        if (Array.isArray(val?.types)) setAckDefaultTypes(val.types);
+      }
 
       if (settingsRes.data?.setting_value) {
         const val =

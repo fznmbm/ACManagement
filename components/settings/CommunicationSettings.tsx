@@ -30,6 +30,18 @@ interface CommSettings {
   sign_off: string;
 }
 
+// Notice types that can be set to require acknowledgement by default.
+const ACK_TYPES: { id: string; label: string }[] = [
+  { id: "announcement", label: "Announcements" },
+  { id: "academic_note", label: "Academic notes" },
+  { id: "feedback", label: "Class feedback" },
+  { id: "fee_alert", label: "Fee notices" },
+  { id: "fine", label: "Fines" },
+  { id: "certificate", label: "Certificates" },
+  { id: "attendance", label: "Attendance notices" },
+  { id: "event", label: "Events" },
+];
+
 export default function CommunicationSettings() {
   const supabase = createClient();
 
@@ -41,6 +53,10 @@ export default function CommunicationSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const [ackTypes, setAckTypes] = useState<string[]>([]);
+  const [ackSaving, setAckSaving] = useState(false);
+  const [ackSaved, setAckSaved] = useState(false);
 
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -59,7 +75,7 @@ export default function CommunicationSettings() {
 
   const fetchData = async () => {
     try {
-      const [settingsRes, templatesRes] = await Promise.all([
+      const [settingsRes, templatesRes, ackRes] = await Promise.all([
         supabase
           .from("system_settings")
           .select("setting_value")
@@ -69,6 +85,11 @@ export default function CommunicationSettings() {
           .from("message_templates")
           .select("*")
           .order("sort_order", { ascending: true }),
+        supabase
+          .from("system_settings")
+          .select("setting_value")
+          .eq("setting_key", "parent_ack_settings")
+          .maybeSingle(),
       ]);
 
       if (settingsRes.data?.setting_value) {
@@ -84,6 +105,14 @@ export default function CommunicationSettings() {
 
       if (templatesRes.data) {
         setTemplates(templatesRes.data);
+      }
+
+      if (ackRes.data?.setting_value) {
+        const val =
+          typeof ackRes.data.setting_value === "string"
+            ? JSON.parse(ackRes.data.setting_value)
+            : ackRes.data.setting_value;
+        if (Array.isArray(val?.types)) setAckTypes(val.types);
       }
     } catch (err) {
       console.error("Error fetching communication settings:", err);
@@ -110,6 +139,37 @@ export default function CommunicationSettings() {
       alert("Failed to save settings");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleAckType = (id: string) =>
+    setAckTypes((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
+    );
+
+  const saveAckSettings = async () => {
+    setAckSaving(true);
+    try {
+      // Stored as a proper JSONB object (no JSON.stringify) and upserted so
+      // the key is created on first save. Read with maybeSingle elsewhere.
+      const { error } = await supabase.from("system_settings").upsert(
+        {
+          setting_key: "parent_ack_settings",
+          setting_value: { types: ackTypes },
+          description:
+            "Notice types that default to requiring parent acknowledgement",
+          category: "notification",
+        },
+        { onConflict: "setting_key" },
+      );
+      if (error) throw error;
+      setAckSaved(true);
+      setTimeout(() => setAckSaved(false), 2000);
+    } catch (err) {
+      console.error("Error saving acknowledgement settings:", err);
+      alert("Failed to save acknowledgement settings");
+    } finally {
+      setAckSaving(false);
     }
   };
 
@@ -283,6 +343,61 @@ export default function CommunicationSettings() {
             {saving ? "Saving..." : "Save defaults"}
           </button>
           {saved && (
+            <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+              <Check className="h-4 w-4" /> Saved
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Acknowledgement defaults */}
+      <div className="border-t pt-8">
+        <h3 className="text-lg font-semibold mb-1">
+          Require acknowledgement by default
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          For these notice types, the &quot;Require acknowledgement&quot; option
+          on the Send update screen starts switched on, so parents are asked to
+          tap &quot;Acknowledge&quot;. You can still change it for any
+          individual message before sending.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {ACK_TYPES.map((t) => {
+            const on = ackTypes.includes(t.id);
+            return (
+              <label
+                key={t.id}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 text-sm transition-colors ${
+                  on
+                    ? "border-amber-400 bg-amber-50 dark:bg-amber-900/15"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => toggleAckType(t.id)}
+                  className="h-4 w-4 rounded border-input text-amber-600"
+                />
+                {t.label}
+              </label>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={saveAckSettings}
+            disabled={ackSaving}
+            className="btn-primary flex items-center gap-2"
+          >
+            {ackSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {ackSaving ? "Saving..." : "Save acknowledgement defaults"}
+          </button>
+          {ackSaved && (
             <span className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
               <Check className="h-4 w-4" /> Saved
             </span>
