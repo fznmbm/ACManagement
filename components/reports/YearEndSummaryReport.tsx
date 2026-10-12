@@ -532,7 +532,7 @@ export default function YearEndSummaryReport() {
                                 index === 0
                                   ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
                                   : index === 1
-                                  ? "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300"
+                                  ? "bg-muted/30 text-foreground"
                                   : index === 2
                                   ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300"
                                   : "bg-muted text-muted-foreground"

@@ -223,7 +223,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
       case "overdue":
         return "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400";
       default:
-        return "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300";
+        return "bg-muted text-foreground  ";
     }
   };
 
@@ -263,28 +263,28 @@ export default function FeesTab({ studentId }: FeesTabProps) {
     <div className="space-y-6">
       {/* Financial Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Invoices</p>
-          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+        <div className="bg-card rounded-xl border border-border p-4">
+          <p className="text-xs text-muted-foreground">Invoices</p>
+          <p className="mt-1 text-xl font-bold text-foreground">
             {stats.totalInvoices}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
+        <div className="bg-card rounded-xl border border-blue-200 dark:border-blue-800 p-4">
           <p className="text-xs text-blue-600 dark:text-blue-400">Total</p>
           <p className="mt-1 text-xl font-bold text-blue-700 dark:text-blue-400">
             {formatCurrency(stats.totalAmount)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-green-200 dark:border-green-800 p-4">
+        <div className="bg-card rounded-xl border border-green-200 dark:border-green-800 p-4">
           <p className="text-xs text-green-600 dark:text-green-400">Paid</p>
           <p className="mt-1 text-xl font-bold text-green-700 dark:text-green-400">
             {formatCurrency(stats.totalPaid)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-red-200 dark:border-red-800 p-4">
+        <div className="bg-card rounded-xl border border-red-200 dark:border-red-800 p-4">
           <p className="text-xs text-red-600 dark:text-red-400">Balance</p>
           <p className="mt-1 text-xl font-bold text-red-700 dark:text-red-400">
             {formatCurrency(stats.totalBalance)}
@@ -341,14 +341,14 @@ export default function FeesTab({ studentId }: FeesTabProps) {
 
       {/* Invoices List */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
           Invoices & Payments
         </h3>
 
         {invoices.length === 0 ? (
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-            <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <div className="bg-card rounded-xl border border-border p-10 text-center">
+            <FileText className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm">
               No invoices generated yet
             </p>
           </div>
@@ -357,13 +357,13 @@ export default function FeesTab({ studentId }: FeesTabProps) {
             {invoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-card rounded-lg border border-border overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        <h4 className="text-lg font-semibold text-foreground">
                           {invoice.invoice_number}
                         </h4>
                         <span
@@ -383,7 +383,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         Billing Period:{" "}
                         {new Date(
                           invoice.billing_period_start
@@ -394,7 +394,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                         ).toLocaleDateString("en-GB")}
                       </p>
                       {invoice.description && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {invoice.description}
                         </p>
                       )}
@@ -404,26 +404,26 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                         setSelectedInvoice(invoice);
                         setShowPaymentModal(true);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-lg transition-colors"
                     >
                       <Download className="h-4 w-4" />
                       View Details
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-border">
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Issue Date
                       </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {new Date(invoice.issue_date).toLocaleDateString(
                           "en-GB"
                         )}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Due Date
                       </p>
                       <p
@@ -431,22 +431,22 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                           isOverdue(invoice.due_date) &&
                           invoice.status !== "paid"
                             ? "text-red-600 dark:text-red-400"
-                            : "text-slate-900 dark:text-white"
+                            : "text-foreground"
                         }`}
                       >
                         {new Date(invoice.due_date).toLocaleDateString("en-GB")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Amount
                       </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {formatCurrency(invoice.amount)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Balance
                       </p>
                       <p
@@ -463,24 +463,24 @@ export default function FeesTab({ studentId }: FeesTabProps) {
 
                   {/* Payment History */}
                   {invoice.fee_payments && invoice.fee_payments.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs font-medium text-foreground mb-2">
                         Payment History:
                       </p>
                       <div className="space-y-2">
                         {invoice.fee_payments.map((payment) => (
                           <div
                             key={payment.id}
-                            className="flex items-center justify-between text-sm bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2"
+                            className="flex items-center justify-between text-sm bg-background/50 rounded-lg p-2"
                           >
                             <div className="flex items-center gap-2">
                               <CheckCircle className="h-4 w-4 text-green-500" />
-                              <span className="text-slate-600 dark:text-slate-400">
+                              <span className="text-muted-foreground">
                                 {new Date(
                                   payment.payment_date
                                 ).toLocaleDateString("en-GB")}
                               </span>
-                              <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">
+                              <span className="text-xs text-muted-foreground capitalize">
                                 ({payment.payment_method})
                               </span>
                             </div>
@@ -502,10 +502,10 @@ export default function FeesTab({ studentId }: FeesTabProps) {
       {/* Invoice Detail Modal */}
       {showPaymentModal && selectedInvoice && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                <h3 className="text-xl font-semibold text-foreground">
                   Invoice Details
                 </h3>
                 <button
@@ -513,7 +513,7 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                     setShowPaymentModal(false);
                     setSelectedInvoice(null);
                   }}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"
                 >
                   <svg
                     className="h-6 w-6"
@@ -535,15 +535,15 @@ export default function FeesTab({ studentId }: FeesTabProps) {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  <p className="text-sm text-muted-foreground mb-1">
                     Invoice Number
                   </p>
-                  <p className="font-semibold text-slate-900 dark:text-white">
+                  <p className="font-semibold text-foreground">
                     {selectedInvoice.invoice_number}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  <p className="text-sm text-muted-foreground mb-1">
                     Status
                   </p>
                   <span
@@ -555,20 +555,20 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  <p className="text-sm text-muted-foreground mb-1">
                     Issue Date
                   </p>
-                  <p className="font-semibold text-slate-900 dark:text-white">
+                  <p className="font-semibold text-foreground">
                     {new Date(selectedInvoice.issue_date).toLocaleDateString(
                       "en-GB"
                     )}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  <p className="text-sm text-muted-foreground mb-1">
                     Due Date
                   </p>
-                  <p className="font-semibold text-slate-900 dark:text-white">
+                  <p className="font-semibold text-foreground">
                     {new Date(selectedInvoice.due_date).toLocaleDateString(
                       "en-GB"
                     )}
@@ -576,26 +576,26 @@ export default function FeesTab({ studentId }: FeesTabProps) {
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <div className="border-t border-border pt-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-muted-foreground">
                       Invoice Amount:
                     </span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                    <span className="font-semibold text-foreground">
                       {formatCurrency(selectedInvoice.amount)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-muted-foreground">
                       Amount Paid:
                     </span>
                     <span className="font-semibold text-green-600 dark:text-green-400">
                       {formatCurrency(selectedInvoice.paid_amount)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-lg pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                  <div className="flex justify-between text-lg pt-2 border-t border-border">
+                    <span className="font-semibold text-foreground">
                       Balance Due:
                     </span>
                     <span className="font-bold text-red-600 dark:text-red-400">

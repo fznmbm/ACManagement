@@ -331,7 +331,7 @@ export default function StudentReportGenerator({
   const getMemorizationStatusBadge = (status: string) => {
     const badges: Record<string, string> = {
       not_started:
-        "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+        "bg-muted text-muted-foreground  ",
       learning: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
       memorized:
         "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -411,7 +411,7 @@ export default function StudentReportGenerator({
 
       {/* Report Content */}
       {reportData && (
-        <div className="space-y-6 bg-white dark:bg-slate-800 p-6 rounded-lg border border-border print:border-0">
+        <div className="space-y-6 bg-card p-6 rounded-lg border border-border print:border-0">
           {/* Header */}
           <div className="border-b pb-4">
             <div className="flex items-start justify-between">

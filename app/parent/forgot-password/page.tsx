@@ -46,21 +46,21 @@ export default function ForgotPasswordPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
             <Mail className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Reset Password
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground">
             Al Hikmah Institute Crawley
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-8">
+        <div className="bg-card rounded-xl shadow-xl p-8">
           {!sent ? (
             <>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Forgot your password?
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              <p className="text-sm text-muted-foreground mb-6">
                 Enter your email address and we'll send you a link to reset your
                 password.
               </p>
@@ -75,18 +75,18 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="parent@example.com"
                       required
-                      className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full pl-10 pr-4 py-3 border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 </div>
@@ -103,7 +103,7 @@ export default function ForgotPasswordPage() {
               <div className="mt-6 text-center">
                 <Link
                   href="/parent/login"
-                  className="flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors"
+                  className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back to login
@@ -113,16 +113,16 @@ export default function ForgotPasswordPage() {
           ) : (
             <div className="text-center py-4">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Check your email
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 We've sent a password reset link to:
               </p>
-              <p className="font-medium text-slate-900 dark:text-white mb-4">
+              <p className="font-medium text-foreground mb-4">
                 {email}
               </p>
-              <p className="text-xs text-slate-400 mb-6">
+              <p className="text-xs text-muted-foreground mb-6">
                 ⚠️ The link expires in 24 hours. If you don't see it, check your
                 spam folder.
               </p>

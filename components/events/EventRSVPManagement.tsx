@@ -145,14 +145,14 @@ export default function EventRSVPManagement({ eventId, eventTitle }: Props) {
           }
           className={`p-3 rounded-lg border text-center transition-all ${
             filter === "no_response"
-              ? "bg-slate-200 border-slate-400 dark:bg-slate-700 dark:border-slate-500"
-              : "bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700"
+              ? "bg-muted border-border  "
+              : "bg-muted border-border  "
           }`}
         >
-          <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">
+          <p className="text-2xl font-bold text-foreground">
             {noResponse.length}
           </p>
-          <p className="text-xs text-slate-500">No Response</p>
+          <p className="text-xs text-muted-foreground">No Response</p>
         </button>
       </div>
 

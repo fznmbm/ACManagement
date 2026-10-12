@@ -60,7 +60,7 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
                 )}
               </div>
               <span
-                className={`px-2 py-0.5 text-xs font-medium rounded-full ${classItem.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                className={`px-2 py-0.5 text-xs font-medium rounded-full ${classItem.is_active ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"}`}
               >
                 {classItem.is_active ? "Active" : "Inactive"}
               </span>
@@ -192,7 +192,7 @@ export default function ClassesTable({ classes, userRole }: ClassesTableProps) {
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
                       classItem.is_active
                         ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {classItem.is_active ? "Active" : "Inactive"}

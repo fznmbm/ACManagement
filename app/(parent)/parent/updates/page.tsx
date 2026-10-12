@@ -44,7 +44,7 @@ const TYPE_META: Record<
   announcement: { icon: Megaphone, label: "Announcement", tint: "text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400" },
   certificate: { icon: Award, label: "Certificate", tint: "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400" },
   attendance: { icon: CalendarCheck, label: "Attendance", tint: "text-teal-600 bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400" },
-  event: { icon: Calendar, label: "Event", tint: "text-slate-600 bg-slate-100 dark:bg-slate-700 dark:text-slate-300" },
+  event: { icon: Calendar, label: "Event", tint: "text-muted-foreground bg-muted " },
 };
 
 function timeAgo(iso: string): string {
@@ -194,10 +194,10 @@ export default function ParentUpdatesPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Updates
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up"}
             {needsAckCount > 0 && (
               <span className="text-amber-600 dark:text-amber-400 font-medium">
@@ -219,9 +219,9 @@ export default function ParentUpdatesPage() {
       </div>
 
       {items.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-          <Bell className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="bg-card rounded-xl border border-border p-10 text-center">
+          <Bell className="h-12 w-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">
             No updates yet. Notices about fees, feedback and events will appear
             here.
           </p>
@@ -242,7 +242,7 @@ export default function ParentUpdatesPage() {
                   needsAck
                     ? "bg-amber-50 dark:bg-amber-900/15 border-amber-300 dark:border-amber-800"
                     : n.is_read
-                      ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                      ? "bg-card border-border"
                       : "bg-primary/5 dark:bg-primary/10 border-primary/30"
                 }`}
               >
@@ -255,17 +255,17 @@ export default function ParentUpdatesPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                      <p className="font-medium text-sm text-foreground truncate">
                         {n.title}
                       </p>
                       {!n.is_read && (
                         <span className="h-2 w-2 rounded-full bg-primary shrink-0"></span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                       {n.message}
                     </p>
-                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-400">
+                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
                       <span className="font-medium">{meta.label}</span>
                       {childName && (
                         <>

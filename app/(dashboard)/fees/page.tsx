@@ -284,7 +284,7 @@ export default function FeesPage() {
           ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
           : status === "overdue"
             ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-            : "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400";
+            : "bg-muted/30 text-muted-foreground ";
 
   return (
     <div className="space-y-6">

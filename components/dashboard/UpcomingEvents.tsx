@@ -52,7 +52,7 @@ export default async function UpcomingEvents() {
       celebration:
         "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
       general:
-        "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300",
+        "bg-muted/30 text-foreground",
     };
     return colors[type] || colors.general;
   };

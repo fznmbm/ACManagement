@@ -89,7 +89,7 @@ export default function EventRSVPConfig({
               setLocalCollectAge(false);
             }
           }}
-          className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
         />
         <div>
           <label htmlFor="rsvp_required" className="font-medium cursor-pointer">
@@ -181,7 +181,7 @@ export default function EventRSVPConfig({
                 id="collect_age_breakdown"
                 checked={localCollectAge}
                 onChange={(e) => setLocalCollectAge(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
               />
               <div className="flex-1">
                 <label

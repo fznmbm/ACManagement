@@ -535,7 +535,7 @@ export default function ParentPrayerSheet({ studentId, studentName }: Props) {
                     ? "bg-blue-100 text-blue-800"
                     : status === "flagged"
                       ? "bg-red-100 text-red-800"
-                      : "bg-slate-100 text-slate-600"
+                      : "bg-muted text-muted-foreground"
               }`}
             >
               {status === "draft"

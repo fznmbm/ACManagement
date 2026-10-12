@@ -286,7 +286,7 @@ export default function FeeStructureForm({
                           {quarters.map((quarter) => (
                             <div
                               key={quarter.id}
-                              className="text-xs bg-white dark:bg-slate-800 p-2 rounded border"
+                              className="text-xs bg-card p-2 rounded border"
                             >
                               <span className="font-medium">
                                 {quarter.quarter_name}

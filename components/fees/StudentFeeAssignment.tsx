@@ -388,7 +388,7 @@ export default function StudentFeeAssignment({
                 {endedAssignments.map((assignment) => (
                   <div
                     key={assignment.id}
-                    className="flex items-center justify-between p-2 border rounded text-sm opacity-50 bg-gray-50 dark:bg-gray-800"
+                    className="flex items-center justify-between p-2 border rounded text-sm opacity-50 bg-muted"
                   >
                     <div>
                       <p className="font-medium">

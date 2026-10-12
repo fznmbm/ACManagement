@@ -22,7 +22,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     <div
       className={`${containerClass} bg-black/50 flex items-center justify-center`}
     >
-      <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-xl">
+      <div className="bg-card rounded-lg p-6 shadow-xl">
         <div className="flex flex-col items-center gap-4">
           <Spinner size="lg" />
           <p className="text-sm font-medium text-foreground">{message}</p>

@@ -566,7 +566,7 @@ export default function FeeSettings() {
                             e.target.checked,
                           )
                         }
-                        className="rounded border-gray-300 text-primary"
+                        className="rounded border-border text-primary"
                       />
                       <button
                         onClick={() => deleteFeeStructure(structure.id)}
@@ -839,7 +839,7 @@ export default function FeeSettings() {
                       className={`inline-block mt-1 px-2 py-1 text-xs rounded-full ${
                         quarter.is_active
                           ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                          : "bg-muted text-muted-foreground  "
                       }`}
                     >
                       {quarter.is_active ? "Active" : "Inactive"}

@@ -246,22 +246,22 @@ export default function MyChildrenPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-foreground">
           My Children
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+        <p className="text-sm text-muted-foreground mt-0.5">
           {children.length} {children.length === 1 ? "child" : "children"}{" "}
           registered
         </p>
       </div>
 
       {children.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-          <Users className="h-12 w-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+        <div className="bg-card rounded-xl border border-border p-10 text-center">
+          <Users className="h-12 w-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <h3 className="font-semibold text-foreground mb-1">
             No Children Linked
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Contact the school to link your children.
           </p>
           <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-left max-w-sm mx-auto">
@@ -288,7 +288,7 @@ export default function MyChildrenPage() {
               <div
                 key={link.id}
                 onClick={() => router.push(`/parent/student/${student.id}`)}
-                className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary dark:hover:border-primary transition-all cursor-pointer overflow-hidden"
+                className="bg-card rounded-xl border border-border hover:border-primary dark:hover:border-primary transition-all cursor-pointer overflow-hidden"
               >
                 <div className="flex items-center gap-3 p-4">
                   {/* Avatar */}
@@ -298,10 +298,10 @@ export default function MyChildrenPage() {
                       {student.last_name[0]}
                     </span>
                     <span
-                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-slate-800 ${getStatusDot(student.status)}`}
+                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white  ${getStatusDot(student.status)}`}
                     ></span>
                     {(unreadCounts.get(link.student_id) || 0) > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
+                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
                         {unreadCounts.get(link.student_id)}
                       </span>
                     )}
@@ -310,7 +310,7 @@ export default function MyChildrenPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                      <p className="font-semibold text-foreground text-sm">
                         {student.first_name} {student.last_name}
                       </p>
                       {link.is_primary && (
@@ -319,7 +319,7 @@ export default function MyChildrenPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {student.student_number} ·{" "}
                       {student.classes?.name || "No class"} · {student.gender}
                     </p>
@@ -338,11 +338,11 @@ export default function MyChildrenPage() {
                     )}
                   </div>
 
-                  <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </div>
 
                 {/* Stats bar */}
-                <div className="flex border-t border-slate-100 dark:border-slate-700 divide-x divide-slate-100 dark:divide-slate-700">
+                <div className="flex border-t border-border divide-x divide-border">
                   {link.can_view_attendance && (
                     <div className="flex-1 px-3 py-2 text-center">
                       <p
@@ -350,7 +350,7 @@ export default function MyChildrenPage() {
                       >
                         {s.attendanceRate}%
                       </p>
-                      <p className="text-xs text-slate-400">Attendance</p>
+                      <p className="text-xs text-muted-foreground">Attendance</p>
                     </div>
                   )}
                   {link.can_view_grades && (
@@ -358,17 +358,17 @@ export default function MyChildrenPage() {
                       <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
                         {s.gradesAverage}%
                       </p>
-                      <p className="text-xs text-slate-400">Grades</p>
+                      <p className="text-xs text-muted-foreground">Grades</p>
                     </div>
                   )}
                   {link.can_view_financial && (
                     <div className="flex-1 px-3 py-2 text-center">
                       <p
-                        className={`text-sm font-bold ${hasPending ? "text-red-600 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}
+                        className={`text-sm font-bold ${hasPending ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
                       >
                         {s.pendingFines}
                       </p>
-                      <p className="text-xs text-slate-400">Fines</p>
+                      <p className="text-xs text-muted-foreground">Fines</p>
                     </div>
                   )}
                 </div>

@@ -233,7 +233,7 @@ export default function OrphanedAuthCleanup() {
                 {previewData.orphanedUsers.map((user: any) => (
                   <div
                     key={user.id}
-                    className="text-xs bg-white dark:bg-slate-800 p-2 rounded border"
+                    className="text-xs bg-card p-2 rounded border"
                   >
                     <div className="font-medium">
                       {user.email || "No email"}
@@ -316,7 +316,7 @@ export default function OrphanedAuthCleanup() {
                 {cleanupResult.deleted.map((email: string, idx: number) => (
                   <div
                     key={idx}
-                    className="text-xs bg-white dark:bg-slate-800 p-2 rounded border"
+                    className="text-xs bg-card p-2 rounded border"
                   >
                     {email}
                   </div>
@@ -332,7 +332,7 @@ export default function OrphanedAuthCleanup() {
                 {cleanupResult.protected.map((email: string, idx: number) => (
                   <div
                     key={idx}
-                    className="text-xs bg-white dark:bg-slate-800 p-2 rounded border"
+                    className="text-xs bg-card p-2 rounded border"
                   >
                     {email}
                   </div>
@@ -420,7 +420,7 @@ export default function OrphanedAuthCleanup() {
       )}
 
       {/* Info Box */}
-      <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 border rounded-lg">
+      <div className="mt-6 p-4 bg-muted/50 border rounded-lg">
         <h4 className="text-sm font-semibold mb-2">ℹ️ How This Works</h4>
         <ul className="text-xs text-muted-foreground space-y-1">
           <li>

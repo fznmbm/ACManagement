@@ -85,7 +85,7 @@ export default function ParentFinancesPage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"invoices" | "fines" | "history">(
-    "invoices",
+    "invoices"
   );
 
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function ParentFinancesPage() {
         period_name,
         notes,
         student_id
-      `,
+      `
         )
         .in("student_id", studentIds)
         .order("generated_date", { ascending: false });
@@ -207,7 +207,7 @@ export default function ParentFinancesPage() {
           date,
           status
         )
-      `,
+      `
         )
         .in("student_id", studentIds)
         .order("issued_date", { ascending: false });
@@ -327,9 +327,7 @@ export default function ParentFinancesPage() {
     // Money still owed = remaining balance on every unpaid/partial/overdue
     // invoice (was: full amount of pending ones only, dropping partials).
     const pendingInvoices = invoices
-      .filter(
-        (inv) => inv.status !== "paid" && inv.status !== ("cancelled" as any),
-      )
+      .filter((inv) => inv.status !== "paid" && inv.status !== ("cancelled" as any))
       .reduce((sum, inv) => sum + (inv.amount - (inv.amount_paid || 0)), 0);
 
     const totalFines = fines.reduce((sum, fine) => sum + fine.amount, 0);
@@ -362,44 +360,44 @@ export default function ParentFinancesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Financial Overview
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             Manage invoices, fines, and payment history
           </p>
         </div>
 
         {/* Summary tiles — compact 2x2 on mobile, 4-across on desktop */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="bg-card rounded-xl border border-border p-4">
+            <p className="text-xs text-muted-foreground">
               Outstanding
             </p>
             <p className="text-xl font-bold text-red-600 dark:text-red-400 mt-1">
               {formatMoney(totals.totalOwed)}
             </p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="bg-card rounded-xl border border-border p-4">
+            <p className="text-xs text-muted-foreground">
               Invoices
             </p>
             <p className="text-xl font-bold text-orange-600 dark:text-orange-400 mt-1">
               {formatMoney(totals.pendingInvoices)}
             </p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Fines</p>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <p className="text-xs text-muted-foreground">Fines</p>
             <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
               {formatMoney(totals.pendingFines)}
             </p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Paid</p>
+          <div className="bg-card rounded-xl border border-border p-4">
+            <p className="text-xs text-muted-foreground">Paid</p>
             <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
               {formatMoney(totals.paidInvoices + totals.paidFines)}
             </p>
@@ -415,18 +413,18 @@ export default function ParentFinancesPage() {
               <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 dark:bg-primary/10 p-4 sm:p-5">
                 <div className="mb-3 flex items-center gap-2">
                   <Landmark className="h-4 w-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  <h2 className="text-sm font-semibold text-foreground">
                     How to pay
                   </h2>
                 </div>
 
                 <div className="grid gap-2 sm:grid-cols-3">
                   {/* Cash — available now */}
-                  <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                  <div className="rounded-lg border border-border bg-card p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Banknote className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium text-slate-900 dark:text-white">
+                        <span className="text-sm font-medium text-foreground">
                           Cash
                         </span>
                       </div>
@@ -434,7 +432,7 @@ export default function ParentFinancesPage() {
                         Available
                       </span>
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-1.5 text-xs text-muted-foreground">
                       Pay at the school office during opening hours.
                     </p>
                   </div>
@@ -443,22 +441,22 @@ export default function ParentFinancesPage() {
                   <div
                     className={`rounded-lg p-3 ${
                       bankReady
-                        ? "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                        : "border border-dashed border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60"
+                        ? "border border-border bg-card"
+                        : "border border-dashed border-border bg-card/60 "
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Landmark
                           className={`h-4 w-4 ${
-                            bankReady ? "text-primary" : "text-slate-400"
+                            bankReady ? "text-primary" : "text-muted-foreground"
                           }`}
                         />
                         <span
                           className={`text-sm font-medium ${
                             bankReady
-                              ? "text-slate-900 dark:text-white"
-                              : "text-slate-500 dark:text-slate-400"
+                              ? "text-foreground"
+                              : "text-muted-foreground"
                           }`}
                         >
                           Bank transfer
@@ -468,7 +466,7 @@ export default function ParentFinancesPage() {
                         className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                           bankReady
                             ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                            : "bg-muted text-muted-foreground  dark:text-muted-foreground"
                         }`}
                       >
                         {bankReady ? "Available" : "Soon"}
@@ -478,66 +476,66 @@ export default function ParentFinancesPage() {
                       <dl className="mt-1.5 space-y-0.5 text-xs">
                         {BANK.accountName && (
                           <div className="flex justify-between gap-3">
-                            <dt className="text-slate-500 dark:text-slate-400">
+                            <dt className="text-muted-foreground">
                               Account
                             </dt>
-                            <dd className="text-right font-medium text-slate-900 dark:text-white">
+                            <dd className="text-right font-medium text-foreground">
                               {BANK.accountName}
                             </dd>
                           </div>
                         )}
                         {BANK.sortCode && (
                           <div className="flex justify-between gap-3">
-                            <dt className="text-slate-500 dark:text-slate-400">
+                            <dt className="text-muted-foreground">
                               Sort code
                             </dt>
-                            <dd className="font-mono font-medium text-slate-900 dark:text-white">
+                            <dd className="font-mono font-medium text-foreground">
                               {BANK.sortCode}
                             </dd>
                           </div>
                         )}
                         {BANK.accountNumber && (
                           <div className="flex justify-between gap-3">
-                            <dt className="text-slate-500 dark:text-slate-400">
+                            <dt className="text-muted-foreground">
                               Account no.
                             </dt>
-                            <dd className="font-mono font-medium text-slate-900 dark:text-white">
+                            <dd className="font-mono font-medium text-foreground">
                               {BANK.accountNumber}
                             </dd>
                           </div>
                         )}
                       </dl>
                     ) : (
-                      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <p className="mt-1.5 text-xs text-muted-foreground">
                         Direct bank payments coming soon.
                       </p>
                     )}
                   </div>
 
                   {/* Online payment — coming soon */}
-                  <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 p-3">
+                  <div className="rounded-lg border border-dashed border-border bg-card/60 p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-muted-foreground">
                           Online payment
                         </span>
                       </div>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
                         Soon
                       </span>
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <p className="mt-1.5 text-xs text-muted-foreground">
                       Pay securely by card online, coming soon.
                     </p>
                   </div>
                 </div>
 
-                <p className="mt-3 flex items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">
                   <Info className="mt-px h-3.5 w-3.5 flex-shrink-0 text-primary" />
                   <span>
                     Quote your{" "}
-                    <strong className="font-medium text-slate-700 dark:text-slate-300">
+                    <strong className="font-medium text-foreground">
                       invoice number
                     </strong>{" "}
                     when you pay so we can match it to the right child.
@@ -548,15 +546,15 @@ export default function ParentFinancesPage() {
           })()}
 
         {/* Tabs */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow">
-          <div className="border-b border-slate-200 dark:border-slate-700">
+        <div className="bg-card rounded-lg shadow">
+          <div className="border-b border-border">
             <nav className="flex space-x-8 px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab("invoices")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === "invoices"
                     ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border dark:text-muted-foreground dark:hover:text-slate-300"
                 }`}
               >
                 Fee Invoices ({invoices.length})
@@ -566,7 +564,7 @@ export default function ParentFinancesPage() {
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === "fines"
                     ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border dark:text-muted-foreground dark:hover:text-slate-300"
                 }`}
               >
                 Attendance Fines ({fines.length})
@@ -576,7 +574,7 @@ export default function ParentFinancesPage() {
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === "history"
                     ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border dark:text-muted-foreground dark:hover:text-slate-300"
                 }`}
               >
                 Payment History
@@ -590,8 +588,8 @@ export default function ParentFinancesPage() {
               <div className="space-y-4">
                 {invoices.length === 0 ? (
                   <div className="text-center py-10">
-                    <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <FileText className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
                       No invoices found
                     </p>
                   </div>
@@ -599,12 +597,12 @@ export default function ParentFinancesPage() {
                   invoices.map((invoice) => (
                     <div
                       key={invoice.id}
-                      className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                      className="border border-border rounded-xl p-4 hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                            <h3 className="font-semibold text-sm text-foreground">
                               {invoice.invoice_number}
                             </h3>
                             <span
@@ -612,25 +610,25 @@ export default function ParentFinancesPage() {
                                 invoice.status === "paid"
                                   ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                                   : invoice.status === "overdue"
-                                    ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
+                                  ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                                  : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
                               }`}
                             >
                               {invoice.status.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
                             {invoice.student.first_name}{" "}
                             {invoice.student.last_name} · Due{" "}
                             {new Date(invoice.due_date).toLocaleDateString(
-                              "en-GB",
+                              "en-GB"
                             )}
                           </p>
                           {invoice.paid_date && (
                             <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
                               Paid{" "}
                               {new Date(invoice.paid_date).toLocaleDateString(
-                                "en-GB",
+                                "en-GB"
                               )}
                               {invoice.payment_method &&
                                 ` · ${invoice.payment_method}`}
@@ -638,14 +636,14 @@ export default function ParentFinancesPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <p className="font-bold text-slate-900 dark:text-white">
+                          <p className="font-bold text-foreground">
                             {formatMoney(invoice.amount)}
                           </p>
                           <button
                             onClick={() =>
                               downloadInvoice(
                                 invoice.id,
-                                invoice.invoice_number,
+                                invoice.invoice_number
                               )
                             }
                             disabled={downloading === invoice.id}
@@ -671,8 +669,8 @@ export default function ParentFinancesPage() {
               <div className="space-y-4">
                 {fines.length === 0 ? (
                   <div className="text-center py-10">
-                    <Receipt className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <Receipt className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
                       No fines found
                     </p>
                   </div>
@@ -680,12 +678,12 @@ export default function ParentFinancesPage() {
                   fines.map((fine) => (
                     <div
                       key={fine.id}
-                      className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                      className="border border-border rounded-xl p-4 hover:bg-accent/50 transition-colors"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                            <h3 className="font-semibold text-sm text-foreground">
                               {fine.fine_type === "late"
                                 ? "Late arrival"
                                 : "Absence"}
@@ -695,25 +693,25 @@ export default function ParentFinancesPage() {
                                 fine.status === "paid"
                                   ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                                   : fine.status === "waived"
-                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
+                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                  : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
                               }`}
                             >
                               {fine.status.toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
                             {fine.student.first_name} {fine.student.last_name}
                             {fine.attendance &&
                               ` · ${new Date(
-                                fine.attendance.date,
+                                fine.attendance.date
                               ).toLocaleDateString("en-GB")}`}
                           </p>
                           {fine.paid_date && (
                             <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
                               Paid{" "}
                               {new Date(fine.paid_date).toLocaleDateString(
-                                "en-GB",
+                                "en-GB"
                               )}
                               {fine.payment_method &&
                                 ` · ${fine.payment_method}`}
@@ -725,7 +723,7 @@ export default function ParentFinancesPage() {
                             className={`font-bold ${
                               fine.status === "pending"
                                 ? "text-red-600 dark:text-red-400"
-                                : "text-slate-900 dark:text-white"
+                                : "text-foreground"
                             }`}
                           >
                             {formatMoney(fine.amount)}
@@ -759,11 +757,11 @@ export default function ParentFinancesPage() {
                 ].sort(
                   (a, b) =>
                     new Date(b.paid_date || "").getTime() -
-                    new Date(a.paid_date || "").getTime(),
+                    new Date(a.paid_date || "").getTime()
                 ).length === 0 ? (
                   <div className="text-center py-10">
-                    <Calendar className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <Calendar className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">
                       No payment history
                     </p>
                   </div>
@@ -775,27 +773,27 @@ export default function ParentFinancesPage() {
                     .sort(
                       (a, b) =>
                         new Date(b.paid_date || "").getTime() -
-                        new Date(a.paid_date || "").getTime(),
+                        new Date(a.paid_date || "").getTime()
                     )
                     .map((payment) => {
                       const isInvoice = "invoice_number" in payment;
                       return (
                         <div
                           key={payment.id}
-                          className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                          className="border border-border rounded-xl p-4 hover:bg-accent/50 transition-colors"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                              <h3 className="font-semibold text-sm text-foreground truncate">
                                 {isInvoice
                                   ? (payment as InvoiceDisplay).invoice_number
                                   : "Attendance fine"}
                               </h3>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                              <p className="text-xs text-muted-foreground mt-1 truncate">
                                 {payment.student.first_name}{" "}
                                 {payment.student.last_name} · Paid{" "}
                                 {new Date(
-                                  payment.paid_date || "",
+                                  payment.paid_date || ""
                                 ).toLocaleDateString("en-GB")}
                                 {payment.payment_method &&
                                   ` · ${payment.payment_method}`}
@@ -811,7 +809,7 @@ export default function ParentFinancesPage() {
                                     ? downloadInvoice(
                                         payment.id,
                                         (payment as InvoiceDisplay)
-                                          .invoice_number,
+                                          .invoice_number
                                       )
                                     : downloadFineReceipt(payment.id)
                                 }

@@ -416,7 +416,7 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
                   checked={sendToPrimary}
                   onChange={(e) => setSendToPrimary(e.target.checked)}
                   disabled={!selectedStudent.parent_phone}
-                  className="h-4 w-4 rounded border-gray-300"
+                  className="h-4 w-4 rounded border-border"
                 />
                 <div className="flex-1">
                   <div className="font-medium flex items-center justify-between">
@@ -448,7 +448,7 @@ export default function StudentMessageForm({ onSuccess, onCancel }: Props) {
                   checked={sendToSecondary}
                   onChange={(e) => setSendToSecondary(e.target.checked)}
                   disabled={!selectedStudent.parent_phone_secondary}
-                  className="h-4 w-4 rounded border-gray-300"
+                  className="h-4 w-4 rounded border-border"
                 />
                 <div className="flex-1">
                   <div className="font-medium flex items-center justify-between">

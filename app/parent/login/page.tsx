@@ -73,17 +73,17 @@ export default function ParentLoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
             <LogIn className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Parent Portal
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground">
             Al Hikmah Institute Crawley
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-8">
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mb-6">
+        <div className="bg-card rounded-xl shadow-xl p-8">
+          <h2 className="text-2xl font-semibold text-foreground mb-6">
             Welcome Back
           </h2>
 
@@ -98,19 +98,19 @@ export default function ParentLoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                className="block text-sm font-medium text-foreground mb-2"
               >
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
                   placeholder="parent@example.com"
                 />
               </div>
@@ -120,25 +120,25 @@ export default function ParentLoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                className="block text-sm font-medium text-foreground mb-2"
               >
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-12 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -205,14 +205,14 @@ export default function ParentLoginPage() {
           </form>
 
           {/* Help Section */}
-          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+          <div className="mt-6 pt-6 border-t border-border">
+            <p className="text-sm text-muted-foreground text-center">
               New to the portal?{" "}
-              <span className="text-slate-900 dark:text-white font-medium">
+              <span className="text-foreground font-medium">
                 You should have received login credentials via email.
               </span>
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 text-center mt-2">
+            <p className="text-xs text-muted-foreground text-center mt-2">
               If you haven't received your login details, please contact the
               school.
             </p>
@@ -227,7 +227,7 @@ export default function ParentLoginPage() {
                 ? "https://al-hikmah.org"
                 : "https://ahic.vercel.app"
             }
-            className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← Back to main site
           </Link>

@@ -101,7 +101,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
       case "learning":
         return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400";
       default:
-        return "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300";
+        return "bg-muted text-foreground  ";
     }
   };
 
@@ -146,9 +146,9 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
 
   if (memorization.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-        <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
+      <div className="bg-card rounded-xl border border-border p-10 text-center">
+        <BookOpen className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <p className="text-muted-foreground text-sm">
           No memorization items recorded yet
         </p>
       </div>
@@ -162,7 +162,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-foreground">
               Overall Progress
             </h3>
           </div>
@@ -170,13 +170,13 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
             {completionPct}%
           </span>
         </div>
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+        <div className="w-full bg-muted rounded-full h-2">
           <div
             className="bg-green-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${completionPct}%` }}
           />
         </div>
-        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           {completed} out of {total} items completed
         </p>
       </div>
@@ -196,13 +196,13 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
         ].map(({ label, key, icon }) => (
           <div
             key={key}
-            className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-center"
+            className="bg-card rounded-lg border border-border p-3 text-center"
           >
             <span className="text-lg">{icon}</span>
-            <p className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+            <p className="text-xl font-bold text-foreground mt-0.5">
               {memorization.filter((m) => m.status === key).length}
             </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-muted-foreground">
               {label}
             </p>
           </div>
@@ -212,7 +212,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
       {/* Category Progress */}
       {categories.length > 1 && (
         <div>
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-3">
+          <h3 className="text-base font-semibold text-foreground mb-3">
             Progress by Category
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -230,26 +230,26 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
               return (
                 <div
                   key={cat}
-                  className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4"
+                  className="bg-card rounded-lg border border-border p-4"
                 >
-                  <h4 className="font-medium text-slate-900 dark:text-white capitalize mb-2">
+                  <h4 className="font-medium text-foreground capitalize mb-2">
                     {cat}
                   </h4>
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-xl font-bold text-slate-900 dark:text-white">
+                    <span className="text-xl font-bold text-foreground">
                       {catCompleted}
                     </span>
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-muted-foreground">
                       / {catItems.length}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                  <div className="w-full bg-muted rounded-full h-1.5">
                     <div
                       className="bg-primary h-1.5 rounded-full"
                       style={{ width: `${catPct}%` }}
                     />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">{catPct}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">{catPct}%</p>
                 </div>
               );
             })}
@@ -260,14 +260,14 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
       {/* Filter + Items */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-base font-semibold text-foreground">
             All Items
           </h3>
           {categories.length > 1 && (
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className="px-3 py-1.5 text-sm border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="all">All Categories</option>
               {categories.map((cat) => (
@@ -283,7 +283,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4"
+              className="bg-card rounded-lg border border-border p-4"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -298,12 +298,12 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
                       {item.status.replace("_", " ")}
                     </span>
                   </div>
-                  <h4 className="font-medium text-slate-900 dark:text-white">
+                  <h4 className="font-medium text-foreground">
                     {item.memorization_items?.name}
                   </h4>
                   {item.proficiency_rating && (
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         Proficiency:
                       </span>
                       {renderStars(item.proficiency_rating)}
@@ -314,33 +314,33 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
 
               {item.memorization_items?.arabic_text && (
                 <div
-                  className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mt-2"
+                  className="bg-background/50 rounded-lg p-3 mt-2"
                   dir="rtl"
                 >
-                  <p className="text-slate-900 dark:text-white text-right text-base leading-relaxed">
+                  <p className="text-foreground text-right text-base leading-relaxed">
                     {item.memorization_items.arabic_text}
                   </p>
                 </div>
               )}
 
               {item.memorization_items?.transliteration && (
-                <p className="text-sm text-slate-500 italic mt-1">
+                <p className="text-sm text-muted-foreground italic mt-1">
                   {item.memorization_items.transliteration}
                 </p>
               )}
 
               {item.memorization_items?.translation && (
-                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                <p className="text-sm text-foreground mt-1">
                   {item.memorization_items.translation}
                 </p>
               )}
 
               {item.teacher_notes && (
-                <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                  <p className="text-xs text-slate-500 font-medium">
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground font-medium">
                     Teacher's Notes:
                   </p>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                  <p className="text-sm text-foreground">
                     {item.teacher_notes}
                   </p>
                 </div>

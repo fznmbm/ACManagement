@@ -281,10 +281,10 @@ export default function StudentDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground">
             Loading student details...
           </p>
         </div>
@@ -294,13 +294,13 @@ export default function StudentDetailPage() {
 
   if (error || !student) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Access Denied
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-6">
+          <p className="text-muted-foreground mb-6">
             {error || "Student not found"}
           </p>
           <button
@@ -377,7 +377,7 @@ export default function StudentDetailPage() {
       cls:
         snapshot.balance && snapshot.balance > 0
           ? "text-red-600 dark:text-red-400"
-          : "text-slate-900 dark:text-white",
+          : "text-foreground",
     },
   ].filter(Boolean) as {
     key: string;
@@ -387,32 +387,32 @@ export default function StudentDetailPage() {
   }[];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-8">
+    <div className="min-h-screen bg-background pb-8">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 pt-6">
           <button
             onClick={() => router.push("/parent/dashboard")}
-            className="flex items-center text-slate-600 dark:text-slate-400 hover:text-primary mb-4"
+            className="flex items-center text-muted-foreground hover:text-primary mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </button>
 
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {student.first_name} {student.last_name}
           </h1>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
-            <span className="text-sm text-slate-600 dark:text-slate-400">
+            <span className="text-sm text-muted-foreground">
               Student #:{" "}
-              <span className="font-medium text-slate-900 dark:text-white">
+              <span className="font-medium text-foreground">
                 {student.student_number}
               </span>
             </span>
             {student.classes && (
-              <span className="text-sm text-slate-600 dark:text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 Class:{" "}
-                <span className="font-medium text-slate-900 dark:text-white">
+                <span className="font-medium text-foreground">
                   {student.classes.class_name}
                 </span>
               </span>
@@ -421,15 +421,15 @@ export default function StudentDetailPage() {
               className={`px-3 py-1 rounded-full text-xs font-medium ${
                 student.status === "active"
                   ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                  : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                  : "bg-muted text-foreground  "
               }`}
             >
               {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
             </span>
             {parentLink && (
-              <span className="text-sm text-slate-600 dark:text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 Relationship:{" "}
-                <span className="font-medium text-slate-900 dark:text-white capitalize">
+                <span className="font-medium text-foreground capitalize">
                   {parentLink.relationship}
                 </span>
                 {parentLink.is_primary && (
@@ -443,11 +443,11 @@ export default function StudentDetailPage() {
 
           {/* Always-visible snapshot */}
           {statItems.length > 0 && (
-            <div className="flex divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 mt-4 -mx-4">
+            <div className="flex divide-x divide-border border-t border-border mt-4 -mx-4">
               {statItems.map((s) => (
                 <div key={s.key} className="flex-1 py-3 text-center">
                   <p className={`text-xl font-bold ${s.cls}`}>{s.value}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
                     {s.label}
                   </p>
                 </div>
@@ -457,7 +457,7 @@ export default function StudentDetailPage() {
         </div>
 
         {/* Section tabs — icon + label, all fit in one row, no scroll */}
-        <div className="max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-700">
+        <div className="max-w-7xl mx-auto border-t border-border">
           <div className="flex">
             {visibleTabs.map((tab) => {
               const Icon = tab.icon;
@@ -470,7 +470,7 @@ export default function StudentDetailPage() {
                   className={`flex-1 flex flex-col items-center gap-1 py-2.5 border-b-2 transition-colors ${
                     on
                       ? "border-primary text-primary"
-                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <span className="relative">
@@ -518,7 +518,7 @@ export default function StudentDetailPage() {
         {effectiveTab === "progress" && (
           <div className="space-y-5">
             {/* Compact segmented control — fits one row on a phone */}
-            <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 gap-1">
+            <div className="flex rounded-lg bg-muted p-1 gap-1">
               {progressTabs.map((pt) => {
                 const Icon = pt.icon;
                 return (
@@ -527,8 +527,8 @@ export default function StudentDetailPage() {
                     onClick={() => openProgressView(pt.id)}
                     className={`flex-1 flex items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
                       progressView === pt.id
-                        ? "bg-white dark:bg-slate-700 text-primary shadow-sm"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                        ? "bg-card text-primary shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -551,7 +551,7 @@ export default function StudentDetailPage() {
         )}
 
         {effectiveTab === "prayers" && student && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+          <div className="bg-card rounded-lg shadow-sm p-6">
             <ParentPrayerSheet
               studentId={params.id as string}
               studentName={`${student.first_name} ${student.last_name}`}
@@ -560,7 +560,7 @@ export default function StudentDetailPage() {
         )}
 
         {effectiveTab === "feedback" && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+          <div className="bg-card rounded-lg shadow-sm p-6">
             <FeedbackTab studentId={params.id as string} />
           </div>
         )}

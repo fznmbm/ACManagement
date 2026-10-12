@@ -192,12 +192,12 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
 
   if (items.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-        <MessageSquare className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-        <p className="font-medium text-slate-700 dark:text-slate-300 text-sm">
+      <div className="bg-card rounded-xl border border-border p-10 text-center">
+        <MessageSquare className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <p className="font-medium text-foreground text-sm">
           No updates yet
         </p>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Class feedback and school notices will appear here
         </p>
       </div>
@@ -214,15 +214,15 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
           return (
             <div
               key={item.id}
-              className={`bg-white dark:bg-slate-800 rounded-xl border overflow-hidden ${
+              className={`bg-card rounded-xl border overflow-hidden ${
                 item.priority === "urgent"
                   ? "border-orange-300 dark:border-orange-700"
-                  : "border-slate-200 dark:border-slate-700"
+                  : "border-border"
               }`}
             >
               <button
                 onClick={() => handleExpand(item)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-base shrink-0">
@@ -230,7 +230,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                   </span>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {item.title}
                       </p>
                       {item.priority === "urgent" && (
@@ -244,7 +244,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {item.notificationType === "academic_note" && (
                         <span className="text-primary font-medium mr-1">
                           Academic Note ·
@@ -259,14 +259,14 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                   </div>
                 </div>
                 {isExpanded ? (
-                  <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
+                  <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
                 ) : (
-                  <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                 )}
               </button>
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-700 pt-3">
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                <div className="px-4 pb-4 border-t border-border pt-3">
+                  <p className="text-sm text-foreground">
                     {item.message}
                   </p>
                 </div>
@@ -283,21 +283,21 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
         return (
           <div
             key={item.id}
-            className={`bg-white dark:bg-slate-800 rounded-xl border overflow-hidden transition-all ${
+            className={`bg-card rounded-xl border overflow-hidden transition-all ${
               isNew
                 ? "border-primary/40"
-                : "border-slate-200 dark:border-slate-700"
+                : "border-border"
             }`}
           >
             <button
               onClick={() => handleExpand(item)}
-              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-accent/50 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-primary shrink-0" />{" "}
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {dateStr}
                     </p>
                     {isNew && (
@@ -312,7 +312,7 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                     )}
                   </div>
                   {!isExpanded && item.class_summary && (
-                    <p className="text-xs text-slate-400 truncate max-w-xs mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate max-w-xs mt-0.5">
                       {item.class_summary.substring(0, 60)}
                       {item.class_summary.length > 60 ? "..." : ""}
                     </p>
@@ -320,18 +320,18 @@ export default function FeedbackTab({ studentId }: { studentId: string }) {
                 </div>
               </div>
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
+                <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
               )}
             </button>
             {isExpanded && (
-              <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+              <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
                 <div>
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                     Class Summary
                   </p>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                  <p className="text-sm text-foreground">
                     {item.class_summary}
                   </p>
                 </div>

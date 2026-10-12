@@ -21,7 +21,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     rectangular: "rounded-lg",
   };
 
-  const baseClasses = "animate-pulse bg-gray-200 dark:bg-gray-700";
+  const baseClasses = "animate-pulse bg-muted";
 
   const style: React.CSSProperties = {
     width: width || (variant === "circular" ? "40px" : "100%"),

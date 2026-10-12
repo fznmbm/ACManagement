@@ -310,7 +310,7 @@ export default function ApplicationsTable({
     <>
       {newAppToast && (
         <div className="fixed top-4 right-4 z-50 bg-primary text-primary-foreground px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-sm">
-          <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+          <div className="h-8 w-8 bg-card/20 rounded-full flex items-center justify-center shrink-0">
             <User className="h-4 w-4" />
           </div>
           <div className="flex-1">

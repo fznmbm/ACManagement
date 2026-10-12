@@ -36,7 +36,7 @@ const getStatusColor = (status: string) => {
     excused: "bg-blue-100 text-blue-800",
     sick: "bg-purple-100 text-purple-800",
   };
-  return colors[status] || "bg-gray-100 text-gray-800";
+  return colors[status] || "bg-muted text-muted-foreground";
 };
 
 // Turn a raw session_type (e.g. "regular", "morning_session") into a label.

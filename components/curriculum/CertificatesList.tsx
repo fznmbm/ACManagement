@@ -80,7 +80,7 @@ export default function CertificatesList({
       case "year_completion":
         return "bg-orange-100 text-orange-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
     }
   };
 

@@ -153,7 +153,7 @@ export default async function StudentDetailPage({
     };
     return (
       colors[status] ||
-      "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300"
+      "bg-muted/30 text-muted-foreground "
     );
   };
 

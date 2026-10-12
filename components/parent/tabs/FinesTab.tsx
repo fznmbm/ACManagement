@@ -89,7 +89,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
           date,
           status
         )
-      `,
+      `
         )
         .eq("student_id", studentId)
         .order("issued_date", { ascending: false });
@@ -131,7 +131,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
         .filter((f) => f.status === "paid")
         .reduce((sum, f) => sum + f.amount, 0);
       const unpaidCount = finesData.filter(
-        (f) => f.status === "pending",
+        (f) => f.status === "pending"
       ).length;
       const unpaidAmount = finesData
         .filter((f) => f.status === "pending")
@@ -160,7 +160,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
       case "absence":
         return "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400";
       default:
-        return "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300";
+        return "bg-muted text-foreground  ";
     }
   };
 
@@ -200,17 +200,17 @@ export default function FinesTab({ studentId }: FinesTabProps) {
     <div className="space-y-6">
       {/* Statistics Cards */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 sm:p-4">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Total</p>
-          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+        <div className="bg-card rounded-xl border border-border p-3 sm:p-4">
+          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="mt-1 text-xl font-bold text-foreground">
             {stats.totalFines}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-muted-foreground">
             {formatCurrency(stats.totalAmount)}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-green-200 dark:border-green-800 p-3 sm:p-4">
+        <div className="bg-card rounded-xl border border-green-200 dark:border-green-800 p-3 sm:p-4">
           <p className="text-xs text-green-600 dark:text-green-400">Paid</p>
           <p className="mt-1 text-xl font-bold text-green-700 dark:text-green-400">
             {stats.paidCount}
@@ -220,7 +220,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-red-200 dark:border-red-800 p-3 sm:p-4">
+        <div className="bg-card rounded-xl border border-red-200 dark:border-red-800 p-3 sm:p-4">
           <p className="text-xs text-red-600 dark:text-red-400">Unpaid</p>
           <p className="mt-1 text-xl font-bold text-red-700 dark:text-red-400">
             {stats.unpaidCount}
@@ -253,16 +253,16 @@ export default function FinesTab({ studentId }: FinesTabProps) {
 
       {/* Filter Tabs */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground">
           Fines History
         </h3>
-        <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+        <div className="flex gap-2 bg-muted rounded-lg p-1">
           <button
             onClick={() => setFilter("all")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               filter === "all"
-                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             All ({stats.totalFines})
@@ -271,8 +271,8 @@ export default function FinesTab({ studentId }: FinesTabProps) {
             onClick={() => setFilter("unpaid")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               filter === "unpaid"
-                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Unpaid ({stats.unpaidCount})
@@ -281,8 +281,8 @@ export default function FinesTab({ studentId }: FinesTabProps) {
             onClick={() => setFilter("paid")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               filter === "paid"
-                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Paid ({stats.paidCount})
@@ -292,14 +292,14 @@ export default function FinesTab({ studentId }: FinesTabProps) {
 
       {/* Fines List */}
       {filteredFines.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
+        <div className="bg-card rounded-xl border border-border p-10 text-center">
           <CheckCircle className="h-10 w-10 text-green-400 mx-auto mb-2" />
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             {filter === "all"
               ? "No fines issued"
               : filter === "paid"
-                ? "No paid fines"
-                : "No unpaid fines"}
+              ? "No paid fines"
+              : "No unpaid fines"}
           </p>
         </div>
       ) : (
@@ -307,9 +307,9 @@ export default function FinesTab({ studentId }: FinesTabProps) {
           {filteredFines.map((fine) => (
             <div
               key={fine.id}
-              className={`bg-white dark:bg-slate-800 rounded-lg border p-4 transition-all ${
+              className={`bg-card rounded-lg border p-4 transition-all ${
                 fine.is_paid
-                  ? "border-slate-200 dark:border-slate-700"
+                  ? "border-border"
                   : "border-red-200 dark:border-red-800 shadow-sm"
               }`}
             >
@@ -321,24 +321,24 @@ export default function FinesTab({ studentId }: FinesTabProps) {
                     </span>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-slate-900 dark:text-white">
+                        <h4 className="font-semibold text-foreground">
                           {fine.fine_type === "late"
                             ? "Late Arrival Fine"
                             : "Absence Fine"}
                         </h4>
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getFineTypeColor(
-                            fine.fine_type,
+                            fine.fine_type
                           )}`}
                         >
                           {fine.fine_type.toUpperCase()}
                         </span>
                       </div>
                       {fine.attendance && (
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           Related to: {fine.attendance.status} on{" "}
                           {new Date(fine.attendance.date).toLocaleDateString(
-                            "en-GB",
+                            "en-GB"
                           )}
                         </p>
                       )}
@@ -347,23 +347,23 @@ export default function FinesTab({ studentId }: FinesTabProps) {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Issue Date
                       </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {new Date(fine.issued_date).toLocaleDateString("en-GB")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Amount
                       </p>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {formatCurrency(fine.amount)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Status
                       </p>
                       <span
@@ -388,7 +388,7 @@ export default function FinesTab({ studentId }: FinesTabProps) {
                     </div>
                     {fine.status === "paid" && fine.paid_date && (
                       <div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                        <p className="text-xs text-muted-foreground mb-1">
                           Paid Date
                         </p>
                         <p className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -399,11 +399,11 @@ export default function FinesTab({ studentId }: FinesTabProps) {
                   </div>
 
                   {fine.remarks && (
-                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mb-1">
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <p className="text-xs text-muted-foreground font-medium mb-1">
                         Remarks:
                       </p>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">
+                      <p className="text-sm text-foreground">
                         {fine.remarks}
                       </p>
                     </div>

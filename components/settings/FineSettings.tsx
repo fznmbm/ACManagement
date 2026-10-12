@@ -183,7 +183,7 @@ export default function FineSettings() {
                       e.target.checked,
                     )
                   }
-                  className="rounded border-gray-300 text-primary"
+                  className="rounded border-border text-primary"
                 />
               </div>
             </div>
@@ -239,7 +239,7 @@ export default function FineSettings() {
             </div>
 
             {!setting.is_active && (
-              <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="mt-4 p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">
                   <strong>Disabled:</strong> No fines will be generated for{" "}
                   {setting.fine_type} attendance status.

@@ -73,7 +73,7 @@ export function DataTable<T>({
   if (!rows.length) {
     return (
       <div className="rounded-xl border border-border bg-card p-10 text-center">
-        <EmptyIcon className="mx-auto mb-2 h-10 w-10 text-slate-300 dark:text-slate-600" />
+        <EmptyIcon className="mx-auto mb-2 h-10 w-10 text-slate-300 dark:text-muted-foreground" />
         <p className="text-sm text-muted-foreground">{empty}</p>
       </div>
     );

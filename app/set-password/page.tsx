@@ -200,14 +200,14 @@ export default function SetPasswordPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-8 text-center">
+          <div className="bg-card rounded-xl shadow-xl p-8 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
               <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               Password Set Successfully!
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
+            <p className="text-muted-foreground mb-4">
               Redirecting to login page...
             </p>
           </div>
@@ -223,15 +223,15 @@ export default function SetPasswordPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
             <Lock className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Set Your Password
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground">
             Create a secure password for your account
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-8">
+        <div className="bg-card rounded-xl shadow-xl p-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -242,25 +242,25 @@ export default function SetPasswordPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                className="block text-sm font-medium text-foreground mb-2"
               >
                 New Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-12 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
                   placeholder="Create a strong password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -271,8 +271,8 @@ export default function SetPasswordPage() {
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4">
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <div className="bg-background/50 rounded-lg p-4">
+              <p className="text-xs font-medium text-foreground mb-2">
                 Password must contain:
               </p>
               <ul className="space-y-1">
@@ -280,7 +280,7 @@ export default function SetPasswordPage() {
                   className={`text-xs flex items-center ${
                     passwordStrength.length
                       ? "text-green-600 dark:text-green-400"
-                      : "text-slate-500 dark:text-slate-400"
+                      : "text-muted-foreground"
                   }`}
                 >
                   <span className="mr-2">
@@ -292,7 +292,7 @@ export default function SetPasswordPage() {
                   className={`text-xs flex items-center ${
                     passwordStrength.uppercase
                       ? "text-green-600 dark:text-green-400"
-                      : "text-slate-500 dark:text-slate-400"
+                      : "text-muted-foreground"
                   }`}
                 >
                   <span className="mr-2">
@@ -304,7 +304,7 @@ export default function SetPasswordPage() {
                   className={`text-xs flex items-center ${
                     passwordStrength.lowercase
                       ? "text-green-600 dark:text-green-400"
-                      : "text-slate-500 dark:text-slate-400"
+                      : "text-muted-foreground"
                   }`}
                 >
                   <span className="mr-2">
@@ -316,7 +316,7 @@ export default function SetPasswordPage() {
                   className={`text-xs flex items-center ${
                     passwordStrength.number
                       ? "text-green-600 dark:text-green-400"
-                      : "text-slate-500 dark:text-slate-400"
+                      : "text-muted-foreground"
                   }`}
                 >
                   <span className="mr-2">
@@ -330,25 +330,25 @@ export default function SetPasswordPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
+                className="block text-sm font-medium text-foreground mb-2"
               >
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-12 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
                   placeholder="Confirm your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-5 w-5" />

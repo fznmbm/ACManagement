@@ -122,6 +122,8 @@ export default function ParentDashboard() {
         setNewFeedbackCount(unseenFeedbackCount + (noticeCount || 0));
 
         // Amount owed = unpaid fines + outstanding invoice balances.
+        // A single £ figure is clearer than a "count" and reads as money
+        // owed (not a dismissable alert), so parents know what to pay.
         const { data: finesData } = await supabase
           .from("fines")
           .select("amount")
@@ -139,8 +141,7 @@ export default function ParentDashboard() {
           .in("status", ["pending", "partial", "overdue"]);
         const invoicesOwed = (invData || []).reduce(
           (sum, i: any) =>
-            sum +
-            Math.max(0, Number(i.amount_due || 0) - Number(i.amount_paid || 0)),
+            sum + Math.max(0, Number(i.amount_due || 0) - Number(i.amount_paid || 0)),
           0,
         );
 
@@ -168,10 +169,10 @@ export default function ParentDashboard() {
       {/* Compact greeting */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-xl font-bold text-foreground">
             Assalamu Alaikum{firstName ? `, ${firstName}` : ""} 👋
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Al Hikmah Institute Crawley
           </p>
         </div>
@@ -180,26 +181,26 @@ export default function ParentDashboard() {
       {/* Quick stats row */}
       <div className="grid grid-cols-3 gap-3">
         <Link href="/parent/children">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center hover:border-primary transition-colors">
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="bg-card rounded-xl border border-border p-4 text-center hover:border-primary transition-colors">
+            <p className="text-2xl font-bold text-foreground">
               {totalStudents}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Children
             </p>
           </div>
         </Link>
         <Link href="/parent/updates">
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center hover:border-primary transition-colors relative">
+          <div className="bg-card rounded-xl border border-border p-4 text-center hover:border-primary transition-colors relative">
             {newFeedbackCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center">
                 {newFeedbackCount}
               </span>
             )}
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
+            <p className="text-2xl font-bold text-foreground">
               {newFeedbackCount}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               New Updates
             </p>
           </div>
@@ -209,16 +210,16 @@ export default function ParentDashboard() {
             className={`rounded-xl border p-4 text-center hover:border-primary transition-colors ${
               amountOwed > 0
                 ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                : "bg-card border-border"
             }`}
           >
             <p
-              className={`text-2xl font-bold ${amountOwed > 0 ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-white"}`}
+              className={`text-2xl font-bold ${amountOwed > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}
             >
               {amountOwed > 0 ? formatMoney(amountOwed) : "£0"}
             </p>
             <p
-              className={`text-xs mt-0.5 ${amountOwed > 0 ? "text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}
+              className={`text-xs mt-0.5 ${amountOwed > 0 ? "text-red-500 dark:text-red-400" : "text-muted-foreground"}`}
             >
               {amountOwed > 0 ? "Due" : "All paid"}
             </p>
@@ -227,9 +228,9 @@ export default function ParentDashboard() {
       </div>
 
       {/* Children list */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <h2 className="font-semibold text-foreground flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             My Children
           </h2>
@@ -245,18 +246,18 @@ export default function ParentDashboard() {
 
         {students.length === 0 ? (
           <div className="p-8 text-center">
-            <Users className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <Users className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
               No students linked yet. Contact the school.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-border">
             {students.map((student) => (
               <Link
                 key={student.id}
                 href={`/parent/student/${student.id}`}
-                className="flex items-center justify-between px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="flex items-center justify-between px-4 py-3.5 hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -266,16 +267,16 @@ export default function ParentDashboard() {
                     </span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900 dark:text-white text-sm">
+                    <p className="font-medium text-foreground text-sm">
                       {student.first_name} {student.last_name}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {student.student_number} ·{" "}
                       {student.classes?.name || "No class"}
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </Link>
             ))}
           </div>

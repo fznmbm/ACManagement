@@ -154,7 +154,7 @@ export default function UsersClient() {
       teacher: "bg-green-500/10 text-green-600 dark:text-green-400",
     };
     return (
-      colors[role as keyof typeof colors] || "bg-gray-500/10 text-gray-600"
+      colors[role as keyof typeof colors] || "bg-gray-500/10 text-muted-foreground"
     );
   };
 

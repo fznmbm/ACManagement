@@ -83,12 +83,12 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
 
   if (certificates.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-        <Award className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-        <p className="font-medium text-slate-700 dark:text-slate-300 text-sm">
+      <div className="bg-card rounded-xl border border-border p-10 text-center">
+        <Award className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <p className="font-medium text-foreground text-sm">
           No certificates yet
         </p>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           They'll appear here when earned
         </p>
       </div>
@@ -100,7 +100,7 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
       {/* Count */}
       <div className="flex items-center gap-2">
         <Award className="h-5 w-5 text-yellow-500" />
-        <p className="font-semibold text-slate-900 dark:text-white">
+        <p className="font-semibold text-foreground">
           {certificates.length} Certificate
           {certificates.length !== 1 ? "s" : ""} Earned
         </p>
@@ -112,13 +112,13 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
           const info = TYPE_INFO[cert.certificate_type] || {
             label: "Certificate",
             emoji: "📜",
-            color: "bg-slate-100 text-slate-700",
-            border: "border-slate-200",
+            color: "bg-muted text-foreground",
+            border: "border-border",
           };
           return (
             <div
               key={cert.id}
-              className={`bg-white dark:bg-slate-800 rounded-xl border-2 ${info.border} overflow-hidden`}
+              className={`bg-card rounded-xl border-2 ${info.border} overflow-hidden`}
             >
               <div
                 className={`${info.color} px-4 py-3 flex items-center gap-3`}
@@ -133,8 +133,8 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
               </div>
               <div className="px-4 py-3 space-y-2">
                 {cert.subjects?.name && (
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
-                    <span className="text-slate-400 text-xs">Subject: </span>
+                  <p className="text-sm text-foreground">
+                    <span className="text-muted-foreground text-xs">Subject: </span>
                     {cert.subjects.name}
                   </p>
                 )}
@@ -144,12 +144,12 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
                   </span>
                 )}
                 {cert.remarks && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                  <p className="text-xs text-muted-foreground italic">
                     {cert.remarks}
                   </p>
                 )}
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {new Date(cert.issue_date).toLocaleDateString("en-GB", {
                       day: "numeric",

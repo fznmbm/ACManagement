@@ -100,7 +100,7 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
           icon: <AlertCircle className="h-3.5 w-3.5" />,
         };
       default:
-        return { bg: "bg-slate-100 text-slate-700", icon: null };
+        return { bg: "bg-muted text-foreground", icon: null };
     }
   };
 
@@ -114,9 +114,9 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
 
   if (total === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-        <Calendar className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
+      <div className="bg-card rounded-xl border border-border p-10 text-center">
+        <Calendar className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <p className="text-muted-foreground text-sm">
           No attendance records yet
         </p>
       </div>
@@ -126,9 +126,9 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
   return (
     <div className="space-y-4">
       {/* Compact summary */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="bg-card rounded-xl border border-border p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3 flex-wrap text-sm text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground">
             <span>{total} days total</span>
             <span className="text-green-600 dark:text-green-400 font-medium">
               ✅ {present} present
@@ -155,7 +155,7 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
             {rate}%
           </span>
         </div>
-        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+        <div className="w-full bg-muted rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all ${rate >= 75 ? "bg-green-500" : "bg-red-500"}`}
             style={{ width: `${rate}%` }}
@@ -164,13 +164,13 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
       </div>
 
       {/* Records */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-          <h3 className="font-medium text-slate-900 dark:text-white text-sm">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="font-medium text-foreground text-sm">
             Attendance Records
           </h3>
         </div>
-        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+        <div className="divide-y divide-border">
           {attendance.map((record) => {
             const style = getStatusStyle(record.status);
             return (
@@ -179,7 +179,7 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
                 className="flex items-center justify-between px-4 py-3"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  <p className="text-sm font-medium text-foreground">
                     {new Date(record.date).toLocaleDateString("en-GB", {
                       weekday: "short",
                       day: "numeric",
@@ -188,12 +188,12 @@ export default function AttendanceTab({ studentId }: AttendanceTabProps) {
                     })}
                   </p>
                   {record.classes?.name && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {record.classes.name}
                     </p>
                   )}
                   {record.notes && (
-                    <p className="text-xs text-slate-400 italic mt-0.5">
+                    <p className="text-xs text-muted-foreground italic mt-0.5">
                       {record.notes}
                     </p>
                   )}

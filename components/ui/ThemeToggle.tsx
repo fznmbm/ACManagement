@@ -29,7 +29,7 @@ export function ThemeToggle() {
     }`;
 
   return (
-    <div className="flex items-center gap-1 p-1 rounded-lg  border border-border bg-muted/50">
+    <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-muted/50">
       {/* Light Mode Button */}
       <button
         onClick={() => setTheme("light")}

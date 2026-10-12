@@ -110,11 +110,11 @@ export default function StudentsTable({
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
+      inactive: "bg-muted text-muted-foreground",
       graduated: "bg-blue-100 text-blue-800",
       withdrawn: "bg-red-100 text-red-800",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status] || "bg-muted text-muted-foreground";
   };
 
   if (students.length === 0) {

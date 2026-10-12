@@ -36,7 +36,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   meeting: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   celebration:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  general: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300",
+  general: "bg-muted text-foreground  ",
 };
 
 export default function ParentEventsPage() {
@@ -165,18 +165,18 @@ export default function ParentEventsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-foreground">
           Events
         </h2>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-muted-foreground">
           Upcoming school events and activities
         </p>
       </div>
 
       {events.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 text-center">
-          <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-500 dark:text-slate-400">
+        <div className="bg-card rounded-lg border border-border p-12 text-center">
+          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">
             No upcoming events
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function ParentEventsPage() {
             return (
               <div
                 key={event.id}
-                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+                className="bg-card rounded-lg border border-border overflow-hidden"
               >
                 <div className="p-5">
                   {/* Priority banner */}
@@ -225,11 +225,11 @@ export default function ParentEventsPage() {
                           )}
                       </div>
 
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {event.title}
                       </h3>
 
-                      <div className="flex flex-col gap-1 mt-2 text-sm text-slate-600 dark:text-slate-400">
+                      <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4 shrink-0" />
                           {formatDate(event.event_date)}
@@ -250,7 +250,7 @@ export default function ParentEventsPage() {
                       </div>
 
                       {event.description && (
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                        <p className="mt-2 text-sm text-muted-foreground">
                           {event.description}
                         </p>
                       )}
@@ -259,19 +259,19 @@ export default function ParentEventsPage() {
 
                   {/* RSVP Section */}
                   {event.rsvp_required && (
-                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <div className="mt-4 pt-4 border-t border-border">
                       {deadlinePassed ? (
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           ⏰ RSVP deadline passed
                           {currentRSVP &&
                             ` — You responded: ${currentRSVP === "attending" ? "Attending" : "Not Attending"}`}
                         </p>
                       ) : (
                         <>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white mb-2">
+                          <p className="text-sm font-medium text-foreground mb-2">
                             Will you attend?
                             {event.rsvp_deadline && (
-                              <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">
+                              <span className="ml-2 text-xs font-normal text-muted-foreground">
                                 Respond by{" "}
                                 {new Date(
                                   event.rsvp_deadline,
@@ -289,7 +289,7 @@ export default function ParentEventsPage() {
                               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 font-medium text-sm transition-all ${
                                 currentRSVP === "attending"
                                   ? "border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                  : "border-slate-200 dark:border-slate-600 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-slate-700 dark:text-slate-300"
+                                  : "border-border hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-foreground"
                               }`}
                             >
                               {isSaving ? (
@@ -307,7 +307,7 @@ export default function ParentEventsPage() {
                               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 font-medium text-sm transition-all ${
                                 currentRSVP === "not_attending"
                                   ? "border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                                  : "border-slate-200 dark:border-slate-600 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-700 dark:text-slate-300"
+                                  : "border-border hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 text-foreground"
                               }`}
                             >
                               {isSaving ? (
@@ -319,7 +319,7 @@ export default function ParentEventsPage() {
                             </button>
                           </div>
                           {currentRSVP && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            <p className="text-xs text-muted-foreground mt-2">
                               ✓ Response recorded — you can change it before the
                               deadline.
                             </p>

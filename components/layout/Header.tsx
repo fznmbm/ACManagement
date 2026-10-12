@@ -287,7 +287,7 @@ export default function Header({ profile }: HeaderProps) {
                   alerts.map((alert) => {
                     const Icon = ALERT_ICONS[alert.event_type] || AlertCircle;
                     const color =
-                      ALERT_COLORS[alert.event_type] || "text-gray-500";
+                      ALERT_COLORS[alert.event_type] || "text-muted-foreground";
                     return (
                       <div
                         key={alert.id}

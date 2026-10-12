@@ -379,7 +379,7 @@ export default function ParentMeetingPage() {
             Al Hikmah Institute Crawley
           </h1>
           <p className="text-lg font-semibold mt-1">Parent Meeting Report</p>
-          <p className="text-sm text-gray-600 mt-1">{meetingDate}</p>
+          <p className="text-sm text-muted-foreground mt-1">{meetingDate}</p>
         </div>
 
         {/* Student Info Card */}
@@ -859,7 +859,7 @@ export default function ParentMeetingPage() {
         )}
 
         {/* Print footer */}
-        <div className="hidden print:block border-t border-gray-200 pt-4 mt-8 text-xs text-gray-500 text-center">
+        <div className="hidden print:block border-t border-border pt-4 mt-8 text-xs text-muted-foreground text-center">
           <p>
             Al Hikmah Institute Crawley · Confidential Parent Meeting Report ·{" "}
             {meetingDate}

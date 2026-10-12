@@ -122,7 +122,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200",
     error:
       "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200",
-    info: "border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
+    info: "border-border bg-card text-foreground   ",
   };
 
   const Icon = {
@@ -153,7 +153,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <p className="flex-1 text-sm font-medium">{t.message}</p>
               <button
                 onClick={() => dismiss(t.id)}
-                className="flex-shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-white/10"
+                className="flex-shrink-0 rounded p-0.5 hover:bg-black/5 dark:hover:bg-card/10"
                 aria-label="Dismiss"
               >
                 <X className="h-4 w-4" />
@@ -170,7 +170,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           onClick={() => resolveConfirm(false)}
         >
           <div
-            className="w-full max-w-md rounded-xl bg-white dark:bg-slate-800 p-6 shadow-xl"
+            className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
             role="alertdialog"
             aria-modal="true"
@@ -183,11 +183,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               )}
               <div className="flex-1">
                 {confirmState.title && (
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {confirmState.title}
                   </h3>
                 )}
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {confirmState.message}
                 </p>
               </div>
@@ -195,7 +195,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => resolveConfirm(false)}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors"
               >
                 {confirmState.cancelText || "Cancel"}
               </button>

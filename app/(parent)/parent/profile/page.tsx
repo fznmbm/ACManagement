@@ -178,7 +178,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -189,12 +189,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Back Button */}
         <button
           onClick={() => router.push("/parent/dashboard")}
-          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
@@ -202,11 +202,11 @@ export default function ProfilePage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <User className="h-7 w-7 text-primary" />
             My Profile
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             Manage your account settings and preferences
           </p>
         </div>
@@ -238,12 +238,12 @@ export default function ProfilePage() {
         )}
 
         {/* Profile Information */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-xl font-semibold text-foreground">
               Profile Information
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Update your personal information
             </p>
           </div>
@@ -251,18 +251,18 @@ export default function ProfilePage() {
           <form onSubmit={handleUpdateProfile} className="p-6 space-y-6">
             {/* Email (Read-only) */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Email Address
               </label>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg">
-                <Mail className="h-5 w-5 text-slate-400" />
+              <div className="flex items-center gap-3 p-3 bg-background/50 border border-border rounded-lg">
+                <Mail className="h-5 w-5 text-muted-foreground" />
                 <input
                   type="email"
                   value={profile?.email || ""}
                   disabled
-                  className="flex-1 bg-transparent text-slate-600 dark:text-slate-400 text-sm"
+                  className="flex-1 bg-transparent text-muted-foreground text-sm"
                 />
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-xs text-muted-foreground">
                   Read-only
                 </span>
               </div>
@@ -270,16 +270,16 @@ export default function ProfilePage() {
 
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Full Name
               </label>
-              <div className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700">
-                <User className="h-5 w-5 text-slate-400" />
+              <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
+                <User className="h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="flex-1 bg-transparent text-slate-900 dark:text-white focus:outline-none"
+                  className="flex-1 bg-transparent text-foreground focus:outline-none"
                   required
                 />
               </div>
@@ -287,16 +287,16 @@ export default function ProfilePage() {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Phone Number
               </label>
-              <div className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700">
-                <Phone className="h-5 w-5 text-slate-400" />
+              <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
+                <Phone className="h-5 w-5 text-muted-foreground" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="flex-1 bg-transparent text-slate-900 dark:text-white focus:outline-none"
+                  className="flex-1 bg-transparent text-foreground focus:outline-none"
                   placeholder="Optional"
                 />
               </div>
@@ -315,12 +315,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-xl font-semibold text-foreground">
               Change Password
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Update your password to keep your account secure
             </p>
           </div>
@@ -328,16 +328,16 @@ export default function ProfilePage() {
           <form onSubmit={handleChangePassword} className="p-6 space-y-6">
             {/* New Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 New Password
               </label>
-              <div className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700">
-                <Lock className="h-5 w-5 text-slate-400" />
+              <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
+                <Lock className="h-5 w-5 text-muted-foreground" />
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="flex-1 bg-transparent text-slate-900 dark:text-white focus:outline-none"
+                  className="flex-1 bg-transparent text-foreground focus:outline-none"
                   placeholder="At least 8 characters"
                   required
                 />
@@ -346,16 +346,16 @@ export default function ProfilePage() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Confirm New Password
               </label>
-              <div className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700">
-                <Lock className="h-5 w-5 text-slate-400" />
+              <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-card">
+                <Lock className="h-5 w-5 text-muted-foreground" />
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="flex-1 bg-transparent text-slate-900 dark:text-white focus:outline-none"
+                  className="flex-1 bg-transparent text-foreground focus:outline-none"
                   placeholder="Confirm password"
                   required
                 />

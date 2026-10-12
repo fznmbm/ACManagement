@@ -22,7 +22,7 @@ export default function StudentStatusBadge({
       case "graduated":
         return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-800";
       default:
-        return "bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-800";
+        return "bg-muted/30 text-muted-foreground  border-border";
     }
   };
 

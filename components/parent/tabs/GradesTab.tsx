@@ -172,9 +172,9 @@ export default function GradesTab({ studentId }: GradesTabProps) {
   // No data yet — show a clean empty state instead of a misleading red 0%.
   if (assessments.length === 0) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-10 text-center">
-        <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
+      <div className="bg-card rounded-xl border border-border p-10 text-center">
+        <BookOpen className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <p className="text-muted-foreground text-sm">
           No assessments recorded yet
         </p>
       </div>
@@ -188,7 +188,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-foreground">
               Overall Performance
             </h3>
           </div>
@@ -198,13 +198,13 @@ export default function GradesTab({ studentId }: GradesTabProps) {
             {overallAverage}%
           </span>
         </div>
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+        <div className="w-full bg-muted rounded-full h-2">
           <div
             className="bg-blue-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${overallAverage}%` }}
           ></div>
         </div>
-        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           Based on {assessments.length} assessments across all subjects
         </p>
       </div>
@@ -212,21 +212,21 @@ export default function GradesTab({ studentId }: GradesTabProps) {
       {/* Subject Statistics */}
       {subjectStats.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             Performance by Subject
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjectStats.map((stat) => (
               <div
                 key={stat.subject}
-                className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow"
+                className="bg-card rounded-lg border border-border p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                    <h4 className="font-semibold text-foreground mb-1">
                       {stat.subject}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {stat.assessmentCount} assessment
                       {stat.assessmentCount !== 1 ? "s" : ""}
                     </p>
@@ -241,23 +241,23 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-muted-foreground">
                       Highest:
                     </span>
-                    <span className="font-medium text-slate-900 dark:text-white">
+                    <span className="font-medium text-foreground">
                       {stat.highestScore}%
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-600 dark:text-slate-400">
+                    <span className="text-muted-foreground">
                       Lowest:
                     </span>
-                    <span className="font-medium text-slate-900 dark:text-white">
+                    <span className="font-medium text-foreground">
                       {stat.lowestScore}%
                     </span>
                   </div>
                 </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-3">
+                <div className="w-full bg-muted rounded-full h-2 mt-3">
                   <div
                     className="bg-blue-500 h-2 rounded-full"
                     style={{ width: `${stat.averagePercentage}%` }}
@@ -271,13 +271,13 @@ export default function GradesTab({ studentId }: GradesTabProps) {
 
       {/* Subject Filter */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground">
           Assessment History
         </h3>
         <select
           value={selectedSubject}
           onChange={(e) => setSelectedSubject(e.target.value)}
-          className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          className="px-4 py-2 border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="all">All Subjects</option>
           {subjectStats.map((stat) => (
@@ -289,11 +289,11 @@ export default function GradesTab({ studentId }: GradesTabProps) {
       </div>
 
       {/* Assessments List */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
         {filteredAssessments.length === 0 ? (
           <div className="text-center py-10">
-            <BookOpen className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <BookOpen className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm">
               {selectedSubject === "all"
                 ? "No assessments recorded yet"
                 : `No assessments for ${selectedSubject}`}
@@ -303,57 +303,57 @@ export default function GradesTab({ studentId }: GradesTabProps) {
           <>
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                <thead className="bg-background/50 border-b border-border">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Subject
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Assessment
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Score
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Grade
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody className="divide-y divide-border">
                   {filteredAssessments.map((assessment) => (
                     <tr
                       key={assessment.id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                      className="hover:bg-accent/50"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {new Date(
                           assessment.assessment_date,
                         ).toLocaleDateString("en-GB")}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {assessment.curriculum_topics?.[0]?.subjects?.[0]
                           ?.name || "N/A"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-900 dark:text-white">
+                      <td className="px-6 py-4 text-sm text-foreground">
                         <div>
                           <p className="font-medium">
                             {assessment.assessment_name}
                           </p>
                           {assessment.curriculum_topics?.[0]?.topic_name && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {assessment.curriculum_topics[0].topic_name}
                             </p>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-foreground text-xs font-medium">
                           <span>
                             {getAssessmentTypeIcon(assessment.assessment_type)}
                           </span>
@@ -362,7 +362,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                           </span>
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                         {assessment.score}/{assessment.total_marks}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -382,8 +382,8 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                           </div>
                           {assessment.remarks && (
                             <div className="group relative">
-                              <FileText className="h-4 w-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-help" />
-                              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-2 bg-slate-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg z-10">
+                              <FileText className="h-4 w-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 cursor-help" />
+                              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-2 bg-slate-900 text-white text-xs rounded shadow-lg z-10">
                                 {assessment.remarks}
                               </div>
                             </div>
@@ -397,15 +397,15 @@ export default function GradesTab({ studentId }: GradesTabProps) {
             </div>
 
             {/* Mobile card view */}
-            <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="md:hidden divide-y divide-border">
               {filteredAssessments.map((assessment) => (
                 <div key={assessment.id} className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white truncate">
+                      <p className="font-medium text-sm text-foreground truncate">
                         {assessment.assessment_name}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         {assessment.curriculum_topics?.[0]?.subjects?.[0]
                           ?.name || "N/A"}
                         {assessment.curriculum_topics?.[0]?.topic_name && (
@@ -431,8 +431,8 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-foreground text-xs font-medium">
                       <span>
                         {getAssessmentTypeIcon(assessment.assessment_type)}
                       </span>
@@ -440,7 +440,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                         {assessment.assessment_type}
                       </span>
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(assessment.assessment_date).toLocaleDateString(
                         "en-GB",
                       )}{" "}
@@ -448,7 +448,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                     </span>
                   </div>
                   {assessment.remarks && (
-                    <p className="flex items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    <p className="flex items-start gap-1.5 text-xs text-muted-foreground mt-2">
                       <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                       {assessment.remarks}
                     </p>

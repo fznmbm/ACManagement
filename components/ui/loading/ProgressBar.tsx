@@ -39,7 +39,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         </div>
       )}
       <div
-        className={`w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ${sizeClasses[size]}`}
+        className={`w-full bg-muted rounded-full overflow-hidden ${sizeClasses[size]}`}
       >
         <div
           className={`${sizeClasses[size]} ${colorClasses[color]} transition-all duration-300 ease-out rounded-full`}

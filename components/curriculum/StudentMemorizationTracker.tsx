@@ -134,7 +134,7 @@ export default function StudentMemorizationTracker({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "not_started":
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
       case "learning":
         return "bg-blue-100 text-blue-800";
       case "memorized":
@@ -142,7 +142,7 @@ export default function StudentMemorizationTracker({
       case "mastered":
         return "bg-purple-100 text-purple-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -199,7 +199,7 @@ export default function StudentMemorizationTracker({
             </div>
             <div className="grid grid-cols-4 gap-4 mt-4 text-sm">
               <div className="text-center">
-                <p className="text-2xl font-bold text-gray-700">
+                <p className="text-2xl font-bold text-foreground">
                   {items.length - studentProgress.length}
                 </p>
                 <p className="text-muted-foreground">Not Started</p>

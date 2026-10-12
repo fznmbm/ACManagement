@@ -153,7 +153,7 @@ export default async function ClassDetailPage({
                     className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
                       classData.is_active
                         ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {classData.is_active ? "Active" : "Inactive"}
