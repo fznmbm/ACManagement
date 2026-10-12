@@ -1,9 +1,8 @@
 // components/dashboard/FinancialOverview.tsx
 import { createClient } from "@/lib/supabase/server";
 import {
-  DollarSign,
+  PoundSterling,
   TrendingUp,
-  TrendingDown,
   CreditCard,
   AlertCircle,
 } from "lucide-react";
@@ -81,62 +80,62 @@ export default async function FinancialOverview() {
   return (
     <div className="bg-card border border-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">Financial Overview</h3>
+        <h3 className="text-lg font-semibold">Financial overview</h3>
         <Link href="/fees" className="text-sm text-primary hover:underline">
-          View Details →
+          View details →
         </Link>
       </div>
 
-      {/* Main Stats Grid */}
+      {/* Main stats — neutral cards; colour only where it carries meaning */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {/* Total Collected */}
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+        {/* Total collected */}
+        <div className="p-4 rounded-lg border border-border bg-muted/40">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <p className="text-xs font-medium text-green-700 dark:text-green-300">
-              Total Collected
+            <PoundSterling className="h-4 w-4 text-primary" />
+            <p className="text-xs font-medium text-muted-foreground">
+              Total collected
             </p>
           </div>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <p className="text-2xl font-bold tabular-nums text-foreground">
             £{totalCollected.toFixed(2)}
           </p>
         </div>
 
-        {/* Monthly Revenue */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        {/* This month */}
+        <div className="p-4 rounded-lg border border-border bg-muted/40">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
-              This Month
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <p className="text-xs font-medium text-muted-foreground">
+              This month
             </p>
           </div>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <p className="text-2xl font-bold tabular-nums text-foreground">
             £{monthlyRevenue.toFixed(2)}
           </p>
         </div>
 
         {/* Outstanding */}
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+        <div className="p-4 rounded-lg border border-border bg-muted/40">
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <p className="text-xs font-medium text-red-700 dark:text-red-300">
+            <AlertCircle className="h-4 w-4 text-danger" />
+            <p className="text-xs font-medium text-muted-foreground">
               Outstanding
             </p>
           </div>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+          <p className="text-2xl font-bold tabular-nums text-danger">
             £{totalOutstanding.toFixed(2)}
           </p>
         </div>
 
-        {/* Collection Rate */}
-        <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+        {/* Collection rate */}
+        <div className="p-4 rounded-lg border border-border bg-muted/40">
           <div className="flex items-center gap-2 mb-2">
-            <CreditCard className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            <p className="text-xs font-medium text-purple-700 dark:text-purple-300">
-              Collection Rate
+            <CreditCard className="h-4 w-4 text-primary" />
+            <p className="text-xs font-medium text-muted-foreground">
+              Collection rate
             </p>
           </div>
-          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <p className="text-2xl font-bold tabular-nums text-foreground">
             {collectionRate}%
           </p>
         </div>
@@ -147,14 +146,14 @@ export default async function FinancialOverview() {
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground mb-1">Fee Revenue</p>
           <p className="text-lg font-semibold">£{totalRevenue.toFixed(2)}</p>
-          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+          <p className="text-xs text-danger mt-1">
             Outstanding: £{outstandingFees.toFixed(2)}
           </p>
         </div>
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground mb-1">Fine Revenue</p>
           <p className="text-lg font-semibold">£{paidFines.toFixed(2)}</p>
-          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+          <p className="text-xs text-danger mt-1">
             Uncollected: £{outstandingFines.toFixed(2)}
           </p>
         </div>

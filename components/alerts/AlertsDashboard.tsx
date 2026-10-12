@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import PageHeader from "@/components/layout/PageHeader";
 import {
   AlertCircle,
   CheckCircle2,
@@ -539,21 +540,18 @@ export default function AlertsDashboard({ compact = false }: Props) {
   // Full page
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Alert Centre</h2>
-          <p className="text-muted-foreground">
-            Review alerts and take action via WhatsApp
-          </p>
-        </div>
-        <button
-          onClick={fetchEvents}
-          className="btn-outline text-sm flex items-center gap-2"
-        >
-          Refresh
-        </button>
-      </div>
+      <PageHeader
+        title="Alert Centre"
+        subtitle="Review alerts and take action via WhatsApp."
+        actions={
+          <button
+            onClick={fetchEvents}
+            className="btn-outline text-sm flex items-center gap-2"
+          >
+            Refresh
+          </button>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

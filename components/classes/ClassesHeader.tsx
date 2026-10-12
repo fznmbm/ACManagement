@@ -3,8 +3,9 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Plus, Download } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import Link from "next/link";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default function ClassesHeader() {
   const router = useRouter();
@@ -36,22 +37,19 @@ export default function ClassesHeader() {
 
   return (
     <div className="space-y-4">
-      {/* Title and Add Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Classes</h2>
-          <p className="text-muted-foreground">
-            Manage classes and assign teachers
-          </p>
-        </div>
-        <Link
-          href="/classes/new"
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Class</span>
-        </Link>
-      </div>
+      <PageHeader
+        title="Classes"
+        subtitle="Manage classes and assign teachers."
+        actions={
+          <Link
+            href="/classes/new"
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add class</span>
+          </Link>
+        }
+      />
 
       {/* Search and Filters */}
       <div className="bg-card border border-border rounded-lg p-4">

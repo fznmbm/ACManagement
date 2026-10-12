@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import PageHeader from "@/components/layout/PageHeader";
 import {
   CheckCircle2,
   XCircle,
@@ -442,32 +443,29 @@ export default function AdminPrayerSheets() {
   };
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold">Prayer Sheets</h2>
-          <p className="text-muted-foreground">
-            Review and verify weekly prayer submissions
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={handleAllIndividualWhatsApp}
-            disabled={allSheets.length === 0}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-          >
-            <MessageSquare className="h-4 w-4" />
-            All Prayer Sheets
-          </button>
-          <button
-            onClick={handleSubmissionListWhatsApp}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700"
-          >
-            <List className="h-4 w-4" />
-            Submission List
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Prayer Sheets"
+        subtitle="Review and verify weekly prayer submissions."
+        actions={
+          <>
+            <button
+              onClick={handleAllIndividualWhatsApp}
+              disabled={allSheets.length === 0}
+              className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+            >
+              <MessageSquare className="h-4 w-4" />
+              All Prayer Sheets
+            </button>
+            <button
+              onClick={handleSubmissionListWhatsApp}
+              className="flex items-center gap-2 px-3 py-2 btn-outline text-sm font-medium"
+            >
+              <List className="h-4 w-4" />
+              Submission List
+            </button>
+          </>
+        }
+      />
       {/* Class Filter */}
       <div className="flex gap-3 items-center flex-wrap">
         <select
