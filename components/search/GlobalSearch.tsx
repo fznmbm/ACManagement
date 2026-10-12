@@ -115,18 +115,19 @@ export default function GlobalSearch() {
           setOpen(true);
           setTimeout(() => inputRef.current?.focus(), 50);
         }}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground bg-muted/50 border border-border rounded-lg hover:bg-accent transition-colors w-64"
+        className="flex items-center justify-center md:justify-start gap-2 h-9 w-9 md:w-64 md:px-3 md:py-2 text-sm text-muted-foreground bg-muted/50 border border-border rounded-lg hover:bg-accent transition-colors"
+        aria-label="Search students"
       >
-        <Search className="h-4 w-4" />
-        <span>Search students...</span>
-        <kbd className="ml-auto text-xs bg-background border border-border rounded px-1.5 py-0.5">
+        <Search className="h-4 w-4 shrink-0" />
+        <span className="hidden md:inline">Search students...</span>
+        <kbd className="hidden md:block ml-auto text-xs bg-background border border-border rounded px-1.5 py-0.5">
           ⌘K
         </kbd>
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute top-0 left-0 w-96 bg-background border border-border rounded-lg shadow-xl z-50">
+        <div className="absolute top-0 right-0 sm:left-0 w-[min(92vw,24rem)] sm:w-96 bg-background border border-border rounded-lg shadow-xl z-50">
           {/* Input */}
           <div className="flex items-center gap-2 px-3 py-3 border-b border-border">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />

@@ -18,39 +18,52 @@ export default function LaunchPage() {
   const [showChooser, setShowChooser] = useState(false);
 
   useEffect(() => {
-    (async () => {
+    let done = false;
+
+    const routeFor = async (userId: string) => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+      const role = profile?.role;
+      if (role === "parent") {
+        done = true;
+        router.replace("/parent/dashboard");
+      } else if (role === "admin" || role === "super_admin" || role === "teacher") {
+        done = true;
+        router.replace("/dashboard");
+      }
+      return done;
+    };
+
+    const check = async () => {
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-
-        if (!session) {
-          setShowChooser(true);
-          return;
-        }
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-
-        const role = profile?.role;
-        if (role === "parent") {
-          router.replace("/parent/dashboard");
-        } else if (
-          role === "admin" ||
-          role === "super_admin" ||
-          role === "teacher"
-        ) {
-          router.replace("/dashboard");
-        } else {
-          setShowChooser(true);
-        }
+        if (session?.user) return routeFor(session.user.id);
       } catch {
-        setShowChooser(true);
+        /* fall through */
       }
+      return false;
+    };
+
+    // Catch a session that hydrates a beat late (common in an installed PWA)
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (!done && session?.user) routeFor(session.user.id);
+    });
+
+    (async () => {
+      if (await check()) return;
+      // one short retry before falling back to the sign-in chooser
+      setTimeout(async () => {
+        if (done) return;
+        if (!(await check()) && !done) setShowChooser(true);
+      }, 700);
     })();
+
+    return () => sub.subscription.unsubscribe();
   }, [router, supabase]);
 
   if (!showChooser) {

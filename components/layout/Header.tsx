@@ -223,7 +223,7 @@ export default function Header({ profile }: HeaderProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <GlobalSearch />
         <ThemeToggle />
 
