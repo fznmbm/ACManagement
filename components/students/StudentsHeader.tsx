@@ -111,7 +111,7 @@ export default function StudentsHeader({
       {/* Title and actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold md:text-2xl">All Students</h2>
+          <h2 className="text-xl font-bold md:text-2xl">Students</h2>
           <p className="text-sm text-muted-foreground">
             Manage and track all students in your centre
           </p>

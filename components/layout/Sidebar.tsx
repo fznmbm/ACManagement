@@ -9,18 +9,15 @@ import { cn } from "@/lib/utils/helpers";
 import {
   LayoutDashboard,
   Users,
-  UserPlus,
   Link as LinkIcon,
   FileText,
   BookOpen,
   ClipboardCheck,
-  History,
   GraduationCap,
   BookMarked,
   MessageSquare,
   Calendar,
   Bell,
-  Coins,
   Receipt,
   BarChart3,
   Shield,
@@ -81,12 +78,6 @@ const NAV_GROUPS: NavGroup[] = [
         roles: ["super_admin", "admin", "teacher"],
       },
       {
-        name: "Add Student",
-        href: "/students/new",
-        icon: UserPlus,
-        roles: ["super_admin", "admin", "teacher"],
-      },
-      {
         name: "Applications",
         href: "/applications",
         icon: FileText,
@@ -102,12 +93,6 @@ const NAV_GROUPS: NavGroup[] = [
         name: "Attendance",
         href: "/attendance",
         icon: ClipboardCheck,
-        roles: ALL,
-      },
-      {
-        name: "Attendance History",
-        href: "/attendance/history",
-        icon: History,
         roles: ALL,
       },
       {
@@ -146,13 +131,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Finance",
     items: [
       {
-        name: "Fines",
-        href: "/fines",
-        icon: Coins,
-        roles: ["super_admin", "admin"],
-      },
-      {
-        name: "Fees",
+        name: "Finance",
         href: "/fees",
         icon: Receipt,
         roles: ["super_admin", "admin"],
@@ -243,7 +222,10 @@ export default function Sidebar({ profile }: SidebarProps) {
     return best;
   })();
 
-  const isActive = (href: string) => href === bestMatch;
+  const isActive = (href: string) =>
+    href === bestMatch ||
+    // Finance is one entry (/fees) but also owns the Fines sub-page
+    (href === "/fees" && pathname.startsWith("/fines"));
 
   const NavBody = (
     <>

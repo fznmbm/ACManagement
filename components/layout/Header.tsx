@@ -1,5 +1,5 @@
 "use client";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   LogOut,
@@ -83,7 +83,6 @@ const getAlertSummary = (
 };
 
 export default function Header({ profile }: HeaderProps) {
-  const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -176,30 +175,6 @@ export default function Header({ profile }: HeaderProps) {
     fetchAlerts();
   };
 
-  const getPageTitle = () => {
-    const path = pathname.split("/")[1];
-    const titles: Record<string, string> = {
-      dashboard: "Dashboard",
-      students: "Students",
-      classes: "Classes",
-      attendance: "Attendance",
-      progress: "Learning",
-      reports: "Reports",
-      settings: "Settings",
-      alerts: "Alert Centre",
-      "prayer-sheets": "Prayer Sheets",
-      "curriculum-assessment": "Learning",
-      fees: "Fee Management",
-      fines: "Fine Management",
-      messages: "Messages",
-      "send-update": "Send Update",
-      events: "Events",
-      applications: "Applications",
-      users: "User Management",
-    };
-    return titles[path] || "Dashboard";
-  };
-
   const handleLogout = async () => {
     setLoading(true);
     try {
@@ -214,15 +189,8 @@ export default function Header({ profile }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between pl-16 pr-4 md:px-6">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-lg md:text-2xl font-bold text-foreground">
-          {getPageTitle()}
-        </h1>
-      </div>
-
-      {/* Actions */}
+    <header className="h-16 bg-card border-b border-border flex items-center justify-end pl-16 pr-4 md:px-6">
+      {/* Utility bar — the page's own PageHeader carries the title/actions */}
       <div className="flex items-center gap-2 sm:gap-4">
         <GlobalSearch />
         <ThemeToggle />
