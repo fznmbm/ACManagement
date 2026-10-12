@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/helpers";
 import {
   LayoutDashboard,
@@ -27,6 +27,7 @@ import {
   Settings,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -182,6 +183,14 @@ export default function Sidebar({ profile }: SidebarProps) {
   const [centreName, setCentreName] = useState("Loading...");
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   // Groups filtered to the current role (and empty groups removed).
   const role = profile.role as Role;
@@ -215,11 +224,26 @@ export default function Sidebar({ profile }: SidebarProps) {
     setMobileOpen(false);
   }, [pathname]);
 
-  const isActive = (href: string) =>
-    pathname === href ||
-    (href !== "/dashboard" &&
-      href !== "/students" &&
-      pathname.startsWith(href + "/"));
+  // Longest-match-wins: only the most specific matching item is active, so
+  // visiting /attendance/history highlights "Attendance History" alone, not
+  // "Attendance" as well.
+  const bestMatch = (() => {
+    let best = "";
+    for (const g of NAV_GROUPS) {
+      for (const i of g.items) {
+        const h = i.href;
+        if (
+          (pathname === h || pathname.startsWith(h + "/")) &&
+          h.length > best.length
+        ) {
+          best = h;
+        }
+      }
+    }
+    return best;
+  })();
+
+  const isActive = (href: string) => href === bestMatch;
 
   const NavBody = (
     <>
@@ -251,14 +275,14 @@ export default function Sidebar({ profile }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
                         active
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                          ? "bg-primary/10 text-primary font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-full before:bg-primary before:content-['']"
+                          : "font-medium text-muted-foreground hover:bg-accent hover:text-foreground",
                       )}
                     >
                       <Icon className="h-5 w-5 shrink-0" />
-                      <span className="font-medium">{item.name}</span>
+                      <span>{item.name}</span>
                     </Link>
                   </li>
                 );
@@ -268,7 +292,7 @@ export default function Sidebar({ profile }: SidebarProps) {
         ))}
       </nav>
 
-      {/* User info */}
+      {/* User info + logout */}
       <div className="border-t border-border p-3">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -283,6 +307,14 @@ export default function Sidebar({ profile }: SidebarProps) {
             </p>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Log out</span>
+        </button>
       </div>
     </>
   );

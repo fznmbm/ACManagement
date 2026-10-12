@@ -1,10 +1,15 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Hanken_Grotesk } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -19,6 +24,7 @@ export const metadata: Metadata = {
     "islamic education",
     "student management",
   ],
+  // Installable-app (PWA) metadata
   applicationName: "Al Hikmah",
   appleWebApp: {
     capable: true,
@@ -32,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#15803d",
+  themeColor: "#116a4c",
   viewportFit: "cover",
 };
 
@@ -42,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={hanken.variable}>
       <head>
         {/* 🔥 CRITICAL FIX: Apply theme BEFORE React renders */}
         <script
@@ -80,7 +86,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning className={inter.className}>
+      <body suppressHydrationWarning>
         <ThemeProvider defaultTheme="system" storageKey="madrasa-theme">
           {children}
         </ThemeProvider>
