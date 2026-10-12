@@ -4,8 +4,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
 import { LoadingButton } from "@/components/ui/loading";
+
+const PARENT_LOGIN_URL =
+  process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+    ? "https://parent.al-hikmah.org/parent/login"
+    : "https://ahic-parent.vercel.app/parent/login";
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
+    ? "https://al-hikmah.org"
+    : "https://ahic.vercel.app";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,10 +32,7 @@ export default function LoginPage() {
 
     try {
       const { data, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        await supabase.auth.signInWithPassword({ email, password });
 
       if (signInError) {
         setError(signInError.message);
@@ -34,23 +40,15 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Get user profile to verify role and determine redirect
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", data.user.id)
           .single();
 
-        // Redirect based on role
         if (profile?.role === "parent") {
-          // Shouldn't happen - parents use /parent/login
           router.push("/parent/dashboard");
-        } else if (
-          ["admin", "super_admin", "teacher"].includes(profile?.role || "")
-        ) {
-          router.push("/dashboard");
         } else {
-          // Unknown role, default to dashboard
           router.push("/dashboard");
         }
         router.refresh();
@@ -63,36 +61,9 @@ export default function LoginPage() {
     }
   };
 
-  // Quick login buttons for testing
-  const quickLogin = async (email: string, password: string) => {
-    setEmail(email);
-    setPassword(password);
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        setError(signInError.message);
-        return;
-      }
-
-      router.push("/dashboard");
-      router.refresh();
-    } catch (err) {
-      setError("An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div>
-      <h2 className="text-2xl font-bold text-center mb-6">Staff Sign In</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">Staff sign in</h2>
 
       {error && (
         <div className="bg-destructive/10 text-destructive border border-destructive/20 rounded-md p-3 mb-4 text-sm">
@@ -103,7 +74,7 @@ export default function LoginPage() {
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
           <label htmlFor="email" className="form-label">
-            Email Address
+            Email address
           </label>
           <input
             id="email"
@@ -133,36 +104,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* <button type="submit" disabled={loading} className="btn-primary w-full">
-          {loading ? (
-            <span className="flex items-center justify-center">
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Signing in...
-            </span>
-          ) : (
-            "Sign In"
-          )}
-        </button> */}
-
         <LoadingButton
           type="submit"
           isLoading={loading}
@@ -170,60 +111,28 @@ export default function LoginPage() {
           variant="primary"
           className="w-full"
         >
-          Sign In
+          Sign in
         </LoadingButton>
-
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-          <p className="text-sm text-center text-muted-foreground">
-            Looking for the parent portal?{" "}
-            <a
-              href={
-                process.env.NEXT_PUBLIC_USE_CUSTOM_DOMAINS === "true"
-                  ? "https://parent.al-hikmah.org/parent/login"
-                  : "https://ahic-parent.vercel.app/parent/login"
-              }
-              className="text-primary hover:underline font-medium"
-            >
-              Click here
-            </a>
-          </p>
-        </div>
       </form>
 
-      {/* Development Quick Login Buttons
-      <div className="mt-6 pt-6 border-t border-border">
-        <p className="text-sm text-muted-foreground text-center mb-3">
-          Quick Login (Testing):
-        </p>
-        <div className="space-y-2">
-          <button
-            onClick={() => quickLogin("mbmfazan@gmail.com", "Hikma@123")}
-            disabled={loading}
-            className="btn-outline w-full text-sm"
+      {/* Cross-links: parent sign-in + back to the website */}
+      <div className="mt-6 pt-6 border-t border-border space-y-3 text-center text-sm">
+        <p className="text-muted-foreground">
+          Are you a parent?{" "}
+          <a
+            href={PARENT_LOGIN_URL}
+            className="font-medium text-primary hover:underline"
           >
-            Login as Admin
-          </button>
-          <button
-            onClick={() => quickLogin("staff@email.com", "Staff@123")}
-            disabled={loading}
-            className="btn-outline w-full text-sm"
-          >
-            Login as Teacher
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground text-center mt-3">
-          Note: Update passwords in the code to match your actual test accounts
+            Go to parent sign-in
+          </a>
         </p>
-      </div> */}
-
-      {/* Uncomment when you add registration
-      <p className="text-center text-sm text-muted-foreground mt-4">
-        Don't have an account?{' '}
-        <Link href="/register" className="text-primary hover:underline">
-          Register here
-        </Link>
-      </p>
-      */}
+        <a
+          href={SITE_URL}
+          className="inline-block text-muted-foreground hover:text-foreground"
+        >
+          ← Back to website
+        </a>
+      </div>
     </div>
   );
 }

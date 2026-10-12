@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
+import PageHeader from "@/components/layout/PageHeader";
 import {
   Calendar,
   Clock,
@@ -497,24 +498,21 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Events</h2>
-          <p className="text-muted-foreground">
-            School events and activities
-          </p>
-        </div>
-        {canManage && (
-          <button
-            onClick={() => (showForm ? setShowForm(false) : openCreate())}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Create event
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Events"
+        subtitle="School events and activities."
+        actions={
+          canManage ? (
+            <button
+              onClick={() => (showForm ? setShowForm(false) : openCreate())}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create event
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Create / Edit form */}
       {showForm && (

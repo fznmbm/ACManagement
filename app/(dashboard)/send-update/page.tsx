@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
+import PageHeader from "@/components/layout/PageHeader";
 import SentNoticeStatus from "@/components/updates/SentNoticeStatus";
 import {
   Send,
@@ -753,12 +754,10 @@ export default function SendUpdatePage() {
   // ===== COMPOSE FORM =====
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Send update</h2>
-        <p className="text-muted-foreground">
-          Send a message or class update to parents
-        </p>
-      </div>
+      <PageHeader
+        title="Send update"
+        subtitle="Send a message or class update to parents."
+      />
 
       {/* Class selector */}
       <div>

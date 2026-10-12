@@ -11,7 +11,6 @@ import {
   Landmark,
   Info,
   Banknote,
-  CreditCard,
 } from "lucide-react";
 import { ParentFine } from "@/types/fines";
 import { ParentInvoice } from "@/types/fees";
@@ -512,23 +511,6 @@ export default function ParentFinancesPage() {
                     )}
                   </div>
 
-                  {/* Online payment — coming soon */}
-                  <div className="rounded-lg border border-dashed border-border bg-card/60 p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Online payment
-                        </span>
-                      </div>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
-                        Soon
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-xs text-muted-foreground">
-                      Pay securely by card online, coming soon.
-                    </p>
-                  </div>
                 </div>
 
                 <p className="mt-3 flex items-start gap-1.5 text-xs text-muted-foreground">

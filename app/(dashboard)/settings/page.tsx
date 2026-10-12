@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsTabs from "@/components/settings/SettingsTabs";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -36,12 +37,10 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Settings</h2>
-        <p className="text-muted-foreground">
-          Manage system configuration and preferences
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        subtitle="Manage system configuration and preferences."
+      />
 
       <SettingsTabs initialSettings={settingsMap} />
     </div>

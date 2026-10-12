@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import PageHeader from "@/components/layout/PageHeader";
 import AttendanceReportGenerator from "@/components/reports/AttendanceReportGenerator";
 import AcademicReportGenerator from "@/components/reports/AcademicReportGenerator";
 import FeeCollectionReport from "@/components/reports/FeeCollectionReport";
@@ -57,13 +58,10 @@ export default async function ReportsPage({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold">Reports</h2>
-        <p className="text-muted-foreground">
-          Generate and export reports for attendance, academics, fees and more
-        </p>
-      </div>
+      <PageHeader
+        title="Reports"
+        subtitle="Generate and export reports for attendance, academics, fees and more."
+      />
 
       {/* Tabs */}
       <div className="border-b border-border">
