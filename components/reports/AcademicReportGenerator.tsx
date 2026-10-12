@@ -43,7 +43,7 @@ export default function AcademicReportGenerator({
         .select(
           `
     *,
-    students (first_name, last_name, student_number),
+    students!inner (first_name, last_name, student_number, class_id),
     subjects (name)
   `,
         )
@@ -53,7 +53,8 @@ export default function AcademicReportGenerator({
         query = query.eq("student_id", selectedStudent);
       }
       if (selectedClass) {
-        query = query.eq("class_id", selectedClass);
+        // academic_progress has no class_id — filter via the student's class.
+        query = query.eq("students.class_id", selectedClass);
       }
       if (dateFrom) {
         query = query.gte("assessment_date", dateFrom);
