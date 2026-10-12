@@ -2,17 +2,22 @@
 
 /**
  * RegistersBoard — admin oversight for "which classes have taken the register
- * for the latest class day". Read-only, additive, no schema change: a class is
- * "Submitted" if any attendance row exists for (class, latest class day),
- * otherwise "Not submitted". (Once a server-side draft/finalize state exists,
- * this upgrades to Not started / Draft / Finalized.)
+ * for the latest class day".
+ *
+ * States (migration 018 adds attendance_registers):
+ *   • Finalised     — a register row with status 'finalized' (shows when).
+ *   • Submitted     — attendance rows exist but no finalised register (older
+ *                     data saved before 018, or saved another way).
+ *   • Not submitted — nothing yet.
+ * If the attendance_registers table isn't applied yet, it falls back to the
+ * original "any rows = Submitted" behaviour.
  */
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { latestClassDay } from "@/lib/utils/classDay";
-import { CheckCircle2, CircleDashed } from "lucide-react";
+import { CheckCircle2, CircleDashed, Clock } from "lucide-react";
 
 interface ClassRow {
   id: string;
@@ -22,7 +27,10 @@ interface ClassRow {
 export default function RegistersBoard() {
   const supabase = createClient();
   const [classes, setClasses] = useState<ClassRow[]>([]);
-  const [submitted, setSubmitted] = useState<Set<string>>(new Set());
+  const [withRows, setWithRows] = useState<Set<string>>(new Set());
+  const [finalized, setFinalized] = useState<Map<string, string | null>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(true);
 
   const day = useMemo(() => latestClassDay(), []);
@@ -50,7 +58,25 @@ export default function RegistersBoard() {
         ]);
         if (!active) return;
         setClasses(cls || []);
-        setSubmitted(new Set((att || []).map((r: any) => r.class_id)));
+        setWithRows(new Set((att || []).map((r: any) => r.class_id)));
+
+        // Register states — best-effort (table may not be applied yet).
+        try {
+          const { data: regs } = await supabase
+            .from("attendance_registers")
+            .select("class_id, status, finalized_at")
+            .eq("date", day);
+          if (active && regs) {
+            const m = new Map<string, string | null>();
+            for (const r of regs as any[]) {
+              if (r.status === "finalized")
+                m.set(r.class_id, r.finalized_at || null);
+            }
+            setFinalized(m);
+          }
+        } catch {
+          /* no register table yet — fall back to any-rows */
+        }
       } catch {
         /* non-blocking oversight widget */
       } finally {
@@ -64,7 +90,17 @@ export default function RegistersBoard() {
 
   if (loading || classes.length === 0) return null;
 
-  const done = classes.filter((c) => submitted.has(c.id)).length;
+  const done = classes.filter(
+    (c) => finalized.has(c.id) || withRows.has(c.id),
+  ).length;
+
+  const fmtTime = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -74,13 +110,14 @@ export default function RegistersBoard() {
             Registers — {dayLabel}
           </h3>
           <p className="text-xs text-muted-foreground">
-            {done} of {classes.length} submitted
+            {done} of {classes.length} taken
           </p>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {classes.map((c) => {
-          const isDone = submitted.has(c.id);
+          const isFinalized = finalized.has(c.id);
+          const hasRows = withRows.has(c.id);
           return (
             <Link
               key={c.id}
@@ -90,9 +127,20 @@ export default function RegistersBoard() {
               <span className="truncate text-sm font-medium text-foreground">
                 {c.name}
               </span>
-              {isDone ? (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Submitted
+              {isFinalized ? (
+                <span
+                  title={
+                    finalized.get(c.id)
+                      ? `Finalised at ${fmtTime(finalized.get(c.id)!)}`
+                      : "Finalised"
+                  }
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Finalised
+                </span>
+              ) : hasRows ? (
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  <Clock className="h-3.5 w-3.5" /> Submitted
                 </span>
               ) : (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">

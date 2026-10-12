@@ -179,6 +179,31 @@ export default function AttendanceMarkingInterface({
         p_records: records,
       } as any);
       if (error) throw error;
+
+      // Record the register as finalised (who/when). Best-effort: if the
+      // attendance_registers table isn't applied yet (migration 018), the
+      // marks still saved above — the board just falls back to "any rows".
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const now = new Date().toISOString();
+        await supabase.from("attendance_registers").upsert(
+          {
+            class_id: selectedClassId,
+            date: selectedDate,
+            status: "finalized",
+            finalized_at: now,
+            finalized_by: user?.id ?? null,
+            updated_by: user?.id ?? null,
+            updated_at: now,
+          },
+          { onConflict: "class_id,date" },
+        );
+      } catch {
+        /* register state is best-effort */
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       router.refresh();
@@ -238,20 +263,20 @@ export default function AttendanceMarkingInterface({
 
     setSaving(true);
     try {
+      // Pre-check settled fines so we can show a clear message in every path.
       const { data: attendanceRecords } = await supabase
         .from("attendance")
         .select("id")
         .eq("class_id", selectedClassId)
         .eq("date", selectedDate);
+      const ids = (attendanceRecords || []).map((r) => r.id);
 
-      if (attendanceRecords && attendanceRecords.length > 0) {
-        const ids = attendanceRecords.map((r) => r.id);
+      if (ids.length > 0) {
         const { count: settledFines } = await supabase
           .from("fines")
           .select("id", { count: "exact", head: true })
           .in("attendance_record_id", ids)
           .neq("status", "pending");
-
         if (settledFines && settledFines > 0) {
           toast.error(
             `${settledFines} fine(s) for this day are already paid or waived. Change individual students instead of clearing the day.`,
@@ -259,20 +284,52 @@ export default function AttendanceMarkingInterface({
           setSaving(false);
           return;
         }
-
-        await supabase
-          .from("fines")
-          .delete()
-          .in("attendance_record_id", ids)
-          .eq("status", "pending");
       }
 
-      const { error } = await supabase
-        .from("attendance")
-        .delete()
-        .eq("class_id", selectedClassId)
-        .eq("date", selectedDate);
-      if (error) throw error;
+      // Atomic clear via the RPC (migration 018). If the function isn't there
+      // yet, fall back to the original client-side cascade.
+      const { error: rpcErr } = await supabase.rpc("clear_class_day", {
+        p_class_id: selectedClassId,
+        p_date: selectedDate,
+      } as any);
+
+      if (rpcErr) {
+        const msg = (rpcErr.message || "").toLowerCase();
+        if (msg.includes("settled_fines")) {
+          toast.error(
+            "Some fines for this day are already paid or waived. Change individual students instead of clearing the day.",
+          );
+          setSaving(false);
+          return;
+        }
+        const rpcMissing =
+          (rpcErr as any).code === "PGRST202" ||
+          msg.includes("could not find") ||
+          msg.includes("does not exist") ||
+          msg.includes("clear_class_day");
+        if (!rpcMissing) throw rpcErr;
+
+        // Fallback cascade (pre-018): delete pending fines, then attendance.
+        if (ids.length > 0) {
+          await supabase
+            .from("fines")
+            .delete()
+            .in("attendance_record_id", ids)
+            .eq("status", "pending");
+        }
+        const { error: delErr } = await supabase
+          .from("attendance")
+          .delete()
+          .eq("class_id", selectedClassId)
+          .eq("date", selectedDate);
+        if (delErr) throw delErr;
+        // Best-effort: clear the register state row if that table exists.
+        await supabase
+          .from("attendance_registers")
+          .delete()
+          .eq("class_id", selectedClassId)
+          .eq("date", selectedDate);
+      }
 
       refreshFines();
       router.refresh();
