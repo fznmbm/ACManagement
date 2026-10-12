@@ -37,7 +37,7 @@ export default async function ParentLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5">
       {children}
     </div>
   );
