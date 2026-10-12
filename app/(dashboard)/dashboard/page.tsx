@@ -123,77 +123,69 @@ export default async function DashboardPage() {
   const activeFinesAmount =
     activeFines?.reduce((sum, fine) => sum + fine.amount, 0) || 0;
 
+  // Decorative tiles share the brand treatment; colour is kept only where it
+  // carries meaning (money owed = attention).
+  const brand = {
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+  };
   const stats = [
     {
       name: "Total Students",
       value: totalStudents || 0,
       icon: Users,
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-100 dark:bg-blue-900/30",
-      hoverBorderColor: "hover:border-blue-600 dark:hover:border-blue-400",
+      ...brand,
       href: "/students",
     },
     {
       name: "Active Classes",
       value: totalClasses || 0,
       icon: BookOpen,
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-100 dark:bg-green-900/30",
-      hoverBorderColor: "hover:border-green-600 dark:hover:border-green-400",
+      ...brand,
       href: "/classes",
     },
     {
       name: "Present (last session)",
       value: todayAttendance || 0,
       icon: CheckCircle,
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-100 dark:bg-purple-900/30",
-      hoverBorderColor: "hover:border-purple-600 dark:hover:border-purple-400",
+      ...brand,
       href: "/attendance",
     },
     {
       name: "Attendance Rate",
       value: `${attendancePercentage}%`,
       icon: TrendingUp,
-      color: "text-orange-600 dark:text-orange-400",
-      bgColor: "bg-orange-100 dark:bg-orange-900/30",
-      hoverBorderColor: "hover:border-orange-600 dark:hover:border-orange-400",
+      ...brand,
       href: "/reports",
     },
     {
       name: "Pending Applications",
       value: pendingApplications || 0,
       icon: FileText,
-      color: "text-indigo-600 dark:text-indigo-400",
-      bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
-      hoverBorderColor: "hover:border-indigo-600 dark:hover:border-indigo-400",
+      ...brand,
       href: "/applications",
     },
     {
       name: "Outstanding Fees",
       value: `£${outstandingFees.toFixed(2)}`,
       icon: PoundSterling,
-      color: "text-red-600 dark:text-red-400",
-      bgColor: "bg-red-100 dark:bg-red-900/30",
-      hoverBorderColor: "hover:border-red-600 dark:hover:border-red-400",
+      color: "text-danger",
+      bgColor: "bg-danger/10",
       href: "/fees",
     },
     {
       name: "Active Fines",
       value: `£${activeFinesAmount.toFixed(2)}`,
       icon: AlertCircle,
-      color: "text-yellow-600 dark:text-yellow-400",
-      bgColor: "bg-yellow-100 dark:bg-yellow-900/30",
-      hoverBorderColor: "hover:border-yellow-600 dark:hover:border-yellow-400",
+      color: "text-warning",
+      bgColor: "bg-warning/10",
       href: "/fines",
     },
     {
       name: "Upcoming Events",
       value: upcomingEventsCount || 0,
       icon: Calendar,
-      color: "text-pink-600 dark:text-pink-400",
-      bgColor: "bg-pink-100 dark:bg-pink-900/30",
-      hoverBorderColor: "hover:border-pink-600 dark:hover:border-pink-400",
+      ...brand,
       href: "/events",
     },
   ];
@@ -238,7 +230,7 @@ export default async function DashboardPage() {
             <Link
               key={stat.name}
               href={stat.href}
-              className={`rounded-lg border-2 border-border bg-card p-5 transition-all duration-200 hover:shadow-lg ${stat.hoverBorderColor}`}
+              className="rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <div>

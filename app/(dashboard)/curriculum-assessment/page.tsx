@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils/helpers";
+import PageHeader from "@/components/layout/PageHeader";
 
 export default async function LearningPage() {
   const supabase = await createClient();
@@ -72,23 +73,20 @@ export default async function LearningPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold">Learning</h2>
-          <p className="text-muted-foreground">
-            Subjects, exams and results for every class.
-          </p>
-        </div>
-        <Link
-          href="/curriculum-assessment/exams/new"
-          className="btn-primary flex items-center gap-2 shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Record exam</span>
-          <span className="sm:hidden">Exam</span>
-        </Link>
-      </div>
+      <PageHeader
+        title="Learning"
+        subtitle="Subjects, exams and results for every class."
+        actions={
+          <Link
+            href="/curriculum-assessment/exams/new"
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Record exam</span>
+            <span className="sm:hidden">Exam</span>
+          </Link>
+        }
+      />
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -104,21 +102,21 @@ export default async function LearningPage() {
           "Exams",
           totalExams || 0,
           ClipboardList,
-          "text-blue-600",
+          "text-primary",
         )}
         {statCard(
           "/curriculum-assessment/exams",
           "Results recorded",
           totalResults || 0,
           ClipboardList,
-          "text-green-600",
+          "text-primary",
         )}
         {statCard(
           "/curriculum-assessment/certificates",
           "Certificates",
           totalCertificates || 0,
           Award,
-          "text-yellow-600",
+          "text-gold",
         )}
       </div>
 
@@ -130,8 +128,8 @@ export default async function LearningPage() {
             href="/curriculum-assessment/exams/new"
             className="flex items-center gap-3 p-4 border border-border rounded-lg hover:border-primary hover:bg-accent transition-colors"
           >
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ClipboardList className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <ClipboardList className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="font-medium">Record exam results</p>
@@ -163,8 +161,8 @@ export default async function LearningPage() {
               href="/curriculum-assessment/certificates/generate"
               className="flex items-center gap-3 p-4 border border-border rounded-lg hover:border-primary hover:bg-accent transition-colors"
             >
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Award className="h-5 w-5 text-yellow-600" />
+              <div className="p-2 bg-gold/15 rounded-lg">
+                <Award className="h-5 w-5 text-gold" />
               </div>
               <div>
                 <p className="font-medium">Award certificate</p>
@@ -225,43 +223,6 @@ export default async function LearningPage() {
             </Link>
           </div>
         )}
-      </div>
-
-      {/* Module navigation */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link
-          href="/curriculum-assessment/subjects"
-          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all"
-        >
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <BookOpen className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h4 className="font-semibold mb-1">Subjects</h4>
-              <p className="text-sm text-muted-foreground">
-                The subjects taught across classes
-              </p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/curriculum-assessment/exams"
-          className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all"
-        >
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ClipboardList className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h4 className="font-semibold mb-1">Exams &amp; results</h4>
-              <p className="text-sm text-muted-foreground">
-                Create exams and mark the whole class
-              </p>
-            </div>
-          </div>
-        </Link>
       </div>
 
     </div>

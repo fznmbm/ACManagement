@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import AttendanceMarkingInterface from "@/components/attendance/AttendanceMarkingInterface";
 import RegistersBoard from "@/components/attendance/RegistersBoard";
+import PageHeader from "@/components/layout/PageHeader";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BarChart3 } from "lucide-react";
@@ -77,22 +78,19 @@ export default async function AttendancePage({
 
   return (
     <div className="space-y-6">
-      {/* Header with History Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Mark Attendance</h2>
-          <p className="text-muted-foreground">
-            Select a class and date to mark or view attendance
-          </p>
-        </div>
-        <Link
-          href="/attendance/history"
-          className="btn-outline flex items-center space-x-2"
-        >
-          <BarChart3 className="h-4 w-4" />
-          <span>View History</span>
-        </Link>
-      </div>
+      <PageHeader
+        title="Attendance"
+        subtitle="Select a class and date to mark or view attendance."
+        actions={
+          <Link
+            href="/attendance/history"
+            className="btn-outline flex items-center gap-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>History</span>
+          </Link>
+        }
+      />
 
       <RegistersBoard />
 

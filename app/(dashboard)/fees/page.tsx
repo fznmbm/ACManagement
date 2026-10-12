@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Download, Plus } from "lucide-react";
 import FeePaymentModal from "@/components/fees/FeePaymentModal";
 import FinanceTabs from "@/components/finance/FinanceTabs";
+import PageHeader from "@/components/layout/PageHeader";
 import ReasonDialog from "@/components/ui/ReasonDialog";
 import { Pagination } from "@/components/ui/DataTable";
 import { useToast } from "@/components/ui/toast";
@@ -288,6 +289,7 @@ export default function FeesPage() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Finance" subtitle="Fees and fines in one place." />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <FinanceTabs active="fees" />
         <div className="flex items-center gap-3 self-start">
