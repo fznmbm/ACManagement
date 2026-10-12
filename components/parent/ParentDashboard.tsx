@@ -246,7 +246,7 @@ export default function ParentDashboard() {
 
         {students.length === 0 ? (
           <div className="p-8 text-center">
-            <Users className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+            <Users className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               No students linked yet. Contact the school.
             </p>

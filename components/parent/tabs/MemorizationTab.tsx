@@ -147,7 +147,7 @@ export default function MemorizationTab({ studentId }: MemorizationTabProps) {
   if (memorization.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-10 text-center">
-        <BookOpen className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
         <p className="text-muted-foreground text-sm">
           No memorization items recorded yet
         </p>

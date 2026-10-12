@@ -570,7 +570,7 @@ export default function ParentFinancesPage() {
               <div className="space-y-4">
                 {invoices.length === 0 ? (
                   <div className="text-center py-10">
-                    <FileText className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                    <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">
                       No invoices found
                     </p>
@@ -651,7 +651,7 @@ export default function ParentFinancesPage() {
               <div className="space-y-4">
                 {fines.length === 0 ? (
                   <div className="text-center py-10">
-                    <Receipt className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                    <Receipt className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">
                       No fines found
                     </p>
@@ -742,7 +742,7 @@ export default function ParentFinancesPage() {
                     new Date(a.paid_date || "").getTime()
                 ).length === 0 ? (
                   <div className="text-center py-10">
-                    <Calendar className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                    <Calendar className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">
                       No payment history
                     </p>

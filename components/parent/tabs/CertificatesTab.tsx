@@ -84,7 +84,7 @@ export default function CertificatesTab({ studentId }: { studentId: string }) {
   if (certificates.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-10 text-center">
-        <Award className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <Award className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
         <p className="font-medium text-foreground text-sm">
           No certificates yet
         </p>

@@ -173,7 +173,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
   if (assessments.length === 0) {
     return (
       <div className="bg-card rounded-xl border border-border p-10 text-center">
-        <BookOpen className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+        <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
         <p className="text-muted-foreground text-sm">
           No assessments recorded yet
         </p>
@@ -184,12 +184,12 @@ export default function GradesTab({ studentId }: GradesTabProps) {
   return (
     <div className="space-y-6">
       {/* Overall Performance */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
+      <div className="bg-primary/5 rounded-xl border border-primary/20 p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <Award className="h-5 w-5 text-primary" />
             <h3 className="text-base font-semibold text-foreground">
-              Overall Performance
+              Overall performance
             </h3>
           </div>
           <span
@@ -200,7 +200,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
         </div>
         <div className="w-full bg-muted rounded-full h-2">
           <div
-            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+            className="bg-primary h-2 rounded-full transition-all duration-500"
             style={{ width: `${overallAverage}%` }}
           ></div>
         </div>
@@ -259,7 +259,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
                 </div>
                 <div className="w-full bg-muted rounded-full h-2 mt-3">
                   <div
-                    className="bg-blue-500 h-2 rounded-full"
+                    className="bg-primary h-2 rounded-full"
                     style={{ width: `${stat.averagePercentage}%` }}
                   ></div>
                 </div>
@@ -292,7 +292,7 @@ export default function GradesTab({ studentId }: GradesTabProps) {
       <div className="bg-card rounded-lg border border-border overflow-hidden">
         {filteredAssessments.length === 0 ? (
           <div className="text-center py-10">
-            <BookOpen className="h-10 w-10 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+            <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-muted-foreground text-sm">
               {selectedSubject === "all"
                 ? "No assessments recorded yet"

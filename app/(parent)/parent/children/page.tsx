@@ -257,7 +257,7 @@ export default function MyChildrenPage() {
 
       {children.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-10 text-center">
-          <Users className="h-12 w-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <Users className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
           <h3 className="font-semibold text-foreground mb-1">
             No Children Linked
           </h3>

@@ -220,7 +220,7 @@ export default function ParentUpdatesPage() {
 
       {items.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-10 text-center">
-          <Bell className="h-12 w-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <Bell className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
             No updates yet. Notices about fees, feedback and events will appear
             here.
