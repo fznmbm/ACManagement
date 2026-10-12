@@ -7,7 +7,6 @@ import { Search, Filter, Plus, Download, Link as LinkIcon, X } from "lucide-reac
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
-import * as XLSX from "xlsx";
 import { calculateAge } from "@/lib/utils/helpers";
 
 interface StudentsHeaderProps {
@@ -79,11 +78,14 @@ export default function StudentsHeader({
     setSelectedStatus("");
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!students || students.length === 0) {
       toast.error("No students to export");
       return;
     }
+    // Load the spreadsheet library only when an export is actually run, so it
+    // stays out of the Students page's initial bundle.
+    const XLSX = await import("xlsx");
     const rows = students.map((s) => ({
       "Student #": s.student_number,
       "First Name": s.first_name,

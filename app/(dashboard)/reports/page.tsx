@@ -2,12 +2,39 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
-import AttendanceReportGenerator from "@/components/reports/AttendanceReportGenerator";
-import AcademicReportGenerator from "@/components/reports/AcademicReportGenerator";
-import FeeCollectionReport from "@/components/reports/FeeCollectionReport";
-import StudentReportGenerator from "@/components/reports/StudentReportGenerator";
-import YearEndSummaryReport from "@/components/reports/YearEndSummaryReport";
-import PrayerComplianceReport from "@/components/reports/PrayerComplianceReport";
+import dynamic from "next/dynamic";
+
+// Code-split: only the active tab's report generator is fetched, instead of
+// bundling all six into the Reports route.
+const loading = () => (
+  <div className="py-12 text-center text-sm text-muted-foreground">
+    Loading report…
+  </div>
+);
+const AttendanceReportGenerator = dynamic(
+  () => import("@/components/reports/AttendanceReportGenerator"),
+  { loading },
+);
+const AcademicReportGenerator = dynamic(
+  () => import("@/components/reports/AcademicReportGenerator"),
+  { loading },
+);
+const FeeCollectionReport = dynamic(
+  () => import("@/components/reports/FeeCollectionReport"),
+  { loading },
+);
+const StudentReportGenerator = dynamic(
+  () => import("@/components/reports/StudentReportGenerator"),
+  { loading },
+);
+const YearEndSummaryReport = dynamic(
+  () => import("@/components/reports/YearEndSummaryReport"),
+  { loading },
+);
+const PrayerComplianceReport = dynamic(
+  () => import("@/components/reports/PrayerComplianceReport"),
+  { loading },
+);
 
 const TABS = [
   { id: "attendance", label: "Attendance" },

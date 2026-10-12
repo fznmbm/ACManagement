@@ -77,28 +77,35 @@ export default function LinkParentsPage() {
         throw error;
       }
 
-      // Fetch parent links for each student
-      const studentsWithLinks = await Promise.all(
-        (data || []).map(async (student) => {
-          const { data: links } = await supabase
+      // Fetch all parent links in ONE query, then group by student (was N+1 —
+      // one query per student).
+      const ids = (data || []).map((s: any) => s.id);
+      const { data: allLinks } = ids.length
+        ? await supabase
             .from("parent_student_links")
-            .select("id, parent_user_id")
-            .eq("student_id", student.id);
+            .select("id, parent_user_id, student_id")
+            .in("student_id", ids)
+        : { data: [] as any[] };
 
-          return {
-            ...student,
-            classes:
-              student.classes &&
-              Array.isArray(student.classes) &&
-              student.classes.length > 0
-                ? { class_name: student.classes[0].name }
-                : student.classes && !Array.isArray(student.classes)
-                ? { class_name: (student.classes as any).name }
-                : null,
-            parent_links: links || [],
-          };
-        })
-      );
+      const linksByStudent = new Map<string, any[]>();
+      for (const l of allLinks || []) {
+        const arr = linksByStudent.get(l.student_id) || [];
+        arr.push({ id: l.id, parent_user_id: l.parent_user_id });
+        linksByStudent.set(l.student_id, arr);
+      }
+
+      const studentsWithLinks = (data || []).map((student: any) => ({
+        ...student,
+        classes:
+          student.classes &&
+          Array.isArray(student.classes) &&
+          student.classes.length > 0
+            ? { class_name: student.classes[0].name }
+            : student.classes && !Array.isArray(student.classes)
+            ? { class_name: (student.classes as any).name }
+            : null,
+        parent_links: linksByStudent.get(student.id) || [],
+      }));
 
       setStudents(studentsWithLinks);
     } catch (err) {
