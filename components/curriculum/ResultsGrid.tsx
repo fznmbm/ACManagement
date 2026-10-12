@@ -153,15 +153,17 @@ export default function ResultsGrid({
       // Shared fields written on every insert/update. We also fill the legacy
       // score/percentage/grade columns so the parent view and older reports
       // keep rendering until those read-paths move to the exam model.
+      // NB: columns match the LIVE academic_progress table — it uses
+      // `teacher_id` (not recorded_by), has no class_id, and assessment_type
+      // is CHECK-constrained to test/quiz/homework/oral_test.
       const commonFor = (score: number) => {
         const pct = calculatePercentage(score, max);
         return {
           exam_id: exam.id,
           written_score: score,
-          recorded_by: user.id,
+          teacher_id: user.id,
           subject_id: exam.subject_id,
-          class_id: exam.class_id,
-          assessment_type: "exam",
+          assessment_type: "test",
           assessment_date: exam.exam_date,
           score,
           max_score: max,
