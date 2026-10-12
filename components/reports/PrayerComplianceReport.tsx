@@ -1,7 +1,7 @@
 // components/reports/PrayerComplianceReport.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Download, FileText } from "lucide-react";
 import { exportTablePDF } from "@/lib/utils/pdfExport";
@@ -44,6 +44,29 @@ export default function PrayerComplianceReport({
     "name" | "submission_rate" | "overall_rate"
   >("submission_rate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  // Prayer sheets are per-class; only classes with prayer sheets enabled count,
+  // so disabled classes never show a misleading 0%. null = not yet known /
+  // column not present (pre-migration) → treat all as enabled.
+  const [enabledClassIds, setEnabledClassIds] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("classes")
+          .select("id")
+          .eq("prayer_sheets_enabled", true);
+        if (!error && data) setEnabledClassIds(data.map((c: any) => c.id));
+      } catch {
+        /* column not applied yet — leave null (no filtering) */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const visibleClasses = enabledClassIds
+    ? classes.filter((c) => enabledClassIds.includes(c.id))
+    : classes;
 
   const generateReport = async () => {
     setLoading(true);
@@ -58,6 +81,14 @@ export default function PrayerComplianceReport({
 
       if (selectedClass) {
         studentsQuery = studentsQuery.eq("class_id", selectedClass);
+      } else if (enabledClassIds) {
+        // "All classes" means all prayer-enabled classes only.
+        studentsQuery = studentsQuery.in(
+          "class_id",
+          enabledClassIds.length ? enabledClassIds : [
+            "00000000-0000-0000-0000-000000000000",
+          ],
+        );
       }
 
       const { data: studentsData } = await studentsQuery.order("first_name");
@@ -284,7 +315,7 @@ export default function PrayerComplianceReport({
             className="form-input"
           >
             <option value="">All Classes</option>
-            {classes.map((cls) => (
+            {visibleClasses.map((cls) => (
               <option key={cls.id} value={cls.id}>
                 {cls.name}
               </option>
