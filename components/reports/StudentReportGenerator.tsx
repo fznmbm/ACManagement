@@ -5,6 +5,11 @@ import { useState } from "react";
 import { Download, Loader2, User, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { exportStudentToPDF } from "@/lib/utils/pdfExport";
+import {
+  cohortWindow,
+  expectedWeeks,
+  participationRate,
+} from "@/lib/utils/prayerParticipation";
 
 interface StudentReportGeneratorProps {
   students: Array<{
@@ -14,6 +19,23 @@ interface StudentReportGeneratorProps {
     student_number: string;
   }>;
   classes: Array<{ id: string; name: string }>;
+}
+
+const PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
+const WEEK_DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+
+function feeStructureName(fee: any): string {
+  const fs = fee.fee_structures;
+  const name = Array.isArray(fs) ? fs[0]?.name : fs?.name;
+  return name || fee.period_name || fee.invoice_number || "Fee";
 }
 
 export default function StudentReportGenerator({
@@ -34,21 +56,16 @@ export default function StudentReportGenerator({
     const supabase = createClient();
 
     try {
-      // 1. Get Student Details
+      // 1. Student details
       const { data: student, error: studentError } = await supabase
         .from("students")
-        .select(
-          `
-          *,
-          classes (name)
-        `,
-        )
+        .select(`*, classes (name)`)
         .eq("id", selectedStudent)
         .single();
 
       if (studentError) throw studentError;
 
-      // 2. Get Attendance Summary
+      // 2. Attendance
       const { data: attendance, error: attendanceError } = await supabase
         .from("attendance")
         .select("status, date")
@@ -57,45 +74,34 @@ export default function StudentReportGenerator({
 
       if (attendanceError) throw attendanceError;
 
-      // Calculate attendance stats
       const attendanceStats: any = {
         total: attendance?.length || 0,
         present: attendance?.filter((a) => a.status === "present").length || 0,
         absent: attendance?.filter((a) => a.status === "absent").length || 0,
         late: attendance?.filter((a) => a.status === "late").length || 0,
         excused: attendance?.filter((a) => a.status === "excused").length || 0,
+        sick: attendance?.filter((a) => a.status === "sick").length || 0,
         percentage: "0",
       };
-
       attendanceStats.percentage =
         attendanceStats.total > 0
           ? ((attendanceStats.present / attendanceStats.total) * 100).toFixed(1)
           : "0";
 
-      // 3. Get Academic Progress
+      // 3. Academic progress
       const { data: academicProgress, error: academicError } = await supabase
         .from("academic_progress")
-        .select(
-          `
-          *,
-          subjects (name)
-        `,
-        )
+        .select(`*, subjects (name)`)
         .eq("student_id", selectedStudent)
         .order("assessment_date", { ascending: false });
 
       if (academicError) throw academicError;
 
-      // Calculate subject averages
       const subjectAverages: Record<string, any> = {};
       academicProgress?.forEach((record) => {
         const subjectName = record.subjects?.name || "Unknown";
         if (!subjectAverages[subjectName]) {
-          subjectAverages[subjectName] = {
-            total: 0,
-            count: 0,
-            scores: [],
-          };
+          subjectAverages[subjectName] = { total: 0, count: 0, scores: [] };
         }
         subjectAverages[subjectName].total += record.percentage || 0;
         subjectAverages[subjectName].count += 1;
@@ -105,79 +111,79 @@ export default function StudentReportGenerator({
           date: record.assessment_date,
         });
       });
-
       Object.keys(subjectAverages).forEach((subject) => {
         subjectAverages[subject].average = (
           subjectAverages[subject].total / subjectAverages[subject].count
         ).toFixed(1);
       });
 
-      // 4. Get Memorization Progress
-      const { data: memorization, error: memorizationError } = await supabase
-        .from("student_memorization")
+      // 4. Prayer compliance — real columns (status + 35 day booleans),
+      // with weeks-submitted measured against the enrolment-aware window.
+      const { data: allSheetWeeks } = await supabase
+        .from("prayer_sheets")
+        .select("week_start_date");
+      const windowRange = cohortWindow(
+        (allSheetWeeks || []).map((s: any) => s.week_start_date),
+      );
+      const { data: prayerSheets } = await supabase
+        .from("prayer_sheets")
         .select("*")
         .eq("student_id", selectedStudent);
 
-      // Then get memorization items separately
-      let memorizationWithItems: any[] = [];
-      if (memorization && memorization.length > 0) {
-        const itemIds = memorization.map((m: any) => m.memorization_item_id);
-        const { data: items } = await supabase
-          .from("memorization_items")
-          .select("*")
-          .in("id", itemIds);
-
-        memorizationWithItems = memorization.map((m: any) => ({
-          ...m,
-          memorization_items: items?.find(
-            (i: any) => i.id === m.memorization_item_id,
-          ),
+      let prayer: any = null;
+      if (prayerSheets && prayerSheets.length > 0) {
+        const calcRate = (prayer: string) => {
+          let prayed = 0;
+          let totalDays = 0;
+          prayerSheets.forEach((sheet: any) => {
+            WEEK_DAYS.forEach((day) => {
+              const v = sheet[`${day}_${prayer}`];
+              if (v !== null && v !== undefined) {
+                totalDays++;
+                if (v === true) prayed++;
+              }
+            });
+          });
+          return totalDays > 0 ? Math.round((prayed / totalDays) * 100) : 0;
+        };
+        const rates = PRAYERS.map((p) => ({
+          name: p.charAt(0).toUpperCase() + p.slice(1),
+          rate: calcRate(p),
         }));
+        const compliance = Math.round(
+          rates.reduce((s, r) => s + r.rate, 0) / rates.length,
+        );
+        const submitted = prayerSheets.filter(
+          (s: any) => s.status === "submitted" || s.status === "verified",
+        ).length;
+        const expected = expectedWeeks(windowRange, student.enrollment_date);
+        prayer = {
+          compliance,
+          submitted,
+          expected,
+          rate: participationRate(submitted, expected),
+          rates,
+        };
       }
 
-      if (memorizationError) throw memorizationError;
+      // 5. Fees
+      const { data: fees } = await supabase
+        .from("fee_invoices")
+        .select(
+          "invoice_number, amount_due, amount_paid, status, due_date, period_name, fee_structures(name)",
+        )
+        .eq("student_id", selectedStudent)
+        .neq("status", "cancelled")
+        .order("due_date", { ascending: false });
 
-      // Calculate memorization stats
-      const memorizationStats = {
-        duas: {
-          total:
-            memorizationWithItems?.filter(
-              (m) => m.memorization_items?.item_type === "dua",
-            ).length || 0,
-          mastered:
-            memorizationWithItems?.filter(
-              (m) =>
-                m.memorization_items?.item_type === "dua" &&
-                m.status === "mastered",
-            ).length || 0,
-        },
-        surahs: {
-          total:
-            memorizationWithItems?.filter(
-              (m) => m.memorization_items?.item_type === "surah",
-            ).length || 0,
-          mastered:
-            memorizationWithItems?.filter(
-              (m) =>
-                m.memorization_items?.item_type === "surah" &&
-                m.status === "mastered",
-            ).length || 0,
-        },
-        hadiths: {
-          total:
-            memorizationWithItems?.filter(
-              (m) => m.memorization_items?.item_type === "hadith",
-            ).length || 0,
-          mastered:
-            memorizationWithItems?.filter(
-              (m) =>
-                m.memorization_items?.item_type === "hadith" &&
-                m.status === "mastered",
-            ).length || 0,
-        },
-      };
+      // 6. Fines
+      const { data: fines } = await supabase
+        .from("fines")
+        .select("fine_type, amount, status, issued_date, notes")
+        .eq("student_id", selectedStudent)
+        .order("issued_date", { ascending: false });
 
-      // 5. Get Certificates
+      // 7. Certificates
       const { data: certificates, error: certificatesError } = await supabase
         .from("certificates")
         .select("*")
@@ -186,12 +192,11 @@ export default function StudentReportGenerator({
 
       if (certificatesError) throw certificatesError;
 
-      // 6. Get Feedback (last 5 class feedback sessions + individual notes)
-      const studentData = student;
+      // 8. Feedback (last 5 completed class sessions + this student's notes)
       const { data: feedbackSessions } = await supabase
         .from("class_feedback_sessions")
         .select("id, session_date, class_summary")
-        .eq("class_id", studentData.class_id)
+        .eq("class_id", student.class_id)
         .eq("status", "completed")
         .order("session_date", { ascending: false })
         .limit(5);
@@ -216,15 +221,16 @@ export default function StudentReportGenerator({
         }));
       }
 
-      // Combine all data
       setReportData({
         student,
         attendanceStats,
-        attendanceRecords: attendance?.slice(0, 10) || [], // Last 10 records
-        academicProgress: academicProgress?.slice(0, 10) || [], // Last 10 assessments
+        attendanceRecords: attendance?.slice(0, 10) || [],
+        academicProgress: academicProgress?.slice(0, 10) || [],
         subjectAverages,
-        memorizationStats,
-        certificates,
+        prayer,
+        fees: fees || [],
+        fines: fines || [],
+        certificates: certificates || [],
         feedback: feedbackWithNotes,
       });
     } catch (error) {
@@ -242,22 +248,49 @@ export default function StudentReportGenerator({
 
   const exportToPDF = () => {
     if (!reportData) return;
-
+    const d = reportData;
     exportStudentToPDF({
-      student: reportData.student,
+      student: d.student,
       attendance: {
-        total: reportData.attendanceStats.total,
-        present: reportData.attendanceStats.present,
-        absent: reportData.attendanceStats.absent,
-        late: reportData.attendanceStats.late,
-        rate: reportData.attendanceStats.percentage,
-        recent: reportData.attendanceRecords,
+        total: d.attendanceStats.total,
+        present: d.attendanceStats.present,
+        absent: d.attendanceStats.absent,
+        late: d.attendanceStats.late,
+        rate: d.attendanceStats.percentage,
+        recent: d.attendanceRecords,
       },
-      // Memorisation is being retired from reports (folded into results),
-      // so the PDF is built from attendance + academic results only. This
-      // also fixes the previous crash (it read an undefined memorization array).
       quranProgress: [],
-      academicProgress: reportData.academicProgress,
+      academicProgress: d.academicProgress,
+      prayer: d.prayer
+        ? {
+            compliance: d.prayer.compliance,
+            submitted: d.prayer.submitted,
+            expected: d.prayer.expected || null,
+            rates: d.prayer.rates,
+          }
+        : null,
+      fees: (d.fees || []).map((f: any) => ({
+        label: feeStructureName(f),
+        due: `£${Number(f.amount_due).toFixed(2)}`,
+        paid: `£${Number(f.amount_paid).toFixed(2)}`,
+        status: f.status,
+      })),
+      fines: (d.fines || []).map((f: any) => ({
+        label: String(f.fine_type).replace(/_/g, " "),
+        amount: `£${Number(f.amount).toFixed(2)}`,
+        status: f.status,
+        date: new Date(f.issued_date).toLocaleDateString("en-GB"),
+      })),
+      certificates: (d.certificates || []).map((c: any) => ({
+        label: String(c.certificate_type).replace(/_/g, " "),
+        number: c.certificate_number,
+        date: new Date(c.issue_date).toLocaleDateString("en-GB"),
+      })),
+      feedback: (d.feedback || []).map((s: any) => ({
+        date: new Date(s.session_date).toLocaleDateString("en-GB"),
+        summary: s.class_summary || "",
+        note: s.studentNote || "",
+      })),
     });
   };
 
@@ -280,10 +313,27 @@ export default function StudentReportGenerator({
       [
         esc("Attendance"),
         esc(
-          `Present ${a.present} / Absent ${a.absent} / Late ${a.late} / Excused ${a.excused} of ${a.total}`,
+          `Present ${a.present} / Absent ${a.absent} / Late ${a.late} / Excused ${a.excused} / Sick ${a.sick} of ${a.total}`,
         ),
       ].join(","),
     );
+
+    if (reportData.prayer) {
+      const p = reportData.prayer;
+      lines.push("");
+      lines.push("Prayer compliance");
+      lines.push([esc("Overall compliance"), esc(`${p.compliance}%`)].join(","));
+      lines.push(
+        [
+          esc("Weeks submitted"),
+          esc(p.expected ? `${p.submitted}/${p.expected}` : `${p.submitted}`),
+        ].join(","),
+      );
+      p.rates.forEach((r: any) =>
+        lines.push([esc(r.name), esc(`${r.rate}%`)].join(",")),
+      );
+    }
+
     lines.push("");
     lines.push("Results");
     lines.push(
@@ -307,6 +357,76 @@ export default function StudentReportGenerator({
       );
     });
 
+    if ((reportData.fees || []).length > 0) {
+      lines.push("");
+      lines.push("Fees");
+      lines.push(["Fee", "Due", "Paid", "Status"].map(esc).join(","));
+      reportData.fees.forEach((f: any) => {
+        lines.push(
+          [
+            feeStructureName(f),
+            `£${Number(f.amount_due).toFixed(2)}`,
+            `£${Number(f.amount_paid).toFixed(2)}`,
+            f.status,
+          ]
+            .map(esc)
+            .join(","),
+        );
+      });
+    }
+
+    if ((reportData.fines || []).length > 0) {
+      lines.push("");
+      lines.push("Fines");
+      lines.push(["Type", "Amount", "Status", "Date"].map(esc).join(","));
+      reportData.fines.forEach((f: any) => {
+        lines.push(
+          [
+            String(f.fine_type).replace(/_/g, " "),
+            `£${Number(f.amount).toFixed(2)}`,
+            f.status,
+            new Date(f.issued_date).toLocaleDateString("en-GB"),
+          ]
+            .map(esc)
+            .join(","),
+        );
+      });
+    }
+
+    if ((reportData.certificates || []).length > 0) {
+      lines.push("");
+      lines.push("Certificates");
+      lines.push(["Certificate", "Number", "Issued"].map(esc).join(","));
+      reportData.certificates.forEach((c: any) => {
+        lines.push(
+          [
+            String(c.certificate_type).replace(/_/g, " "),
+            c.certificate_number,
+            new Date(c.issue_date).toLocaleDateString("en-GB"),
+          ]
+            .map(esc)
+            .join(","),
+        );
+      });
+    }
+
+    if ((reportData.feedback || []).length > 0) {
+      lines.push("");
+      lines.push("Recent feedback");
+      lines.push(["Date", "Class summary", "Personal note"].map(esc).join(","));
+      reportData.feedback.forEach((f: any) => {
+        lines.push(
+          [
+            new Date(f.session_date).toLocaleDateString("en-GB"),
+            f.class_summary || "",
+            f.studentNote || "",
+          ]
+            .map(esc)
+            .join(","),
+        );
+      });
+    }
+
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -328,18 +448,20 @@ export default function StudentReportGenerator({
     return badges[status] || "";
   };
 
-  const getMemorizationStatusBadge = (status: string) => {
-    const badges: Record<string, string> = {
-      not_started:
-        "bg-muted text-muted-foreground  ",
-      learning: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-      memorized:
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-      mastered:
-        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-    };
-    return badges[status] || badges.not_started;
-  };
+  const rateColor = (rate: number) =>
+    rate >= 80
+      ? "text-green-600 dark:text-green-400"
+      : rate >= 50
+        ? "text-yellow-600 dark:text-yellow-400"
+        : "text-red-600 dark:text-red-400";
+
+  // Fee / fine outstanding totals
+  const outstandingFees = (reportData?.fees || [])
+    .filter((f: any) => ["pending", "partial", "overdue"].includes(f.status))
+    .reduce((s: number, f: any) => s + (f.amount_due - f.amount_paid), 0);
+  const pendingFines = (reportData?.fines || [])
+    .filter((f: any) => f.status === "pending")
+    .reduce((s: number, f: any) => s + Number(f.amount), 0);
 
   return (
     <div className="space-y-6">
@@ -419,7 +541,6 @@ export default function StudentReportGenerator({
                 <h2 className="text-2xl font-bold">
                   {reportData.student.first_name} {reportData.student.last_name}
                 </h2>
-
                 <p className="text-sm text-muted-foreground mt-1">
                   Student #: {reportData.student.student_number}
                 </p>
@@ -431,7 +552,7 @@ export default function StudentReportGenerator({
                 </p>
                 <p>
                   <span className="text-muted-foreground">Report Date:</span>{" "}
-                  {new Date().toLocaleDateString()}
+                  {new Date().toLocaleDateString("en-GB")}
                 </p>
               </div>
             </div>
@@ -447,7 +568,7 @@ export default function StudentReportGenerator({
                   {reportData.student.date_of_birth
                     ? new Date(
                         reportData.student.date_of_birth,
-                      ).toLocaleDateString()
+                      ).toLocaleDateString("en-GB")
                     : "N/A"}
                 </p>
               </div>
@@ -462,7 +583,7 @@ export default function StudentReportGenerator({
                 <p className="font-medium">
                   {new Date(
                     reportData.student.enrollment_date,
-                  ).toLocaleDateString()}
+                  ).toLocaleDateString("en-GB")}
                 </p>
               </div>
               <div>
@@ -486,7 +607,7 @@ export default function StudentReportGenerator({
           {/* 2. Attendance Summary */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Attendance Summary</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
               <div className="bg-primary/10 rounded-lg p-3 text-center">
                 <p className="text-2xl font-bold">
                   {reportData.attendanceStats.percentage}%
@@ -517,6 +638,12 @@ export default function StudentReportGenerator({
                 </p>
                 <p className="text-xs text-muted-foreground">Excused</p>
               </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-purple-600">
+                  {reportData.attendanceStats.sick}
+                </p>
+                <p className="text-xs text-muted-foreground">Sick</p>
+              </div>
             </div>
 
             {/* Recent Attendance */}
@@ -535,7 +662,7 @@ export default function StudentReportGenerator({
                     (record: any, index: number) => (
                       <tr key={index} className="border-t border-border">
                         <td className="px-3 py-2">
-                          {new Date(record.date).toLocaleDateString()}
+                          {new Date(record.date).toLocaleDateString("en-GB")}
                         </td>
                         <td className="px-3 py-2">
                           <span
@@ -557,8 +684,6 @@ export default function StudentReportGenerator({
           {/* 3. Academic Progress */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Academic Progress</h3>
-
-            {/* Subject Averages */}
             {Object.keys(reportData.subjectAverages).length > 0 ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -580,7 +705,6 @@ export default function StudentReportGenerator({
                   )}
                 </div>
 
-                {/* Recent Assessments */}
                 <div className="border border-border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted">
@@ -606,7 +730,7 @@ export default function StudentReportGenerator({
                             <td className="px-3 py-2">
                               {new Date(
                                 record.assessment_date,
-                              ).toLocaleDateString()}
+                              ).toLocaleDateString("en-GB")}
                             </td>
                             <td className="px-3 py-2">
                               {record.subjects?.name}
@@ -639,36 +763,145 @@ export default function StudentReportGenerator({
             )}
           </div>
 
-          {/* 4. Memorization Progress */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">
-              Memorization Progress
-            </h3>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="border border-border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold">
-                  {reportData.memorizationStats.duas.mastered}/
-                  {reportData.memorizationStats.duas.total}
-                </p>
-                <p className="text-sm text-muted-foreground">Duas</p>
-              </div>
-              <div className="border border-border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold">
-                  {reportData.memorizationStats.surahs.mastered}/
-                  {reportData.memorizationStats.surahs.total}
-                </p>
-                <p className="text-sm text-muted-foreground">Surahs</p>
-              </div>
-              <div className="border border-border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold">
-                  {reportData.memorizationStats.hadiths.mastered}/
-                  {reportData.memorizationStats.hadiths.total}
-                </p>
-                <p className="text-sm text-muted-foreground">Hadiths</p>
+          {/* 4. Prayer Compliance */}
+          {reportData.prayer && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Prayer Compliance</h3>
+              <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
+                <div className="bg-primary/10 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-primary">
+                    {reportData.prayer.compliance}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Compliance</p>
+                </div>
+                <div className="border border-border rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold">
+                    {reportData.prayer.rate === null
+                      ? "—"
+                      : `${reportData.prayer.submitted}/${reportData.prayer.expected}`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Weeks submitted
+                  </p>
+                </div>
+                {reportData.prayer.rates.map((r: any) => (
+                  <div
+                    key={r.name}
+                    className="border border-border rounded-lg p-3 text-center"
+                  >
+                    <p className={`text-xl font-bold ${rateColor(r.rate)}`}>
+                      {r.rate}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">{r.name}</p>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
+
+          {/* 5. Fees */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">Fees</h3>
+              {outstandingFees > 0 && (
+                <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                  £{outstandingFees.toFixed(2)} outstanding
+                </span>
+              )}
+            </div>
+            {reportData.fees.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No fee invoices
+              </p>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">Fee</th>
+                      <th className="px-3 py-2 text-left font-semibold">Due</th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Paid
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.fees.map((f: any, i: number) => (
+                      <tr key={i} className="border-t border-border">
+                        <td className="px-3 py-2">{feeStructureName(f)}</td>
+                        <td className="px-3 py-2">
+                          £{Number(f.amount_due).toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2">
+                          £{Number(f.amount_paid).toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2 capitalize">{f.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          {/* 5. Feedback */}
+
+          {/* 6. Fines */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">Fines</h3>
+              {pendingFines > 0 && (
+                <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                  £{pendingFines.toFixed(2)} pending
+                </span>
+              )}
+            </div>
+            {reportData.fines.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">
+                No fines recorded
+              </p>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Type
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Amount
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Status
+                      </th>
+                      <th className="px-3 py-2 text-left font-semibold">
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.fines.map((f: any, i: number) => (
+                      <tr key={i} className="border-t border-border">
+                        <td className="px-3 py-2 capitalize">
+                          {String(f.fine_type).replace(/_/g, " ")}
+                        </td>
+                        <td className="px-3 py-2">
+                          £{Number(f.amount).toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2 capitalize">{f.status}</td>
+                        <td className="px-3 py-2">
+                          {new Date(f.issued_date).toLocaleDateString("en-GB")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* 7. Feedback */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Recent Feedback</h3>
             {reportData.feedback && reportData.feedback.length > 0 ? (
@@ -682,11 +915,7 @@ export default function StudentReportGenerator({
                       <p className="text-sm font-medium">
                         {new Date(session.session_date).toLocaleDateString(
                           "en-GB",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          },
+                          { day: "numeric", month: "short", year: "numeric" },
                         )}
                       </p>
                       {session.studentNote && (
@@ -713,7 +942,7 @@ export default function StudentReportGenerator({
             )}
           </div>
 
-          {/* 6. Certificates */}
+          {/* 8. Certificates */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Certificates Earned</h3>
             {reportData.certificates && reportData.certificates.length > 0 ? (
@@ -727,12 +956,12 @@ export default function StudentReportGenerator({
                       <Download className="h-5 w-5 text-yellow-600" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-sm">
-                        {cert.certificate_type.replace("_", " ")}
+                      <p className="font-medium text-sm capitalize">
+                        {String(cert.certificate_type).replace(/_/g, " ")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(cert.issue_date).toLocaleDateString()} •{" "}
-                        {cert.certificate_number}
+                        {new Date(cert.issue_date).toLocaleDateString("en-GB")}{" "}
+                        • {cert.certificate_number}
                       </p>
                     </div>
                   </div>

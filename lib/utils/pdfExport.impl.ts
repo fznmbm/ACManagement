@@ -258,6 +258,18 @@ export function exportStudentToPDF(data: {
   attendance: any;
   quranProgress: any[];
   academicProgress: any[];
+  // Optional extra sections (pre-shaped by the caller so this stays decoupled
+  // from the DB schema). When omitted, the section is skipped.
+  prayer?: {
+    compliance: number;
+    submitted: number;
+    expected: number | null;
+    rates?: { name: string; rate: number }[];
+  } | null;
+  fees?: { label: string; due: string; paid: string; status: string }[];
+  fines?: { label: string; amount: string; status: string; date: string }[];
+  certificates?: { label: string; number: string; date: string }[];
+  feedback?: { date: string; summary: string; note: string }[];
 }) {
   const doc = initializePDF("Student Report");
 
@@ -449,6 +461,137 @@ export function exportStudentToPDF(data: {
         fontSize: 9,
       },
     });
+  }
+
+  // Prayer Compliance
+  if (data.prayer) {
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Prayer Compliance", 20, yPos);
+    yPos += 5;
+
+    const prayerRows: string[][] = [
+      ["Overall compliance", `${data.prayer.compliance}%`],
+      [
+        "Weeks submitted",
+        data.prayer.expected != null
+          ? `${data.prayer.submitted}/${data.prayer.expected}`
+          : `${data.prayer.submitted}`,
+      ],
+      ...(data.prayer.rates || []).map((r) => [r.name, `${r.rate}%`]),
+    ];
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Measure", "Value"]],
+      body: prayerRows,
+      theme: "striped",
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // Fees
+  if (data.fees && data.fees.length > 0) {
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Fee Invoices", 20, yPos);
+    yPos += 5;
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Fee", "Due", "Paid", "Status"]],
+      body: data.fees.map((f) => [f.label, f.due, f.paid, f.status]),
+      theme: "striped",
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // Fines
+  if (data.fines && data.fines.length > 0) {
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Fines", 20, yPos);
+    yPos += 5;
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Type", "Amount", "Status", "Date"]],
+      body: data.fines.map((f) => [f.label, f.amount, f.status, f.date]),
+      theme: "striped",
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // Certificates
+  if (data.certificates && data.certificates.length > 0) {
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Certificates", 20, yPos);
+    yPos += 5;
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Certificate", "Number", "Issued"]],
+      body: data.certificates.map((c) => [c.label, c.number, c.date]),
+      theme: "striped",
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // Recent Feedback
+  if (data.feedback && data.feedback.length > 0) {
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Recent Feedback", 20, yPos);
+    yPos += 5;
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [["Date", "Class summary", "Personal note"]],
+      body: data.feedback.map((f) => [f.date, f.summary, f.note]),
+      theme: "striped",
+      headStyles: { fillColor: COLORS.primary, textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 28 },
+        1: { cellWidth: 76 },
+        2: { cellWidth: 76 },
+      },
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 10;
   }
 
   // Add footer to all pages

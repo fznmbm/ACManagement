@@ -5,6 +5,21 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Download, FileText } from "lucide-react";
 import { exportTablePDF } from "@/lib/utils/pdfExport";
+import {
+  cohortWindow,
+  expectedWeeks,
+  participationRate,
+} from "@/lib/utils/prayerParticipation";
+
+// Whole weeks from a start date (inclusive) up to today — the shared
+// denominator so "submitted" is measured against weeks the programme has run,
+// not just weeks a parent happened to open a sheet.
+function weeksSince(startISO: string): number {
+  const start = new Date(startISO);
+  if (isNaN(start.getTime())) return 0;
+  const ms = Date.now() - start.getTime();
+  return Math.max(1, Math.floor(ms / (7 * 24 * 60 * 60 * 1000)) + 1);
+}
 
 interface PrayerComplianceReportProps {
   classes: Array<{ id: string; name: string }>;
@@ -23,7 +38,8 @@ interface StudentPrayerData {
   class_name: string;
   total_sheets: number;
   submitted: number;
-  submission_rate: number;
+  expected_weeks: number;
+  submission_rate: number | null; // null = child enrolled after the tracking window
   fajr: number;
   dhuhr: number;
   asr: number;
@@ -40,6 +56,7 @@ export default function PrayerComplianceReport({
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState("");
   const [reportData, setReportData] = useState<StudentPrayerData[]>([]);
+  const [totalWeeks, setTotalWeeks] = useState(0);
   const [sortBy, setSortBy] = useState<
     "name" | "submission_rate" | "overall_rate"
   >("submission_rate");
@@ -75,7 +92,7 @@ export default function PrayerComplianceReport({
       let studentsQuery = supabase
         .from("students")
         .select(
-          "id, first_name, last_name, student_number, class_id, classes(name)",
+          "id, first_name, last_name, student_number, class_id, enrollment_date, classes(name)",
         )
         .eq("status", "active");
 
@@ -104,15 +121,22 @@ export default function PrayerComplianceReport({
         .select("*")
         .in("student_id", studentIds);
 
+      // Cohort tracking window (earliest → latest sheet week, end clamped to
+      // this week) — the denominator baseline for "weeks submitted".
+      const windowRange = cohortWindow(
+        (sheets || []).map((s: any) => s.week_start_date),
+      );
+
       // Calculate per-student stats
       const result: StudentPrayerData[] = studentsData.map((student: any) => {
         const studentSheets =
           sheets?.filter((s) => s.student_id === student.id) || [];
-        //const submitted = studentSheets.filter((s) => s.submitted).length;
         const submitted = studentSheets.filter(
           (s) => s.status === "submitted" || s.status === "verified",
         ).length;
         const total = studentSheets.length;
+        // Expected weeks from the later of (tracking start, enrolment week).
+        const expected = expectedWeeks(windowRange, student.enrollment_date);
 
         const calcPrayer = (prayer: string) => {
           let prayed = 0;
@@ -153,8 +177,8 @@ export default function PrayerComplianceReport({
           class_name: (student.classes as any)?.name || "Unassigned",
           total_sheets: total,
           submitted,
-          submission_rate:
-            total > 0 ? Math.round((submitted / total) * 100) : 0,
+          expected_weeks: expected,
+          submission_rate: participationRate(submitted, expected),
           fajr,
           dhuhr,
           asr,
@@ -174,15 +198,15 @@ export default function PrayerComplianceReport({
   };
 
   const sorted = [...reportData].sort((a, b) => {
-    const aVal = sortBy === "name" ? a.name : a[sortBy];
-    const bVal = sortBy === "name" ? b.name : b[sortBy];
-    if (typeof aVal === "string")
+    if (sortBy === "name") {
       return sortDir === "asc"
-        ? aVal.localeCompare(bVal as string)
-        : (bVal as string).localeCompare(aVal);
-    return sortDir === "asc"
-      ? (aVal as number) - (bVal as number)
-      : (bVal as number) - (aVal as number);
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name);
+    }
+    // submission_rate may be null (child enrolled after window) — sort last.
+    const aVal = (a[sortBy] ?? -1) as number;
+    const bVal = (b[sortBy] ?? -1) as number;
+    return sortDir === "asc" ? aVal - bVal : bVal - aVal;
   });
 
   const handleSort = (col: typeof sortBy) => {
@@ -212,8 +236,8 @@ export default function PrayerComplianceReport({
       "Student",
       "Student #",
       "Class",
-      "Sheets Submitted",
-      "Submission Rate",
+      "Weeks Submitted",
+      "Participation Rate",
       "Fajr",
       "Dhuhr",
       "Asr",
@@ -225,8 +249,10 @@ export default function PrayerComplianceReport({
       s.name,
       s.number,
       s.class_name,
-      `${s.submitted}/${s.total_sheets}`,
-      `${s.submission_rate}%`,
+      s.submission_rate === null
+        ? `${s.submitted}`
+        : `${s.submitted}/${s.expected_weeks}`,
+      s.submission_rate === null ? "n/a" : `${s.submission_rate}%`,
       `${s.fajr}%`,
       `${s.dhuhr}%`,
       `${s.asr}%`,
@@ -262,7 +288,7 @@ export default function PrayerComplianceReport({
         "Student",
         "Student #",
         "Class",
-        "Submitted",
+        "Weeks",
         "Fajr",
         "Dhuhr",
         "Asr",
@@ -274,7 +300,9 @@ export default function PrayerComplianceReport({
         s.name,
         s.number,
         s.class_name,
-        `${s.submitted}/${s.total_sheets} (${s.submission_rate}%)`,
+        s.submission_rate === null
+          ? "—"
+          : `${s.submitted}/${s.expected_weeks} (${s.submission_rate}%)`,
         `${s.fajr}%`,
         `${s.dhuhr}%`,
         `${s.asr}%`,
@@ -287,11 +315,12 @@ export default function PrayerComplianceReport({
   };
 
   // Summary stats
+  const ratedRows = reportData.filter((r) => r.submission_rate !== null);
   const avgSubmission =
-    reportData.length > 0
+    ratedRows.length > 0
       ? Math.round(
-          reportData.reduce((s, r) => s + r.submission_rate, 0) /
-            reportData.length,
+          ratedRows.reduce((s, r) => s + (r.submission_rate || 0), 0) /
+            ratedRows.length,
         )
       : 0;
   const avgOverall =
@@ -377,7 +406,7 @@ export default function PrayerComplianceReport({
               {avgSubmission}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Avg Submission Rate
+              Avg Participation
             </p>
           </div>
           <div
@@ -450,8 +479,9 @@ export default function PrayerComplianceReport({
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Sheets: {student.submitted}/{student.total_sheets} (
-                  {student.submission_rate}%)
+                  {student.submission_rate === null
+                    ? "Weeks: — (enrolled after tracking start)"
+                    : `Weeks submitted: ${student.submitted}/${student.expected_weeks} (${student.submission_rate}%)`}
                 </p>
               </div>
             ))}
@@ -472,8 +502,9 @@ export default function PrayerComplianceReport({
                   <th
                     className="px-4 py-2 text-center font-medium cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort("submission_rate")}
+                    title="Weeks submitted ÷ expected weeks (from enrolment / tracking start)"
                   >
-                    Submitted{" "}
+                    Weeks{" "}
                     {sortBy === "submission_rate"
                       ? sortDir === "asc"
                         ? "↑"
@@ -521,12 +552,16 @@ export default function PrayerComplianceReport({
                       {student.class_name}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${getRateBg(student.submission_rate)}`}
-                      >
-                        {student.submitted}/{student.total_sheets} (
-                        {student.submission_rate}%)
-                      </span>
+                      {student.submission_rate === null ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${getRateBg(student.submission_rate)}`}
+                        >
+                          {student.submitted}/{student.expected_weeks} (
+                          {student.submission_rate}%)
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
