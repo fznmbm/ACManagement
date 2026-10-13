@@ -1,19 +1,24 @@
 // File: app/api/users/create/route.ts
-
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { logAudit } from "@/lib/utils/auditLogger";
+import { resend, emailConfig } from "@/lib/email/resend";
+
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  teacher: "Teacher",
+};
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Check if requester is super_admin
+    // Only super_admins may create staff
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -31,151 +36,100 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get request body
     const body = await request.json();
-    const { email, password, fullName, role } = body;
+    const { email, fullName, role } = body;
+    // Password is optional now: when omitted we email a set-password invite
+    // instead of handing the admin a credential to copy. A password may still
+    // be supplied to set one directly (legacy behaviour).
+    const password: string | undefined = body.password?.trim()
+      ? body.password
+      : undefined;
 
-    // Validate input
-    if (!email || !password || !fullName || !role) {
+    if (!email || !fullName || !role) {
       return NextResponse.json(
-        { error: "Email, password, full name, and role are required" },
+        { error: "Email, full name, and role are required" },
         { status: 400 },
       );
     }
-
-    if (password.length < 8) {
+    if (password && password.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters" },
         { status: 400 },
       );
     }
-
     const validRoles = ["super_admin", "admin", "teacher"];
     if (!validRoles.includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 },
+      );
+    }
 
-    // Create user using Supabase Admin API
-    // We need to use the service role key for this
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const invite = !password;
 
     const supabaseAdmin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      },
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
-    // // Create auth user
-    // const { data: authData, error: authError } =
-    //   await supabaseAdmin.auth.admin.createUser({
-    //     email,
-    //     password,
-    //     email_confirm: true, // Auto-confirm email
-    //     user_metadata: {
-    //       full_name: fullName,
-    //     },
-    //   });
-
-    // if (authError) {
-    //   console.error("Auth error:", authError);
-    //   return NextResponse.json(
-    //     { error: authError.message || "Failed to create user" },
-    //     { status: 400 }
-    //   );
-    // }
-
-    // Create auth user with detailed logging
-    console.log("🔐 Creating auth user...");
-    console.log("📧 Email:", email);
-    console.log("🔑 Password length:", password.length);
-    console.log("👤 Full name:", fullName);
+    // Create the auth user. In invite mode we set a random temporary password
+    // the user never sees; the emailed link lets them set their own.
+    const tempPassword =
+      password ||
+      Math.random().toString(36).slice(-12) +
+        Math.random().toString(36).slice(-12) +
+        "Aa1!";
 
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
+        email: normalizedEmail,
+        password: tempPassword,
         email_confirm: true,
-        user_metadata: {
-          full_name: fullName,
-        },
+        user_metadata: { full_name: fullName, role },
       });
 
-    console.log("✅ Auth Data:", authData);
-    console.log("❌ Auth Error:", authError);
-
     if (authError) {
-      console.error("🚨 AUTH CREATION FAILED:", authError);
-      console.error("Error details:", JSON.stringify(authError, null, 2));
       return NextResponse.json(
         { error: authError.message || "Failed to create user" },
         { status: 400 },
       );
     }
-
-    if (!authData || !authData.user) {
-      console.error("🚨 No user data returned!");
+    if (!authData?.user) {
       return NextResponse.json(
         { error: "Failed to create user - no data returned" },
         { status: 400 },
       );
     }
 
-    console.log("✅ User created in auth.users:", authData.user.id);
-
-    // Get organization_id from requester's profile
-    // const { data: orgData } = await supabase
-    //   .from("profiles")
-    //   .select("organization_id")
-    //   .eq("id", user.id)
-    //   .single();
-
-    // // Create profile
-    // const { error: profileError } = await supabase.from("profiles").insert({
-    //   id: authData.user.id,
-    //   email,
-    //   full_name: fullName,
-    //   role,
-    //   organization_id: orgData?.organization_id || null,
-    // });
-
-    // Wait for trigger to create profile
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Check if profile exists
+    // The handle_new_user trigger usually creates the profile; wait, then
+    // upsert the role/name either way.
+    await new Promise((r) => setTimeout(r, 500));
     const { data: existingProfile } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .eq("id", authData.user.id)
       .single();
 
-    let profileError = null;
-
-    if (existingProfile) {
-      // Profile exists (created by trigger), update it
-      const { error } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          full_name: fullName,
-          role,
-          // organization_id: orgData?.organization_id || null,
-        })
-        .eq("id", authData.user.id);
-      profileError = error;
-    } else {
-      // Profile doesn't exist (trigger failed?), create it
-      const { error } = await supabaseAdmin.from("profiles").insert({
-        id: authData.user.id,
-        email,
-        full_name: fullName,
-        role,
-        // organization_id: orgData?.organization_id || null,
-      });
-      profileError = error;
-    }
+    const profileError = existingProfile
+      ? (
+          await supabaseAdmin
+            .from("profiles")
+            .update({ full_name: fullName, role })
+            .eq("id", authData.user.id)
+        ).error
+      : (
+          await supabaseAdmin
+            .from("profiles")
+            .insert({ id: authData.user.id, email: normalizedEmail, full_name: fullName, role })
+        ).error;
 
     if (profileError) {
       console.error("Profile error:", profileError);
@@ -186,14 +140,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (profileError) {
-      console.error("Profile error:", profileError);
-      // Try to delete the auth user if profile creation fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      return NextResponse.json(
-        { error: "Failed to create user profile" },
-        { status: 400 },
-      );
+    // In invite mode, email a set-password link (mirrors the parent invite).
+    let emailSent = false;
+    if (invite) {
+      try {
+        const requestUrl = new URL(request.url);
+        const baseUrl =
+          process.env.NEXT_PUBLIC_APP_URL ||
+          `${requestUrl.protocol}//${requestUrl.host}`;
+
+        const { data: linkData, error: linkError } =
+          await supabaseAdmin.auth.admin.generateLink({
+            type: "magiclink",
+            email: normalizedEmail,
+            options: { redirectTo: `${baseUrl}/auth/callback?next=/set-password` },
+          });
+
+        if (!linkError && linkData?.properties?.action_link) {
+          await resend.emails.send({
+            from: emailConfig.from,
+            replyTo: emailConfig.replyTo,
+            to: normalizedEmail,
+            subject: "Your Al Hikmah Institute staff account",
+            html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color:#116a4c;">Welcome to Al Hikmah Institute Crawley</h2>
+      <p>An account has been created for you as <strong>${ROLE_LABELS[role] || role}</strong>.</p>
+      <p>Click the button below to set your password and sign in:</p>
+      <p style="margin:24px 0;">
+        <a href="${linkData.properties.action_link}"
+           style="background:#116a4c;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600;">
+          Set your password
+        </a>
+      </p>
+      <p style="color:#555;font-size:13px;">If the button doesn't work, copy this link into your browser:</p>
+      <p style="word-break:break-all;font-size:12px;color:#555;">${linkData.properties.action_link}</p>
+      <p style="color:#888;font-size:12px;margin-top:24px;">If you weren't expecting this, you can ignore this email.</p>
+    </div>`,
+          });
+          emailSent = true;
+        } else if (linkError) {
+          console.error("generateLink error:", linkError);
+        }
+      } catch (e) {
+        console.error("Invite email failed:", e);
+      }
     }
 
     await logAudit({
@@ -201,14 +192,16 @@ export async function POST(request: NextRequest) {
       action: "create",
       table_name: "profiles",
       record_id: authData.user.id,
-      new_values: { email, full_name: fullName, role },
+      new_values: { email: normalizedEmail, full_name: fullName, role, invited: invite },
     });
 
     return NextResponse.json({
       success: true,
+      invited: invite,
+      emailSent,
       user: {
         id: authData.user.id,
-        email,
+        email: normalizedEmail,
         full_name: fullName,
         role,
       },

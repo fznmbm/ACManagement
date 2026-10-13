@@ -2,7 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, Eye, EyeOff } from "lucide-react";
+import { X, Loader2, Mail } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -15,30 +16,22 @@ export function AddUserModal({
   onClose,
   onSuccess,
 }: AddUserModalProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
     fullName: "",
     role: "teacher" as "super_admin" | "admin" | "teacher",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Validation
-    if (!formData.email || !formData.password || !formData.fullName) {
-      setError("All fields are required");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters");
+    if (!formData.email || !formData.fullName) {
+      setError("Name and email are required");
       setLoading(false);
       return;
     }
@@ -49,13 +42,18 @@ export function AddUserModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        alert(
-          `User created successfully!\n\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nPlease save these credentials and share them securely with the user.`
-        );
+        if (data.emailSent) {
+          toast.success(
+            `Invite emailed to ${formData.email}. They'll set their own password.`,
+          );
+        } else {
+          toast.success(
+            `Account created for ${formData.email}, but the invite email couldn't be sent. Use "Reset password" on their row to resend the set-up link.`,
+          );
+        }
         onSuccess();
       } else {
         setError(data.error || "Failed to create user");
@@ -68,16 +66,6 @@ export function AddUserModal({
     }
   };
 
-  const generatePassword = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-    let password = "";
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setFormData({ ...formData, password });
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -85,7 +73,7 @@ export function AddUserModal({
       <div className="bg-card border rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold">Add New User</h2>
+          <h2 className="text-xl font-bold">Invite a staff member</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-accent rounded-lg transition-colors"
@@ -97,10 +85,18 @@ export function AddUserModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 p-3 text-sm text-muted-foreground">
+            <Mail className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+            <span>
+              We&apos;ll email them a secure link to set their own password — no
+              need to share credentials.
+            </span>
+          </div>
+
           {/* Full Name */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Full Name <span className="text-destructive">*</span>
+              Full name <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
@@ -108,7 +104,7 @@ export function AddUserModal({
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              placeholder="John Doe"
+              placeholder="e.g. Aisha Khan"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
               required
               disabled={loading}
@@ -118,7 +114,7 @@ export function AddUserModal({
           {/* Email */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Email Address <span className="text-destructive">*</span>
+              Email address <span className="text-destructive">*</span>
             </label>
             <input
               type="email"
@@ -126,57 +122,11 @@ export function AddUserModal({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              placeholder="user@example.com"
+              placeholder="staff@example.com"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
               required
               disabled={loading}
             />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Password <span className="text-destructive">*</span>
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder="Min. 8 characters"
-                  className="w-full px-3 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  required
-                  disabled={loading}
-                  minLength={8}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded"
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={generatePassword}
-                className="px-3 py-2 border rounded-lg hover:bg-accent transition-colors text-sm"
-                disabled={loading}
-              >
-                Generate
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              User will be able to change this password after first login
-            </p>
           </div>
 
           {/* Role */}
@@ -237,10 +187,10 @@ export function AddUserModal({
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-                  Creating...
+                  Sending invite…
                 </>
               ) : (
-                "Create User"
+                "Send invite"
               )}
             </button>
           </div>
