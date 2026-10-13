@@ -5,6 +5,19 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Download, Filter, TrendingUp } from "lucide-react";
 
+// Live `applications` has `date_of_birth` + `child_first_name`/`child_last_name`
+// (no `student_age`/`student_name`), so derive age from DOB here.
+function computeAge(dob: string | null | undefined): number | null {
+  if (!dob) return null;
+  const b = new Date(dob);
+  if (isNaN(b.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
+
 export default function ApplicationStatsReport() {
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
@@ -111,7 +124,8 @@ export default function ApplicationStatsReport() {
         "14-16": 0,
       };
       applications?.forEach((app) => {
-        const age = app.student_age;
+        const age = computeAge(app.date_of_birth);
+        if (age === null) return;
         if (age >= 5 && age <= 7) ageGroups["5-7"]++;
         else if (age >= 8 && age <= 10) ageGroups["8-10"]++;
         else if (age >= 11 && age <= 13) ageGroups["11-13"]++;
@@ -165,9 +179,9 @@ export default function ApplicationStatsReport() {
       );
 
       return [
-        app.id.slice(0, 8),
-        app.student_name,
-        app.student_age,
+        app.application_number || app.id.slice(0, 8),
+        `${app.child_first_name} ${app.child_last_name}`,
+        computeAge(app.date_of_birth) ?? "",
         app.parent_name,
         app.parent_email,
         app.parent_phone,

@@ -102,6 +102,37 @@ interface FeeInvoice {
   fee_structures: { name: string }[] | { name: string } | null;
 }
 
+interface AttendanceTrendPoint {
+  month: string; // YYYY-MM
+  label: string;
+  present: number;
+  total: number;
+  rate: number;
+}
+
+interface EngagementSummary {
+  portal: "active" | "invite_opened" | "not_started";
+  notif_total: number;
+  notif_read: number;
+  notif_rate: number | null;
+  prayer_sheets: number;
+  feedback_views: number;
+  meetings_attended: number;
+}
+
+const PORTAL_LABEL = {
+  active: "Portal active",
+  invite_opened: "Invite opened",
+  not_started: "Not activated",
+} as const;
+
+const PORTAL_BADGE = {
+  active: "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
+  invite_opened:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400",
+  not_started: "bg-muted text-muted-foreground",
+} as const;
+
 export default function ParentMeetingPage() {
   const params = useParams();
   const router = useRouter();
@@ -121,6 +152,15 @@ export default function ParentMeetingPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [fines, setFines] = useState<Fine[]>([]);
   const [fees, setFees] = useState<FeeInvoice[]>([]);
+  const [attendanceTrend, setAttendanceTrend] = useState<AttendanceTrendPoint[]>(
+    [],
+  );
+  const [engagement, setEngagement] = useState<EngagementSummary | null>(null);
+  const [linkedParentIds, setLinkedParentIds] = useState<string[]>([]);
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteMessage, setNoteMessage] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [meetingDate] = useState(
     new Date().toLocaleDateString("en-GB", {
@@ -156,7 +196,7 @@ export default function ParentMeetingPage() {
       // Fetch attendance summary
       const { data: attendanceData } = await supabase
         .from("attendance")
-        .select("status")
+        .select("status, date")
         .eq("student_id", studentId);
 
       if (attendanceData) {
@@ -168,6 +208,30 @@ export default function ParentMeetingPage() {
           excused: attendanceData.filter((a) => a.status === "excused").length,
         };
         setAttendance(summary);
+
+        // Recent attendance trend — last 6 months, so a late decline is visible
+        const buckets: Record<string, { present: number; total: number }> = {};
+        attendanceData.forEach((a: any) => {
+          const m = (a.date || "").slice(0, 7);
+          if (!m) return;
+          if (!buckets[m]) buckets[m] = { present: 0, total: 0 };
+          buckets[m].total++;
+          if (a.status === "present") buckets[m].present++;
+        });
+        const trend = Object.entries(buckets)
+          .sort(([x], [y]) => x.localeCompare(y))
+          .slice(-6)
+          .map(([month, v]) => ({
+            month,
+            label: new Date(month + "-01").toLocaleDateString("en-GB", {
+              month: "short",
+              year: "2-digit",
+            }),
+            present: v.present,
+            total: v.total,
+            rate: v.total > 0 ? Math.round((v.present / v.total) * 100) : 0,
+          }));
+        setAttendanceTrend(trend);
       }
 
       // Fetch academic progress
@@ -220,16 +284,19 @@ export default function ParentMeetingPage() {
         );
       }
 
-      // Fetch academic notes from parent_notifications.
-      // Tolerate a missing or duplicate primary link: take the first match
-      // instead of `.single()` (which errors on 0 or >1 rows).
+      // Fetch all parent links for this student (both parents may be linked).
+      // Tolerate a missing or duplicate primary link.
       const { data: linkRows } = await supabase
         .from("parent_student_links")
-        .select("parent_user_id")
-        .eq("student_id", studentId)
-        .eq("is_primary", true)
-        .limit(1);
-      const primaryParentId = linkRows?.[0]?.parent_user_id;
+        .select("parent_user_id, is_primary")
+        .eq("student_id", studentId);
+      const allParentIds = Array.from(
+        new Set((linkRows || []).map((l: any) => l.parent_user_id)),
+      );
+      setLinkedParentIds(allParentIds);
+      const primaryParentId =
+        (linkRows || []).find((l: any) => l.is_primary)?.parent_user_id ||
+        allParentIds[0];
 
       if (primaryParentId) {
         const { data: notesData } = await supabase
@@ -250,24 +317,34 @@ export default function ParentMeetingPage() {
         .eq("student_id", studentId);
 
       if (prayerData && prayerData.length > 0) {
-        const submitted = prayerData.filter((p) => p.submitted).length;
+        // Live prayer_sheets stores a `status` plus 35 per-day booleans
+        // (monday_fajr … sunday_isha) — not a `submitted` flag or a `prayers`
+        // JSON blob. Compute from the real columns.
+        const submitted = prayerData.filter(
+          (p: any) => p.status === "submitted" || p.status === "verified",
+        ).length;
+        const weekDays = [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+        ];
         const calcRate = (prayer: string) => {
-          const total = prayerData.reduce((sum, sheet) => {
-            const days = sheet.prayers || {};
-            return (
-              sum +
-              Object.values(days).filter((d: any) => d[prayer] !== undefined)
-                .length
-            );
-          }, 0);
-          const prayed = prayerData.reduce((sum, sheet) => {
-            const days = sheet.prayers || {};
-            return (
-              sum +
-              Object.values(days).filter((d: any) => d[prayer] === true).length
-            );
-          }, 0);
-          return total > 0 ? Math.round((prayed / total) * 100) : 0;
+          let prayed = 0;
+          let totalDays = 0;
+          prayerData.forEach((sheet: any) => {
+            weekDays.forEach((day) => {
+              const v = sheet[`${day}_${prayer}`];
+              if (v !== null && v !== undefined) {
+                totalDays++;
+                if (v === true) prayed++;
+              }
+            });
+          });
+          return totalDays > 0 ? Math.round((prayed / totalDays) * 100) : 0;
         };
 
         setPrayerSummary({
@@ -279,6 +356,66 @@ export default function ParentMeetingPage() {
           maghrib_rate: calcRate("maghrib"),
           isha_rate: calcRate("isha"),
         });
+
+        // Parent engagement signals for this student's parent(s)
+        if (allParentIds.length > 0) {
+          const prayerSubmitted = (prayerData as any[]).filter(
+            (p) => p.status === "submitted" || p.status === "verified",
+          ).length;
+
+          let portal: EngagementSummary["portal"] = "not_started";
+          try {
+            const { data: portalRows } = await supabase
+              .from("parent_portal_status")
+              .select("portal_status")
+              .in("id", allParentIds);
+            const statuses = (portalRows || []).map((p: any) => p.portal_status);
+            portal = statuses.includes("active")
+              ? "active"
+              : statuses.includes("link_clicked")
+                ? "invite_opened"
+                : "not_started";
+          } catch {
+            const { data: profs } = await supabase
+              .from("profiles")
+              .select("password_set")
+              .in("id", allParentIds);
+            portal = (profs || []).some((p: any) => p.password_set)
+              ? "active"
+              : "not_started";
+          }
+
+          const { data: notifRows } = await supabase
+            .from("parent_notifications")
+            .select("is_read")
+            .in("parent_user_id", allParentIds);
+          const notifTotal = notifRows?.length || 0;
+          const notifRead =
+            notifRows?.filter((n: any) => n.is_read).length || 0;
+
+          const { data: viewRows } = await supabase
+            .from("parent_feedback_session_views")
+            .select("id")
+            .in("parent_user_id", allParentIds);
+
+          const { data: meetingRows } = await supabase
+            .from("parent_meeting_attendance")
+            .select("attended")
+            .in("parent_user_id", allParentIds);
+          const meetingsAttended =
+            meetingRows?.filter((m: any) => m.attended).length || 0;
+
+          setEngagement({
+            portal,
+            notif_total: notifTotal,
+            notif_read: notifRead,
+            notif_rate:
+              notifTotal > 0 ? Math.round((notifRead / notifTotal) * 100) : null,
+            prayer_sheets: prayerSubmitted,
+            feedback_views: viewRows?.length || 0,
+            meetings_attended: meetingsAttended,
+          });
+        }
       }
 
       // Fetch fines
@@ -318,6 +455,58 @@ export default function ParentMeetingPage() {
   };
 
   const handlePrint = () => window.print();
+
+  const saveMeetingNote = async () => {
+    if (!noteMessage.trim() || linkedParentIds.length === 0) return;
+    setSavingNote(true);
+    setNoteSaved(false);
+    try {
+      const studentId = params.id as string;
+      const title = noteTitle.trim() || `Parent meeting — ${meetingDate}`;
+      const message = noteMessage.trim();
+      const { error } = await supabase.from("parent_notifications").insert(
+        linkedParentIds.map((pid) => ({
+          parent_user_id: pid,
+          student_id: studentId,
+          type: "academic_note",
+          priority: "normal",
+          title,
+          message,
+          is_read: false,
+        })),
+      );
+      if (error) throw error;
+      // Reflect immediately in the Academic Notes section above
+      setAcademicNotes((prev) => [
+        {
+          id: `tmp-${Date.now()}`,
+          title,
+          message,
+          created_at: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+      setNoteTitle("");
+      setNoteMessage("");
+      setNoteSaved(true);
+    } catch (err) {
+      console.error("Error saving meeting note:", err);
+      alert("Could not save the note. Please try again.");
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const prayerCompliance = prayerSummary
+    ? Math.round(
+        (prayerSummary.fajr_rate +
+          prayerSummary.dhuhr_rate +
+          prayerSummary.asr_rate +
+          prayerSummary.maghrib_rate +
+          prayerSummary.isha_rate) /
+          5,
+      )
+    : 0;
 
   const attendanceRate =
     attendance && attendance.total > 0
@@ -466,23 +655,17 @@ export default function ParentMeetingPage() {
             </p>
           </div>
 
-          {/* Prayer Submission */}
+          {/* Prayer Compliance */}
           <div className="bg-card border border-border rounded-xl p-4 text-center">
             <p className="text-3xl font-bold text-primary">
-              {prayerSummary
-                ? Math.round(
-                    (prayerSummary.submitted / prayerSummary.total_sheets) *
-                      100,
-                  )
-                : 0}
-              %
+              {prayerCompliance}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Prayer Submission
+              Prayer Compliance
             </p>
             <p className="text-xs text-muted-foreground">
               {prayerSummary?.submitted || 0}/{prayerSummary?.total_sheets || 0}{" "}
-              sheets
+              sheets submitted
             </p>
           </div>
 
@@ -548,6 +731,94 @@ export default function ParentMeetingPage() {
             );
           })()}
         </div>
+
+        {/* Parent Engagement */}
+        {engagement && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <h3 className="font-semibold flex items-center gap-2">
+                <User className="h-4 w-4 text-primary" />
+                Parent Engagement
+              </h3>
+              <span
+                className={`text-xs px-2 py-1 rounded-full font-medium ${PORTAL_BADGE[engagement.portal]}`}
+              >
+                {PORTAL_LABEL[engagement.portal]}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <p className="text-xl font-bold">
+                  {engagement.notif_rate === null
+                    ? "—"
+                    : `${engagement.notif_rate}%`}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Notifications read
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {engagement.notif_read}/{engagement.notif_total}
+                </p>
+              </div>
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <p className="text-xl font-bold">{engagement.prayer_sheets}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Prayer sheets
+                </p>
+              </div>
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <p className="text-xl font-bold">{engagement.feedback_views}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Feedback viewed
+                </p>
+              </div>
+              <div className="p-3 bg-muted/30 rounded-lg">
+                <p className="text-xl font-bold">
+                  {engagement.meetings_attended}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Meetings attended
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Attendance Trend */}
+        {attendanceTrend.length > 0 && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              Recent Attendance
+              <span className="text-xs font-normal text-muted-foreground">
+                (last {attendanceTrend.length} months)
+              </span>
+            </h3>
+            <div className="flex items-end justify-between gap-2 sm:gap-4">
+              {attendanceTrend.map((m) => (
+                <div key={m.month} className="flex-1 text-center">
+                  <div className="flex items-end justify-center h-24">
+                    <div
+                      className={`w-full max-w-[3rem] mx-auto rounded-t ${
+                        m.rate >= 80
+                          ? "bg-green-500"
+                          : m.rate >= 60
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                      }`}
+                      style={{ height: `${Math.max(m.rate, 4)}%` }}
+                    />
+                  </div>
+                  <p className="text-sm font-semibold mt-1">{m.rate}%</p>
+                  <p className="text-xs text-muted-foreground">{m.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {m.present}/{m.total}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Prayer Breakdown */}
         {prayerSummary && (
@@ -666,6 +937,61 @@ export default function ParentMeetingPage() {
             </div>
           </div>
         )}
+
+        {/* Log meeting outcome — writes a parent-visible academic note */}
+        <div className="no-print bg-card border border-border rounded-xl p-5">
+          <h3 className="font-semibold mb-1 flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            Log Meeting Outcome
+          </h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Saves a note the parent will see in their portal, and adds it to
+            Academic Notes above.
+          </p>
+          {linkedParentIds.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No parent portal account is linked to this student yet, so there
+              is nobody to send the note to.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={noteTitle}
+                onChange={(e) => {
+                  setNoteTitle(e.target.value);
+                  setNoteSaved(false);
+                }}
+                placeholder={`Parent meeting — ${meetingDate}`}
+                className="form-input"
+              />
+              <textarea
+                value={noteMessage}
+                onChange={(e) => {
+                  setNoteMessage(e.target.value);
+                  setNoteSaved(false);
+                }}
+                rows={4}
+                placeholder="What was discussed and agreed…"
+                className="form-input"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={saveMeetingNote}
+                  disabled={savingNote || !noteMessage.trim()}
+                  className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                >
+                  {savingNote ? "Saving…" : "Save & notify parent"}
+                </button>
+                {noteSaved && (
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    Saved ✓
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Class Feedback Sessions */}
         <div className="bg-card border border-border rounded-xl p-5">

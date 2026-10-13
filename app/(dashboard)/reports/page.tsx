@@ -35,6 +35,18 @@ const PrayerComplianceReport = dynamic(
   () => import("@/components/reports/PrayerComplianceReport"),
   { loading },
 );
+const LowAttendanceReportGenerator = dynamic(
+  () => import("@/components/reports/LowAttendanceReportGenerator"),
+  { loading },
+);
+const ParentEngagementReport = dynamic(
+  () => import("@/components/reports/ParentEngagementReport"),
+  { loading },
+);
+const ApplicationStatsReport = dynamic(
+  () => import("@/components/reports/ApplicationStatsReport"),
+  { loading },
+);
 
 const TABS = [
   { id: "attendance", label: "Attendance" },
@@ -42,6 +54,9 @@ const TABS = [
   { id: "fees", label: "Fee Collection" },
   { id: "student", label: "Student Report" },
   { id: "prayer", label: "Prayer Compliance" },
+  { id: "lowattendance", label: "Low Attendance" },
+  { id: "engagement", label: "Parent Engagement" },
+  { id: "applications", label: "Application Stats" },
   { id: "yearend", label: "Year End Summary" },
 ] as const;
 
@@ -142,6 +157,16 @@ export default async function ReportsPage({
             students={students || []}
           />
         )}
+        {activeTab === "lowattendance" && (
+          <LowAttendanceReportGenerator
+            classes={classes || []}
+            students={students || []}
+          />
+        )}
+        {activeTab === "engagement" && (
+          <ParentEngagementReport classes={classes || []} />
+        )}
+        {activeTab === "applications" && <ApplicationStatsReport />}
         {activeTab === "yearend" && <YearEndSummaryReport />}
       </div>
     </div>
