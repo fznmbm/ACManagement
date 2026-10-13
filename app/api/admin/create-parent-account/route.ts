@@ -243,13 +243,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Step 4: Check if link already exists
+    // Step 4: Check if link already exists (0-or-1 → maybeSingle, no error on 0)
     const { data: existingLink } = await supabase
       .from("parent_student_links")
       .select("id")
       .eq("parent_user_id", parentUserId)
       .eq("student_id", student_id)
-      .single();
+      .maybeSingle();
 
     if (!existingLink) {
       console.log("📝 Creating parent-student link...");

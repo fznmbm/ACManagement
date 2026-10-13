@@ -145,7 +145,7 @@ export default function ParentMeetingPage() {
         .from("students")
         .select("*, classes(name)")
         .eq("id", studentId)
-        .single();
+        .maybeSingle();
 
       if (!studentData) {
         router.push("/students");
@@ -220,19 +220,22 @@ export default function ParentMeetingPage() {
         );
       }
 
-      // Fetch academic notes from parent_notifications
-      const { data: linksData } = await supabase
+      // Fetch academic notes from parent_notifications.
+      // Tolerate a missing or duplicate primary link: take the first match
+      // instead of `.single()` (which errors on 0 or >1 rows).
+      const { data: linkRows } = await supabase
         .from("parent_student_links")
         .select("parent_user_id")
         .eq("student_id", studentId)
         .eq("is_primary", true)
-        .single();
+        .limit(1);
+      const primaryParentId = linkRows?.[0]?.parent_user_id;
 
-      if (linksData?.parent_user_id) {
+      if (primaryParentId) {
         const { data: notesData } = await supabase
           .from("parent_notifications")
           .select("id, title, message, created_at")
-          .eq("parent_user_id", linksData.parent_user_id)
+          .eq("parent_user_id", primaryParentId)
           .eq("student_id", studentId)
           .eq("type", "academic_note")
           .order("created_at", { ascending: false });

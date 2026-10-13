@@ -128,13 +128,13 @@ export default function FeesTab({ studentId }: FeesTabProps) {
         throw error;
       }
 
-      // Verify parent authorization
+      // Verify parent authorization (unique pair; maybeSingle → null, not error)
       const { data: linkCheck } = await supabase
         .from("parent_student_links")
         .select("id")
         .eq("parent_user_id", user.id)
         .eq("student_id", studentId)
-        .single();
+        .maybeSingle();
 
       if (!linkCheck) {
         console.error("❌ Parent not authorized for this student");

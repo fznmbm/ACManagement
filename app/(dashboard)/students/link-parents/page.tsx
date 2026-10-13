@@ -535,7 +535,7 @@ function LinkParentModal({
         .select("id")
         .eq("parent_user_id", selectedParent.id)
         .eq("student_id", student.id)
-        .single();
+        .maybeSingle();
 
       if (existingLink) {
         setError("This student is already linked to this parent");
