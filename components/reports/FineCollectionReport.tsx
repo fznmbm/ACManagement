@@ -276,8 +276,6 @@ export default function FineCollectionReport({
               <option value="all">All Types</option>
               <option value="late">Late Arrival</option>
               <option value="absent">Absence</option>
-              <option value="behavior">Behavior</option>
-              <option value="other">Other</option>
             </select>
           </div>
         </div>

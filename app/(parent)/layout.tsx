@@ -33,9 +33,29 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
   const { actualTheme, setTheme, mounted } = useTheme();
 
   const [user, setUser] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [unreadEvents, setUnreadEvents] = useState(0);
+
+  // Recount unread notices (non-event) and unread events for the bell/badges.
+  const refreshCounts = async (uid: string) => {
+    const { count } = await supabase
+      .from("parent_notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("parent_user_id", uid)
+      .eq("is_read", false)
+      .neq("type", "event");
+    setUnreadTotal(count || 0);
+
+    const { count: eventCount } = await supabase
+      .from("parent_notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("parent_user_id", uid)
+      .eq("is_read", false)
+      .eq("type", "event");
+    setUnreadEvents(eventCount || 0);
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -70,23 +90,10 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
         }
 
         setUser(profile);
+        setUserId(session.user.id);
         setLoading(false);
 
-        const { count } = await supabase
-          .from("parent_notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("parent_user_id", session.user.id)
-          .eq("is_read", false)
-          .neq("type", "event");
-        setUnreadTotal(count || 0);
-
-        const { count: eventCount } = await supabase
-          .from("parent_notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("parent_user_id", session.user.id)
-          .eq("is_read", false)
-          .eq("type", "event");
-        setUnreadEvents(eventCount || 0);
+        await refreshCounts(session.user.id);
       } catch (error) {
         console.error("Auth check error:", error);
         router.push("/parent/login");
@@ -94,7 +101,32 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
     };
 
     checkUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, supabase, pathname]);
+
+  // Keep the bell/badges live: a new notice (INSERT) or a read/acknowledge
+  // (UPDATE, including "mark all read" on the Updates page) refreshes the
+  // count without needing a page reload or navigation.
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel("parent-notifications-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "parent_notifications",
+          filter: `parent_user_id=eq.${userId}`,
+        },
+        () => refreshCounts(userId),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const toggleTheme = () =>
     setTheme(actualTheme === "dark" ? "light" : "dark");
@@ -110,7 +142,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
       name: "My Children",
       href: "/parent/children",
       icon: Users,
-      badge: unreadTotal,
+      badge: 0,
     },
     {
       name: "Events",

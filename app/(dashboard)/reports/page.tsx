@@ -47,11 +47,16 @@ const ApplicationStatsReport = dynamic(
   () => import("@/components/reports/ApplicationStatsReport"),
   { loading },
 );
+const FineCollectionReport = dynamic(
+  () => import("@/components/reports/FineCollectionReport"),
+  { loading },
+);
 
 const TABS = [
   { id: "attendance", label: "Attendance" },
   { id: "academic", label: "Academic Progress" },
   { id: "fees", label: "Fee Collection" },
+  { id: "fines", label: "Fine Collection" },
   { id: "student", label: "Student Report" },
   { id: "prayer", label: "Prayer Compliance" },
   { id: "lowattendance", label: "Low Attendance" },
@@ -141,6 +146,12 @@ export default async function ReportsPage({
         )}
         {activeTab === "fees" && (
           <FeeCollectionReport
+            classes={classes || []}
+            students={students || []}
+          />
+        )}
+        {activeTab === "fines" && (
+          <FineCollectionReport
             classes={classes || []}
             students={students || []}
           />

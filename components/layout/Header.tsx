@@ -96,11 +96,15 @@ export default function Header({ profile }: HeaderProps) {
   }, []);
 
   useEffect(() => {
+    // Listen for INSERT *and* UPDATE/DELETE: DB triggers auto-dismiss alerts
+    // (fee paid, fine paid/deleted, attendance corrected, grade improved) by
+    // UPDATEing student_events.status — without this the bell kept showing
+    // resolved alerts with a stale count until a full reload.
     const channel = supabase
       .channel("student-events-realtime")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "student_events" },
+        { event: "*", schema: "public", table: "student_events" },
         () => {
           fetchAlerts();
         },
@@ -207,8 +211,8 @@ export default function Header({ profile }: HeaderProps) {
           >
             <Bell className="h-5 w-5 text-muted-foreground" />
             {alertCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                {alertCount > 9 ? "9+" : alertCount}
+              <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 bg-red-500 text-white text-[10px] leading-none rounded-full flex items-center justify-center font-bold">
+                {alertCount > 99 ? "99+" : alertCount}
               </span>
             )}
           </button>
