@@ -216,7 +216,7 @@ export default function ParentLayout({ children }: ParentLayoutProps) {
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   {unreadTotal > 0 && (
                     <span className="absolute top-0.5 right-0.5 min-w-[1.05rem] h-[1.05rem] px-1 text-[10px] font-bold leading-none rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
-                      {unreadTotal > 9 ? "9+" : unreadTotal}
+                      {unreadTotal > 99 ? "99+" : unreadTotal}
                     </span>
                   )}
                 </Link>
