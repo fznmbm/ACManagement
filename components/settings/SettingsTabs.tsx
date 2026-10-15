@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Users,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import AcademicSettings from "./AcademicSettings";
 import ApplicationSettings from "./ApplicationSettings";
@@ -24,6 +25,67 @@ import MessageLogCleanup from "@/components/admin/MessageLogCleanup";
 
 interface SettingsTabsProps {
   initialSettings: Record<string, any>;
+}
+
+/**
+ * A settings sub-section. On mobile it's a collapsible accordion row (collapsed
+ * by default — so a tab with 2–3 sub-sections isn't one endless scroll). On
+ * desktop (md+) the toggle is hidden and the content is always shown, so the
+ * desktop layout is unchanged. `selfTitled` omits the desktop heading when the
+ * child already renders its own (e.g. FineSettings).
+ */
+function Section({
+  title,
+  description,
+  selfTitled,
+  children,
+}: {
+  title: string;
+  description?: string;
+  selfTitled?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="py-4 first:pt-0 md:py-0">
+      {/* Mobile accordion toggle */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 text-left md:hidden"
+      >
+        <span className="min-w-0">
+          <span className="block font-semibold">{title}</span>
+          {description && (
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              {description}
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Desktop heading (omitted when the child self-titles) */}
+      {!selfTitled && (
+        <div className="hidden md:block">
+          <h3 className="text-lg font-semibold mb-1">{title}</h3>
+          {description && (
+            <p className="text-sm text-muted-foreground mb-4">{description}</p>
+          )}
+        </div>
+      )}
+
+      {/* Content: collapsed on mobile until opened; always shown on desktop */}
+      <div className={`${open ? "block pt-4" : "hidden"} md:block md:pt-0`}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 type TabId = "centre" | "academic" | "communication" | "financial" | "security";
@@ -97,7 +159,7 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
               <button
                 key={tab.id}
                 onClick={() => switchTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-4 border-b-2 transition-colors whitespace-nowrap ${
+                className={`flex items-center space-x-2 px-4 py-3 md:px-6 md:py-4 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? "border-primary text-primary bg-primary/5"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -123,59 +185,50 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
         )}
 
         {activeTab === "academic" && (
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">Academic Settings</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Configure academic year and grading preferences
-              </p>
+          <div className="divide-y divide-border md:space-y-8 md:divide-y-0">
+            <Section
+              title="Academic Settings"
+              description="Configure academic year and grading preferences"
+            >
               <AcademicSettings settings={initialSettings} />
-            </div>
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold mb-1">
-                Application Settings
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Configure enrolment deadlines and application form settings
-              </p>
+            </Section>
+            <Section
+              title="Application Settings"
+              description="Configure enrolment deadlines and application form settings"
+            >
               <ApplicationSettings />
-            </div>
+            </Section>
           </div>
         )}
 
         {activeTab === "communication" && <CommunicationSettings />}
 
         {activeTab === "financial" && (
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">Fee Settings</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Configure fee structures and payment terms
-              </p>
+          <div className="divide-y divide-border md:space-y-8 md:divide-y-0">
+            <Section
+              title="Fee Settings"
+              description="Configure fee structures and payment terms"
+            >
               <FeeSettings />
-            </div>
-            <div className="border-t pt-8">
+            </Section>
+            <Section title="Fine Settings" selfTitled>
               <FineSettings />
-            </div>
+            </Section>
           </div>
         )}
 
         {activeTab === "security" && (
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">
-                Password & Security
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Update your password and security preferences
-              </p>
+          <div className="divide-y divide-border md:space-y-8 md:divide-y-0">
+            <Section
+              title="Password & Security"
+              description="Update your password and security preferences"
+            >
               <PasswordSettings />
-            </div>
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold mb-1">Staff accounts</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Add, edit or remove staff logins on the Users page.
-              </p>
+            </Section>
+            <Section
+              title="Staff accounts"
+              description="Add, edit or remove staff logins on the Users page."
+            >
               <Link
                 href="/users"
                 className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-accent"
@@ -184,18 +237,16 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
                 Manage staff accounts
                 <ArrowRight className="h-4 w-4" />
               </Link>
-            </div>
-            <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold mb-1">Maintenance</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Occasional cleanup tools — removing unused logins and clearing
-                old message logs.
-              </p>
+            </Section>
+            <Section
+              title="Maintenance"
+              description="Occasional cleanup tools — removing unused logins and clearing old message logs."
+            >
               <div className="space-y-6">
                 <OrphanedAuthCleanup />
                 <MessageLogCleanup />
               </div>
-            </div>
+            </Section>
           </div>
         )}
       </div>
