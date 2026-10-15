@@ -614,9 +614,14 @@ export default function AttendanceMarkingInterface({
         </div>
       )}
 
-      {/* Sticky action bar */}
+      {/* Spacer so the last student row can scroll clear of the fixed bar */}
+      {students.length > 0 && <div aria-hidden className="h-28 md:hidden" />}
+
+      {/* Action bar — fixed to the viewport bottom on mobile (like the parent
+          app's bottom nav: full-width, solid, above the home indicator); an
+          in-flow card on desktop. */}
       {students.length > 0 && (
-        <div className="sticky bottom-0 z-10 -mx-3 -mb-3 border-t border-border bg-card px-3 py-3 md:mx-0 md:mb-0 md:rounded-lg md:border md:px-4 md:shadow-lg pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:z-auto md:mt-4 md:rounded-lg md:border md:px-4 md:pb-3 md:shadow-lg">
           {pendingSeconds !== null ? (
             <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm font-medium text-foreground">
