@@ -5,16 +5,60 @@ import { useState } from "react";
 import {
   Save,
   Loader2,
-  Upload,
   Building2,
-  Mail,
   Phone,
   MapPin,
+  Share2,
+  Image as ImageIcon,
+  Clock,
+  ChevronDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface CentreSettingsProps {
   settings: Record<string, any>;
+}
+
+/**
+ * A collapsible settings group. Collapsed by default on mobile (so the Centre
+ * tab isn't one long scroll); on desktop (md+) the toggle is inert and content
+ * is always shown. Collapsed inputs stay in the DOM, so they still save.
+ */
+function Group({
+  title,
+  icon: Icon,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-border rounded-lg">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 p-4 text-left md:cursor-default"
+      >
+        <span className="flex items-center gap-2 font-semibold">
+          <Icon className="h-4 w-4 shrink-0" />
+          {title}
+        </span>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform md:hidden ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      <div className={`${open ? "block" : "hidden"} px-4 pb-4 md:block`}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function CentreSettings({ settings }: CentreSettingsProps) {
@@ -32,18 +76,15 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
     setSaved(false);
 
     try {
-      // Get all form values from the DOM
       const form = document.querySelector("form");
       if (!form) {
         throw new Error("Form not found");
       }
 
-      // Create FormData object and convert to regular object
       const formDataObj = new FormData(form);
       const generalData: Record<string, any> = {};
       const operatingHours: Record<string, any> = {};
 
-      // First, set all operating days to false
       [
         "monday",
         "tuesday",
@@ -56,32 +97,25 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
         operatingHours[`operating_${day}`] = false;
       });
 
-      // Convert FormData to object
-
       formDataObj.forEach((value, key) => {
         if (key.startsWith("operating_") || key.startsWith("hours_")) {
           if (key.startsWith("operating_")) {
-            operatingHours[key] = true; // Checkbox is checked
+            operatingHours[key] = true;
           } else {
-            operatingHours[key] = value; // Time values
+            operatingHours[key] = value;
           }
         } else {
           generalData[key] = value;
         }
       });
 
-      // Add logo and seal URLs
       generalData.logo_url = logoUrl;
       generalData.seal_url = sealUrl;
 
-      // Save general settings to database
       const response = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category: "centre_info",
-          data: generalData,
-        }),
+        body: JSON.stringify({ category: "centre_info", data: generalData }),
       });
 
       if (!response.ok) {
@@ -89,7 +123,6 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
         throw new Error(errorData.error || "Failed to save general settings");
       }
 
-      // Save operating hours separately
       const hoursResponse = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,73 +151,29 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Centre Information</h3>
+        <h3 className="text-lg font-semibold mb-1">Centre Information</h3>
         <p className="text-sm text-muted-foreground">
-          Configure your Islamic centre details
+          Configure your centre details
         </p>
       </div>
 
-      <form className="space-y-6">
+      <form className="space-y-4">
         {/* Basic Information */}
-        <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-4 flex items-center space-x-2">
-            <Building2 className="h-4 w-4" />
-            <span>Basic Information</span>
-          </h4>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="form-label">Centre Name (English)</label>
-                <input
-                  type="text"
-                  name="centre_name"
-                  defaultValue={centreInfo.centre_name}
-                  className="form-input"
-                  placeholder="Al-Noor Islamic Centre"
-                />
-              </div>
-              <div>
-                <label className="form-label">Centre Name (Arabic)</label>
-                <input
-                  type="text"
-                  name="centre_name_ar"
-                  defaultValue={centreInfo.centre_name_ar}
-                  className="form-input rtl"
-                  placeholder="مركز النور الإسلامي"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="form-label">Description</label>
-              <textarea
-                name="description"
-                className="form-input"
-                rows={3}
-                defaultValue={centreInfo.description}
-                placeholder="Brief description of your centre..."
-              />
-            </div>
-
-            <div>
-              <label className="form-label">Registration Number</label>
-              <input
-                type="text"
-                name="registration_number"
-                defaultValue={centreInfo.registration_number}
-                className="form-input"
-                placeholder="Charity/Organisation registration number"
-              />
-            </div>
+        <Group title="Basic Information" icon={Building2} defaultOpen>
+          <div>
+            <label className="form-label">Centre Name</label>
+            <input
+              type="text"
+              name="centre_name"
+              defaultValue={centreInfo.centre_name}
+              className="form-input"
+              placeholder="Al Hikmah Institute"
+            />
           </div>
-        </div>
+        </Group>
 
         {/* Contact Information */}
-        <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-4 flex items-center space-x-2">
-            <Phone className="h-4 w-4" />
-            <span>Contact Information</span>
-          </h4>
+        <Group title="Contact Information" icon={Phone}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="form-label">Primary Phone</label>
@@ -193,7 +182,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 name="phone"
                 defaultValue={centreInfo.phone}
                 className="form-input"
-                placeholder="+44 20 1234 5678"
+                placeholder="+44 7411 061242"
               />
             </div>
             <div>
@@ -203,7 +192,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 name="phone_secondary"
                 defaultValue={centreInfo.phone_secondary}
                 className="form-input"
-                placeholder="+44 20 8765 4321"
+                placeholder="+44 7738 314404"
               />
             </div>
             <div>
@@ -213,7 +202,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 name="email"
                 defaultValue={centreInfo.email}
                 className="form-input"
-                placeholder="info@al-hikmah.org"
+                placeholder="alhikmahinstitutecrawley@gmail.com"
               />
             </div>
             <div>
@@ -227,14 +216,10 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
               />
             </div>
           </div>
-        </div>
+        </Group>
 
         {/* Address */}
-        <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-4 flex items-center space-x-2">
-            <MapPin className="h-4 w-4" />
-            <span>Address</span>
-          </h4>
+        <Group title="Address" icon={MapPin}>
           <div className="space-y-4">
             <div>
               <label className="form-label">Street Address</label>
@@ -254,17 +239,17 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                   name="city"
                   defaultValue={centreInfo.city}
                   className="form-input"
-                  placeholder="London"
+                  placeholder="Crawley"
                 />
               </div>
               <div>
-                <label className="form-label">County/State</label>
+                <label className="form-label">County</label>
                 <input
                   type="text"
                   name="county"
                   defaultValue={centreInfo.county}
                   className="form-input"
-                  placeholder="Greater London"
+                  placeholder="West Sussex"
                 />
               </div>
               <div>
@@ -274,7 +259,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                   name="postal_code"
                   defaultValue={centreInfo.postal_code}
                   className="form-input"
-                  placeholder="SW1A 1AA"
+                  placeholder="RH10 1AA"
                 />
               </div>
             </div>
@@ -295,11 +280,10 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
               </select>
             </div>
           </div>
-        </div>
+        </Group>
 
         {/* Social Media */}
-        <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-4">Social Media Links</h4>
+        <Group title="Social Media Links" icon={Share2}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="form-label">Facebook</label>
@@ -312,16 +296,6 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
               />
             </div>
             <div>
-              <label className="form-label">Twitter/X</label>
-              <input
-                type="url"
-                name="twitter"
-                defaultValue={centreInfo.twitter}
-                className="form-input"
-                placeholder="https://twitter.com/yourhandle"
-              />
-            </div>
-            <div>
               <label className="form-label">Instagram</label>
               <input
                 type="url"
@@ -331,28 +305,15 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 placeholder="https://instagram.com/yourprofile"
               />
             </div>
-            <div>
-              <label className="form-label">YouTube</label>
-              <input
-                type="url"
-                name="youtube"
-                defaultValue={centreInfo.youtube}
-                className="form-input"
-                placeholder="https://youtube.com/yourchannel"
-              />
-            </div>
           </div>
-        </div>
+        </Group>
 
         {/* Logo & Branding */}
-        <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-4">Logo & Branding</h4>
-
+        <Group title="Logo & Branding" icon={ImageIcon}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Centre Logo */}
             <div className="space-y-3">
               <label className="form-label">Centre Logo</label>
-
               {logoUrl && (
                 <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
                   <img
@@ -372,7 +333,6 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                   </div>
                 </div>
               )}
-
               <input
                 type="url"
                 value={logoUrl}
@@ -381,14 +341,13 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                 placeholder="https://example.com/logo.png"
               />
               <p className="text-xs text-muted-foreground">
-                Recommended: PNG or SVG, 200x200px, transparent background
+                Recommended: PNG or SVG, 200×200px, transparent background
               </p>
             </div>
 
             {/* Official Seal */}
             <div className="space-y-3">
-              <label className="form-label">Official Seal/Stamp</label>
-
+              <label className="form-label">Official Seal / Stamp</label>
               {sealUrl && (
                 <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
                   <img
@@ -408,7 +367,6 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                   </div>
                 </div>
               )}
-
               <input
                 type="url"
                 value={sealUrl}
@@ -418,38 +376,14 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
               />
               <p className="text-xs text-muted-foreground">
                 Used on certificates. Recommended: PNG, circular design,
-                200x200px
+                200×200px
               </p>
             </div>
           </div>
-
-          {/* Primary Color - Keep this existing part */}
-          <div className="mt-6">
-            <label className="form-label">Primary Color</label>
-            <div className="flex items-center space-x-4">
-              <input
-                type="color"
-                name="primary_color"
-                defaultValue={centreInfo.primary_color || "#22c55e"}
-                className="h-10 w-20 rounded border border-input cursor-pointer"
-              />
-              <input
-                type="text"
-                name="primary_color_hex"
-                defaultValue={centreInfo.primary_color || "#22c55e"}
-                className="form-input flex-1"
-                placeholder="#22c55e"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Used for buttons, links, and highlights
-            </p>
-          </div>
-        </div>
+        </Group>
 
         {/* Operating Hours */}
-        <div className="border border-border rounded-lg p-4">
-          <h4 className="font-semibold mb-4">Operating Hours</h4>
+        <Group title="Operating Hours" icon={Clock}>
           <div className="space-y-3">
             {[
               "Monday",
@@ -462,10 +396,12 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
             ].map((day) => {
               const dayLower = day.toLowerCase();
               const operatingHours = settings.operating_hours || {};
-
               return (
-                <div key={day} className="flex items-center space-x-4">
-                  <div className="w-32">
+                <div
+                  key={day}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2"
+                >
+                  <div className="w-28">
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -486,7 +422,7 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                     defaultValue={
                       operatingHours[`hours_${dayLower}_start`] || "09:00"
                     }
-                    className="form-input w-32 text-sm"
+                    className="form-input w-28 text-sm"
                   />
                   <span className="text-muted-foreground">to</span>
                   <input
@@ -495,21 +431,19 @@ export default function CentreSettings({ settings }: CentreSettingsProps) {
                     defaultValue={
                       operatingHours[`hours_${dayLower}_end`] || "17:00"
                     }
-                    className="form-input w-32 text-sm"
+                    className="form-input w-28 text-sm"
                   />
                 </div>
               );
             })}
           </div>
-        </div>
+        </Group>
       </form>
 
       {/* Save Button */}
       <div className="flex items-center justify-end space-x-4 pt-4 border-t">
         {saved && (
-          <span className="text-sm text-green-600">
-            ✓ Settings saved successfully!
-          </span>
+          <span className="text-sm text-green-600">✓ Settings saved</span>
         )}
         <button
           type="button"
