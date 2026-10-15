@@ -34,7 +34,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen supports-[height:100dvh]:h-[100dvh] bg-background">
       <RouteProgressBar />
 
       {/* Sidebar */}
