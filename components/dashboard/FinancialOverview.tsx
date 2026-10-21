@@ -1,11 +1,6 @@
 // components/dashboard/FinancialOverview.tsx
 import { createClient } from "@/lib/supabase/server";
-import {
-  PoundSterling,
-  TrendingUp,
-  CreditCard,
-  AlertCircle,
-} from "lucide-react";
+import { PoundSterling, TrendingUp, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function FinancialOverview() {
@@ -42,11 +37,6 @@ export default async function FinancialOverview() {
 
   const totalCollected = totalRevenue + paidFines;
   const totalOutstanding = outstandingFees + outstandingFines;
-
-  // Collection rate
-  const totalBilled = totalCollected + totalOutstanding;
-  const collectionRate =
-    totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 0;
 
   // Get this month's revenue. Month boundaries computed properly (the old
   // code asked for the 31st of every month, which Postgres rejects), and fee
@@ -87,7 +77,7 @@ export default async function FinancialOverview() {
       </div>
 
       {/* Main stats — neutral cards; colour only where it carries meaning */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {/* Total collected */}
         <div className="p-4 rounded-lg border border-border bg-muted/40">
           <div className="flex items-center gap-2 mb-2">
@@ -127,18 +117,6 @@ export default async function FinancialOverview() {
           </p>
         </div>
 
-        {/* Collection rate */}
-        <div className="p-4 rounded-lg border border-border bg-muted/40">
-          <div className="flex items-center gap-2 mb-2">
-            <CreditCard className="h-4 w-4 text-primary" />
-            <p className="text-xs font-medium text-muted-foreground">
-              Collection rate
-            </p>
-          </div>
-          <p className="text-2xl font-bold tabular-nums text-foreground">
-            {collectionRate}%
-          </p>
-        </div>
       </div>
 
       {/* Breakdown */}

@@ -6,9 +6,9 @@ import {
   CheckCircle,
   TrendingUp,
   FileText,
-  CreditCard,
   AlertCircle,
-  Calendar,
+  Moon,
+  ClipboardCheck,
   PoundSterling,
   MessageSquare,
   UserPlus,
@@ -18,7 +18,7 @@ import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { latestClassDay } from "@/lib/utils/classDay";
 import AlertsDashboard from "@/components/alerts/AlertsDashboard";
 import RegistersBoard from "@/components/attendance/RegistersBoard";
-import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
+import PrayerSnapshot from "@/components/dashboard/PrayerSnapshot";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import ClassPerformance from "@/components/dashboard/ClassPerformance";
 
@@ -27,7 +27,7 @@ const QUICK_ACTIONS = [
   { label: "Add student", href: "/students/new", icon: UserPlus },
   { label: "Collect fee", href: "/fees", icon: PoundSterling },
   { label: "Send update", href: "/send-update", icon: MessageSquare },
-  { label: "Create event", href: "/events", icon: Calendar },
+  { label: "Prayer sheets", href: "/prayer-sheets", icon: Moon },
   { label: "Reports", href: "/reports", icon: FileText },
 ];
 
@@ -45,9 +45,10 @@ export default async function DashboardPage() {
     .single();
 
   const todayDate = latestClassDay();
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-  const todayStr = new Date().toISOString().split("T")[0];
+  // Monday of the current week — for this week's prayer submissions.
+  const mondayDate = new Date();
+  mondayDate.setDate(mondayDate.getDate() - ((mondayDate.getDay() + 6) % 7));
+  const weekMonday = mondayDate.toISOString().split("T")[0];
 
   // Basic stats — one batch.
   const [
@@ -75,7 +76,7 @@ export default async function DashboardPage() {
     { count: totalTodayRecords },
     { data: outstandingInvoices },
     { data: activeFines },
-    { count: upcomingEventsCount },
+    { count: prayerThisWeek },
     { data: activeAppYear },
   ] = await Promise.all([
     supabase
@@ -88,10 +89,10 @@ export default async function DashboardPage() {
       .in("status", ["pending", "partial", "overdue"]),
     supabase.from("fines").select("amount").eq("status", "pending"),
     supabase
-      .from("events")
+      .from("prayer_sheets")
       .select("*", { count: "exact", head: true })
-      .gte("event_date", todayStr)
-      .lte("event_date", thirtyDaysFromNow.toISOString().split("T")[0]),
+      .eq("week_start_date", weekMonday)
+      .in("status", ["submitted", "verified"]),
     supabase
       .from("application_settings")
       .select("academic_year")
@@ -182,11 +183,11 @@ export default async function DashboardPage() {
       href: "/fines",
     },
     {
-      name: "Upcoming Events",
-      value: upcomingEventsCount || 0,
-      icon: Calendar,
+      name: "Prayer (this week)",
+      value: prayerThisWeek || 0,
+      icon: ClipboardCheck,
       ...brand,
-      href: "/events",
+      href: "/prayer-sheets",
     },
   ];
 
@@ -252,7 +253,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <FinancialOverview />
-          <UpcomingEvents />
+          <PrayerSnapshot />
           <RecentActivity />
           <ClassPerformance />
         </div>
