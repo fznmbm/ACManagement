@@ -361,13 +361,6 @@ export default function FeeSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Fee Settings</h2>
-        <p className="text-sm text-muted-foreground">
-          Configure fee structures, quarterly periods, and automation settings
-        </p>
-      </div>
-
       {/* Sections stacked (no inner tabs) */}
       {(
         <div className="space-y-6">
@@ -681,31 +674,6 @@ export default function FeeSettings() {
             </div>
           </div>
 
-          {/* Save Button */}
-          <div className="flex items-center justify-end space-x-4 pt-4 border-t">
-            {saved && (
-              <span className="text-sm text-green-600 flex items-center space-x-1">
-                <span>✓ Settings saved successfully!</span>
-              </span>
-            )}
-            <button
-              onClick={saveFeeSettings}
-              disabled={saving}
-              className="btn-primary flex items-center space-x-2"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  <span>Save Settings</span>
-                </>
-              )}
-            </button>
-          </div>
         </div>
       )}
 
@@ -738,7 +706,7 @@ export default function FeeSettings() {
                 className="btn-primary flex items-center space-x-2"
               >
                 <Save className="h-4 w-4" />
-                <span>{saving ? "Saving..." : "Save Settings"}</span>
+                <span>{saving ? "Saving..." : "Save quarters"}</span>
               </button>
             </div>
           </div>
@@ -990,7 +958,7 @@ export default function FeeSettings() {
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  <span>Save Settings</span>
+                  <span>Save fee settings</span>
                 </>
               )}
             </button>

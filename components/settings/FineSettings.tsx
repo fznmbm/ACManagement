@@ -126,15 +126,6 @@ export default function FineSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Fine Settings</h2>
-          <p className="text-muted-foreground">
-            Configure automatic fine amounts for attendance violations
-          </p>
-        </div>
-      </div>
-
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
         <div className="flex items-start space-x-3">
           <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />

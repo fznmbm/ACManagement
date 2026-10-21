@@ -211,7 +211,10 @@ export default function SettingsTabs({ initialSettings }: SettingsTabsProps) {
             >
               <FeeSettings />
             </Section>
-            <Section title="Fine Settings" selfTitled>
+            <Section
+              title="Fine Settings"
+              description="Automatic fine amounts for late / absent attendance"
+            >
               <FineSettings />
             </Section>
           </div>
