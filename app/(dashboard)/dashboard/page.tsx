@@ -45,10 +45,12 @@ export default async function DashboardPage() {
     .single();
 
   const todayDate = latestClassDay();
-  // Monday of the current week — for this week's prayer submissions.
+  // A week's prayer sheet is submitted the FOLLOWING Monday, so the most
+  // recently *completed* week (last Monday) is the meaningful recent figure —
+  // the current week would read ~0 all week.
   const mondayDate = new Date();
-  mondayDate.setDate(mondayDate.getDate() - ((mondayDate.getDay() + 6) % 7));
-  const weekMonday = mondayDate.toISOString().split("T")[0];
+  mondayDate.setDate(mondayDate.getDate() - ((mondayDate.getDay() + 6) % 7) - 7);
+  const lastWeekMonday = mondayDate.toISOString().split("T")[0];
 
   // Basic stats — one batch.
   const [
@@ -76,7 +78,7 @@ export default async function DashboardPage() {
     { count: totalTodayRecords },
     { data: outstandingInvoices },
     { data: activeFines },
-    { count: prayerThisWeek },
+    { count: prayerLastWeek },
     { data: activeAppYear },
   ] = await Promise.all([
     supabase
@@ -91,7 +93,7 @@ export default async function DashboardPage() {
     supabase
       .from("prayer_sheets")
       .select("*", { count: "exact", head: true })
-      .eq("week_start_date", weekMonday)
+      .eq("week_start_date", lastWeekMonday)
       .in("status", ["submitted", "verified"]),
     supabase
       .from("application_settings")
@@ -183,8 +185,8 @@ export default async function DashboardPage() {
       href: "/fines",
     },
     {
-      name: "Prayer (this week)",
-      value: prayerThisWeek || 0,
+      name: "Prayer (last week)",
+      value: prayerLastWeek || 0,
       icon: ClipboardCheck,
       ...brand,
       href: "/prayer-sheets",

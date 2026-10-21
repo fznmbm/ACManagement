@@ -3,47 +3,90 @@ import { createClient } from "@/lib/supabase/server";
 import { Moon } from "lucide-react";
 import Link from "next/link";
 
-/** Monday (ISO date) of the current week. */
-function currentMonday(): string {
-  const d = new Date();
-  const dow = d.getDay(); // 0 Sun … 6 Sat
-  d.setDate(d.getDate() - ((dow + 6) % 7));
-  return d.toISOString().split("T")[0];
-}
-
 export default async function PrayerSnapshot() {
   const supabase = await createClient();
 
-  const monday = currentMonday();
+  // Reference week = the most recent week that actually has submissions.
+  // (The current week reads ~0 until it's submitted the following Monday.)
+  const { data: latest } = await supabase
+    .from("prayer_sheets")
+    .select("week_start_date")
+    .in("status", ["submitted", "verified"])
+    .order("week_start_date", { ascending: false })
+    .limit(1);
+  const refWeek = latest?.[0]?.week_start_date as string | undefined;
+  if (!refWeek) return null; // nothing submitted yet — hide the panel
 
+  // Participating classes = prayer-enabled; fall back to classes that actually
+  // have sheets that week (not every class does prayer sheets — e.g. only one).
+  let { data: classRows } = await supabase
+    .from("classes")
+    .select("id, name")
+    .eq("is_active", true)
+    .eq("prayer_sheets_enabled", true);
+
+  if (!classRows || classRows.length === 0) {
+    const { data: wkSheets } = await supabase
+      .from("prayer_sheets")
+      .select("student_id")
+      .eq("week_start_date", refWeek);
+    const sheetStudentIds = (wkSheets || []).map((s) => s.student_id);
+    if (sheetStudentIds.length > 0) {
+      const { data: studs } = await supabase
+        .from("students")
+        .select("class_id")
+        .in("id", sheetStudentIds);
+      const classIds = Array.from(
+        new Set((studs || []).map((s) => s.class_id).filter(Boolean)),
+      ) as string[];
+      if (classIds.length > 0) {
+        const { data: cls } = await supabase
+          .from("classes")
+          .select("id, name")
+          .in("id", classIds);
+        classRows = cls || [];
+      }
+    }
+  }
+  if (!classRows || classRows.length === 0) return null;
+
+  const classIds = classRows.map((c) => c.id);
+  const classMap = new Map(classRows.map((c) => [c.id, c.name]));
+
+  // Active students in the participating classes.
   const { data: students } = await supabase
     .from("students")
     .select("id, class_id")
-    .eq("status", "active");
-
+    .eq("status", "active")
+    .in("class_id", classIds);
   if (!students || students.length === 0) return null;
 
-  const { data: classes } = await supabase
-    .from("classes")
-    .select("id, name")
-    .eq("is_active", true);
-  const classMap = new Map((classes || []).map((c) => [c.id, c.name]));
-
-  // This week's submitted/verified prayer sheets.
+  // That week's sheets (all statuses) so we can tell submitted vs draft vs none.
   const { data: sheets } = await supabase
     .from("prayer_sheets")
     .select("student_id, status")
-    .eq("week_start_date", monday)
-    .in("status", ["submitted", "verified"]);
-  const submitted = new Set((sheets || []).map((s) => s.student_id));
+    .eq("week_start_date", refWeek)
+    .in(
+      "student_id",
+      students.map((s) => s.id),
+    );
+  const statusOf = new Map(
+    (sheets || []).map((s) => [s.student_id, s.status as string]),
+  );
 
-  // Per-class submission rate for the week.
-  const perClass = new Map<string, { total: number; done: number }>();
+  const perClass = new Map<
+    string,
+    { total: number; submitted: number; draft: number; none: number }
+  >();
   students.forEach((s) => {
     if (!s.class_id) return;
-    const e = perClass.get(s.class_id) || { total: 0, done: 0 };
+    const e =
+      perClass.get(s.class_id) || { total: 0, submitted: 0, draft: 0, none: 0 };
     e.total++;
-    if (submitted.has(s.id)) e.done++;
+    const st = statusOf.get(s.id);
+    if (st === "submitted" || st === "verified") e.submitted++;
+    else if (st) e.draft++; // draft / flagged — started but not submitted
+    else e.none++; // no sheet at all — never started
     perClass.set(s.class_id, e);
   });
 
@@ -51,16 +94,19 @@ export default async function PrayerSnapshot() {
     .map(([id, v]) => ({
       name: classMap.get(id) || "Unassigned",
       ...v,
-      rate: v.total > 0 ? Math.round((v.done / v.total) * 100) : 0,
+      rate: v.total > 0 ? Math.round((v.submitted / v.total) * 100) : 0,
     }))
-    .sort((a, b) => b.rate - a.rate)
-    .slice(0, 5);
+    .sort((a, b) => b.rate - a.rate);
 
-  const totalDone = submitted.size;
-  const totalStudents = students.length;
+  const totalStudents = rows.reduce((s, r) => s + r.total, 0);
+  const totalSubmitted = rows.reduce((s, r) => s + r.submitted, 0);
   const overall =
-    totalStudents > 0 ? Math.round((totalDone / totalStudents) * 100) : 0;
+    totalStudents > 0 ? Math.round((totalSubmitted / totalStudents) * 100) : 0;
 
+  const weekLabel = new Date(refWeek).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
   const rateColor = (r: number) =>
     r >= 80
       ? "text-green-600 dark:text-green-400"
@@ -75,7 +121,7 @@ export default async function PrayerSnapshot() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Moon className="h-4 w-4 text-primary" />
-          Prayer this week
+          Prayer — week of {weekLabel}
         </h3>
         <Link
           href="/prayer-sheets"
@@ -90,18 +136,14 @@ export default async function PrayerSnapshot() {
           {overall}%
         </span>
         <span className="text-sm text-muted-foreground">
-          submitted · {totalDone}/{totalStudents} students
+          submitted · {totalSubmitted}/{totalStudents} students
         </span>
       </div>
 
-      {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No prayer sheets submitted yet this week.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {rows.map((c) => (
-            <div key={c.name} className="flex items-center gap-3">
+      <div className="space-y-3">
+        {rows.map((c) => (
+          <div key={c.name}>
+            <div className="flex items-center gap-3">
               <span className="w-24 shrink-0 text-sm font-medium truncate">
                 {c.name}
               </span>
@@ -111,13 +153,18 @@ export default async function PrayerSnapshot() {
                   style={{ width: `${c.rate}%` }}
                 />
               </div>
-              <span className={`w-20 shrink-0 text-right text-sm font-semibold ${rateColor(c.rate)}`}>
-                {c.done}/{c.total} · {c.rate}%
+              <span
+                className={`w-12 shrink-0 text-right text-sm font-semibold ${rateColor(c.rate)}`}
+              >
+                {c.rate}%
               </span>
             </div>
-          ))}
-        </div>
-      )}
+            <p className="mt-1 pl-24 text-xs text-muted-foreground">
+              {c.submitted} submitted · {c.draft} draft · {c.none} not started
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -84,6 +84,10 @@ export default function AttendanceMarkingInterface({
   const [notesMap, setNotesMap] = useState<Map<string, string>>(new Map());
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // Tap a stat card to show only that status; tap again / "Show all" to clear.
+  const [statusFilter, setStatusFilter] = useState<
+    "present" | "absent" | "late" | "excused_sick" | null
+  >(null);
 
   // Finalise + Undo countdown
   const [pendingSeconds, setPendingSeconds] = useState<number | null>(null);
@@ -401,6 +405,25 @@ export default function AttendanceMarkingInterface({
     excused: values.filter((s) => s === "excused" || s === "sick").length,
   };
 
+  const matchesFilter = (st: AttendanceStatus | undefined) => {
+    if (!statusFilter) return true;
+    if (statusFilter === "excused_sick")
+      return st === "excused" || st === "sick";
+    return st === statusFilter;
+  };
+  const visibleStudents = students.filter((s) =>
+    matchesFilter(attendanceMap.get(s.id)),
+  );
+  const FILTER_LABELS: Record<string, string> = {
+    present: "present",
+    absent: "absent",
+    late: "late",
+    excused_sick: "excused / sick",
+  };
+  // Toggle a filter (tapping the active card clears it).
+  const toggleFilter = (f: typeof statusFilter) =>
+    setStatusFilter((cur) => (cur === f ? null : f));
+
   const dateObj = new Date(selectedDate + "T00:00:00");
   const dateLabel = dateObj.toLocaleDateString("en-GB", {
     weekday: "long",
@@ -501,39 +524,104 @@ export default function AttendanceMarkingInterface({
         </div>
       </div>
 
-      {/* Statistics */}
+      {/* Statistics — tap a card to show only that status; tap again to clear */}
       <div className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
+        <button
+          type="button"
+          onClick={() => setStatusFilter(null)}
+          aria-pressed={statusFilter === null}
+          className={`text-left bg-card border border-border rounded-lg p-4 transition-shadow hover:shadow-sm ${
+            statusFilter === null
+              ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+              : ""
+          }`}
+        >
           <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-2xl font-bold">{stats.total}</p>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 dark:bg-green-900/20 dark:border-green-800">
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleFilter("present")}
+          aria-pressed={statusFilter === "present"}
+          className={`text-left bg-green-50 border border-green-200 rounded-lg p-4 transition-shadow hover:shadow-sm dark:bg-green-900/20 dark:border-green-800 ${
+            statusFilter === "present"
+              ? "ring-2 ring-green-500 ring-offset-2 ring-offset-background"
+              : ""
+          }`}
+        >
           <p className="text-sm text-green-700 dark:text-green-400">Present</p>
           <p className="text-2xl font-bold text-green-700 dark:text-green-400">
             {stats.present}
           </p>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 dark:bg-red-900/20 dark:border-red-800">
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleFilter("absent")}
+          aria-pressed={statusFilter === "absent"}
+          className={`text-left bg-red-50 border border-red-200 rounded-lg p-4 transition-shadow hover:shadow-sm dark:bg-red-900/20 dark:border-red-800 ${
+            statusFilter === "absent"
+              ? "ring-2 ring-red-500 ring-offset-2 ring-offset-background"
+              : ""
+          }`}
+        >
           <p className="text-sm text-red-700 dark:text-red-400">Absent</p>
           <p className="text-2xl font-bold text-red-700 dark:text-red-400">
             {stats.absent}
           </p>
-        </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 dark:bg-orange-900/20 dark:border-orange-800">
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleFilter("late")}
+          aria-pressed={statusFilter === "late"}
+          className={`text-left bg-orange-50 border border-orange-200 rounded-lg p-4 transition-shadow hover:shadow-sm dark:bg-orange-900/20 dark:border-orange-800 ${
+            statusFilter === "late"
+              ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-background"
+              : ""
+          }`}
+        >
           <p className="text-sm text-orange-700 dark:text-orange-400">Late</p>
           <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">
             {stats.late}
           </p>
-        </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-900/20 dark:border-blue-800">
+        </button>
+        <button
+          type="button"
+          onClick={() => toggleFilter("excused_sick")}
+          aria-pressed={statusFilter === "excused_sick"}
+          className={`text-left bg-blue-50 border border-blue-200 rounded-lg p-4 transition-shadow hover:shadow-sm dark:bg-blue-900/20 dark:border-blue-800 ${
+            statusFilter === "excused_sick"
+              ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background"
+              : ""
+          }`}
+        >
           <p className="text-sm text-blue-700 dark:text-blue-400">
             Excused / Sick
           </p>
           <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
             {stats.excused}
           </p>
-        </div>
+        </button>
       </div>
+
+      {/* Active-filter banner so no one wonders where the other students went */}
+      {statusFilter && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm">
+          <span>
+            Showing only{" "}
+            <strong className="capitalize">
+              {FILTER_LABELS[statusFilter]}
+            </strong>{" "}
+            ({visibleStudents.length}) — tap the card again or Show all to clear.
+          </span>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(null)}
+            className="shrink-0 font-medium text-primary hover:underline"
+          >
+            Show all
+          </button>
+        </div>
+      )}
 
       {/* Students */}
       {students.length === 0 ? (
@@ -542,10 +630,16 @@ export default function AttendanceMarkingInterface({
             No students enrolled in this class yet.
           </p>
         </div>
+      ) : visibleStudents.length === 0 ? (
+        <div className="bg-card border border-border rounded-lg p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            No students are marked {FILTER_LABELS[statusFilter!]}.
+          </p>
+        </div>
       ) : (
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="divide-y divide-border">
-            {students.map((student) => {
+            {visibleStudents.map((student) => {
               const status = attendanceMap.get(student.id);
               const note = notesMap.get(student.id) || "";
               return (

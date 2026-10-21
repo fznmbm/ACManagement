@@ -433,13 +433,25 @@ export default function AdminPrayerSheets() {
   const notSubmittedStudents = allStudents.filter(
     (s) => !submittedIds.has(s.id),
   );
-  const notSubmittedCount = notSubmittedStudents.length;
+
+  // "Not started" = active students with NO sheet at all this week (not even a
+  // draft) — distinct from draft (opened/started but not submitted).
+  const startedIds = new Set(allSheets.map((s) => s.student_id));
+  const notStartedStudents = allStudents.filter((s) => !startedIds.has(s.id));
 
   const statusCounts = {
     all: allSheets.length,
     submitted: allSheets.filter((s) => s.status === "submitted").length,
     flagged: allSheets.filter((s) => s.status === "flagged").length,
     draft: allSheets.filter((s) => s.status === "draft").length,
+    notstarted: notStartedStudents.length,
+  };
+  const FILTER_META: Record<string, string> = {
+    all: "All",
+    submitted: "Submitted",
+    draft: "Draft",
+    flagged: "Flagged",
+    notstarted: "Not started",
   };
   return (
     <div className="space-y-6">
@@ -501,8 +513,9 @@ export default function AdminPrayerSheets() {
           </button>
         </div>
       </div>
-      {/* Submission Summary */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* Submission Summary — mutually exclusive: every active student is in
+          exactly one bucket (submitted + draft + flagged + not started = total) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
           <p className="text-2xl font-bold text-green-700 dark:text-green-400">
             {statusCounts.submitted}
@@ -511,12 +524,12 @@ export default function AdminPrayerSheets() {
             Submitted
           </p>
         </div>
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-            {notSubmittedCount}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+            {statusCounts.draft}
           </p>
-          <p className="text-xs text-red-600 dark:text-red-500">
-            Not Submitted
+          <p className="text-xs text-blue-600 dark:text-blue-500">
+            Draft (started)
           </p>
         </div>
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 text-center">
@@ -527,50 +540,61 @@ export default function AdminPrayerSheets() {
             Flagged
           </p>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-            {statusCounts.draft}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-center">
+          <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+            {statusCounts.notstarted}
           </p>
-          <p className="text-xs text-blue-600 dark:text-blue-500">Draft</p>
+          <p className="text-xs text-red-600 dark:text-red-500">Not started</p>
         </div>
       </div>
-      {/* Not Submitted Students */}
-      {notSubmittedStudents.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">
-            ❌ Not Submitted ({notSubmittedStudents.length})
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {notSubmittedStudents.map((s) => (
-              <span
-                key={s.id}
-                className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-xs"
-              >
-                {s.first_name} {s.last_name}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
       {/* Status Filter */}{" "}
       <div className="flex gap-2 flex-wrap">
-        {(["all", "submitted", "flagged", "draft"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              statusFilter === s
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border hover:bg-accent"
-            }`}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-            <span className="ml-2 text-xs opacity-70">({statusCounts[s]})</span>
-          </button>
-        ))}
+        {(["all", "submitted", "draft", "flagged", "notstarted"] as const).map(
+          (s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === s
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border hover:bg-accent"
+              }`}
+            >
+              {FILTER_META[s]}
+              <span className="ml-2 text-xs opacity-70">
+                ({statusCounts[s]})
+              </span>
+            </button>
+          ),
+        )}
       </div>
       {/* Sheets List */}
-      {loading ? (
+      {statusFilter === "notstarted" ? (
+        notStartedStudents.length === 0 ? (
+          <div className="bg-card border border-border rounded-lg p-12 text-center">
+            <p className="text-muted-foreground">
+              Everyone has opened a sheet this week. 🎉
+            </p>
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-3">
+              Not started ({notStartedStudents.length}) — haven&apos;t opened a
+              sheet this week
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {notStartedStudents.map((s) => (
+                <span
+                  key={s.id}
+                  className="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-xs"
+                >
+                  {s.first_name} {s.last_name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
+      ) : loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
